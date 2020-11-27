@@ -421,7 +421,7 @@ if (!fbc) {
 }
 
 
-const apiVersion = '8.0';
+const apiVersion = '9.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 let postBody = 'data=' + enc(JSON.stringify([mapEvent()]));
 
