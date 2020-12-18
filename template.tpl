@@ -403,7 +403,6 @@ const setCookie = require('setCookie');
 const getCookieValues = require('getCookieValues');
 const getContainerVersion = require('getContainerVersion');
 const logToConsole = require('logToConsole');
-const sha256Sync = require('sha256Sync');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -540,21 +539,21 @@ function mapEvent() {
     if (eventData.lead_id) mappedData.user_data.lead_id = eventData.lead_id;
     if (eventData.leadId) mappedData.user_data.lead_id = eventData.leadId;
 
-    if (eventData.lastName) mappedData.user_data.ln = sha256Sync(eventData.lastName.toLowerCase());
-    if (eventData.LastName) mappedData.user_data.ln = sha256Sync(eventData.LastName.toLowerCase());
-    if (eventData.nameLast) mappedData.user_data.ln = sha256Sync(eventData.nameLast.toLowerCase());
+    if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
+    if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
+    if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
 
-    if (eventData.firstName) mappedData.user_data.fn = sha256Sync(eventData.firstName.toLowerCase());
-    if (eventData.FirstName) mappedData.user_data.fn = sha256Sync(eventData.FirstName.toLowerCase());
-    if (eventData.nameFirst) mappedData.user_data.fn = sha256Sync(eventData.nameFirst.toLowerCase());
+    if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
+    if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
+    if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
 
-    if (eventData.email) mappedData.user_data.em = sha256Sync(eventData.email.toLowerCase());
-    if (eventData.phone) mappedData.user_data.ph = sha256Sync(eventData.phone);
-    if (eventData.gender) mappedData.user_data.ge = sha256Sync(eventData.gender[0].toLowerCase());
-    if (eventData.city) mappedData.user_data.ct = sha256Sync(eventData.city.toLowerCase());
-    if (eventData.state) mappedData.user_data.st = sha256Sync(eventData.state.toLowerCase());
-    if (eventData.zip) mappedData.user_data.zp = sha256Sync(eventData.zip);
-    if (eventData.countryCode) mappedData.user_data.country = sha256Sync(eventData.countryCode.toLowerCase());
+    if (eventData.email) mappedData.user_data.em = eventData.email;
+    if (eventData.phone) mappedData.user_data.ph = eventData.phone;
+    if (eventData.gender) mappedData.user_data.ge = eventData.gender;
+    if (eventData.city) mappedData.user_data.ct = eventData.city;
+    if (eventData.state) mappedData.user_data.st = eventData.state;
+    if (eventData.zip) mappedData.user_data.zp = eventData.zip;
+    if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
 
 
     //
@@ -875,5 +874,3 @@ setup: ''
 ___NOTES___
 
 Created on 10/11/2020, 18:14:02
-
-
