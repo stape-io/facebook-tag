@@ -498,6 +498,7 @@ function mapEvent() {
 
     const mappedData = {
         event_name: eventName,
+        action_source: 'website',
         event_source_url: eventData.page_location,
         event_time: Math.floor(getTimestampMillis() / 1000),
         custom_data: {},
@@ -508,6 +509,7 @@ function mapEvent() {
     };
 
     if (data.serverEventDataList) {
+        if (data.serverEventDataList.action_source) mappedData.action_source = data.serverEventDataList.action_source;
         if (data.serverEventDataList.event_time) mappedData.event_time = data.serverEventDataList.event_time;
         if (data.serverEventDataList.event_source_url) mappedData.event_source_url = data.serverEventDataList.event_source_url;
         if (data.serverEventDataList.opt_out) mappedData.opt_out = data.serverEventDataList.opt_out;
