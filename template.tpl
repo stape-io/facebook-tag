@@ -481,6 +481,12 @@ function getEventName() {
             'start_trial': 'StartTrial',
             'submit_application': 'SubmitApplication',
             'subscribe': 'Subscribe',
+            
+            'gtm4wp.addProductToCartEEC': 'AddToCart',
+            'gtm4wp.productClickEEC': 'ViewContent',
+            'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
+            'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
+            'gtm4wp.orderCompletedEEC': 'Purchase'
         };
 
         if (!gaToFacebookEventName[eventName]) {
