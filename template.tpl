@@ -209,6 +209,10 @@ ___TEMPLATE_PARAMETERS___
             "type": "SELECT",
             "selectItems": [
               {
+                "value": "action_source",
+                "displayValue": "Action Source"
+              },
+              {
                 "value": "event_time",
                 "displayValue": "Event Time"
               },
