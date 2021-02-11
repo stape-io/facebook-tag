@@ -481,7 +481,7 @@ function getEventName() {
             'start_trial': 'StartTrial',
             'submit_application': 'SubmitApplication',
             'subscribe': 'Subscribe',
-            
+
             'gtm4wp.addProductToCartEEC': 'AddToCart',
             'gtm4wp.productClickEEC': 'ViewContent',
             'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
@@ -514,18 +514,25 @@ function mapEvent() {
         }
     };
 
+    let serverEventDataList = [];
     if (data.serverEventDataList) {
-        if (data.serverEventDataList.action_source) mappedData.action_source = data.serverEventDataList.action_source;
-        if (data.serverEventDataList.event_time) mappedData.event_time = data.serverEventDataList.event_time;
-        if (data.serverEventDataList.event_source_url) mappedData.event_source_url = data.serverEventDataList.event_source_url;
-        if (data.serverEventDataList.opt_out) mappedData.opt_out = data.serverEventDataList.opt_out;
-        if (data.serverEventDataList.event_id) mappedData.event_id = data.serverEventDataList.event_id;
+        data.serverEventDataList.forEach(d => {
+            serverEventDataList[d.name] = d.value;
+        });
+    }
 
-        if (data.serverEventDataList.data_processing_options) {
-            mappedData.data_processing_options = data.serverEventDataList.data_processing_options;
+    if (serverEventDataList) {
+        if (serverEventDataList.action_source) mappedData.action_source = serverEventDataList.action_source;
+        if (serverEventDataList.event_time) mappedData.event_time = serverEventDataList.event_time;
+        if (serverEventDataList.event_source_url) mappedData.event_source_url = serverEventDataList.event_source_url;
+        if (serverEventDataList.opt_out) mappedData.opt_out = serverEventDataList.opt_out;
+        if (serverEventDataList.event_id) mappedData.event_id = serverEventDataList.event_id;
 
-            if (data.serverEventDataList.data_processing_options_country) mappedData.data_processing_options_country = data.serverEventDataList.data_processing_options_country;
-            if (data.serverEventDataList.data_processing_options_state) mappedData.data_processing_options_state = data.serverEventDataList.data_processing_options_state;
+        if (serverEventDataList.data_processing_options) {
+            mappedData.data_processing_options = serverEventDataList.data_processing_options;
+
+            if (serverEventDataList.data_processing_options_country) mappedData.data_processing_options_country = serverEventDataList.data_processing_options_country;
+            if (serverEventDataList.data_processing_options_state) mappedData.data_processing_options_state = serverEventDataList.data_processing_options_state;
         }
     }
 
