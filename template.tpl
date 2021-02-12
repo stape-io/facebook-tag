@@ -518,6 +518,8 @@ function mapEvent() {
         }
     };
 
+    if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
+
     let serverEventDataList = [];
     if (data.serverEventDataList) {
         data.serverEventDataList.forEach(d => {
