@@ -32,7 +32,7 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "SELECT",
     "name": "inheritEventName",
-    "displayName": "Event Name",
+    "displayName": "Event Name Setup Method",
     "selectItems": [
       {
         "value": "inherit",
