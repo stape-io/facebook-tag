@@ -599,6 +599,7 @@ function mapEvent() {
     }
 
     if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
+    if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
     if (eventData.value) mappedData.custom_data.value = eventData.value;
 
     if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
