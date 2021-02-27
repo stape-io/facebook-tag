@@ -51,7 +51,7 @@ ___TEMPLATE_PARAMETERS___
         "radioItems": [
           {
             "value": "standard",
-            "displayValue": "Standart",
+            "displayValue": "Standard",
             "subParams": [
               {
                 "type": "SELECT",
