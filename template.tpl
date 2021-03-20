@@ -416,9 +416,11 @@ const setCookie = require('setCookie');
 const getCookieValues = require('getCookieValues');
 const getContainerVersion = require('getContainerVersion');
 const logToConsole = require('logToConsole');
+const sha256Sync = require('sha256Sync');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
+
 const eventData = getAllEventData();
 
 let fbc = getCookieValues('_fbc')[0];
@@ -435,7 +437,7 @@ if (!fbc) {
 
 const apiVersion = '10.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
-let postBody = 'data=' + enc(JSON.stringify([mapEvent()]));
+let postBody = 'data=' + enc(JSON.stringify([mapEvent(eventData, data)]));
 
 if (data.testId) {
     postBody += '&test_event_code=' + enc(data.testId);
@@ -470,7 +472,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
 }, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST', timeout: 3500}, postBody);
 
 
-function getEventName() {
+function getEventName(data) {
     if (data.inheritEventName === 'inherit') {
         let eventName = eventData.event_name;
 
@@ -512,10 +514,10 @@ function getEventName() {
     return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
 }
 
-function mapEvent() {
-    let eventName = getEventName();
+function mapEvent(eventData, data) {
+    let eventName = getEventName(data);
 
-    const mappedData = {
+    let mappedData = {
         event_name: eventName,
         action_source: 'website',
         event_source_url: eventData.page_location,
@@ -527,9 +529,170 @@ function mapEvent() {
         }
     };
 
+    if (fbc) mappedData.user_data.fbc = fbc;
+    if (fbp) mappedData.user_data.fbp = fbp;
+
+    mappedData = addServerEventData(eventData, data, mappedData);
+    mappedData = addUserData(eventData, mappedData);
+    mappedData = addEcommerceData(eventData, mappedData);
+    mappedData = overrideDataIfNeeded(data, mappedData);
+    mappedData = hashDataIfNeeded(mappedData);
+
+    if (isDebug) {
+        logToConsole('Event raw data: ', eventData);
+        logToConsole('Facebook mapped data: ', mappedData);
+    }
+
+    return mappedData;
+}
+
+
+function enc(data) {
+    data = data || '';
+    return encodeUriComponent(data);
+}
+
+function isHashed(value) {
+    if (!value) {
+        return false;
+    }
+
+    return value.match('^[A-Fa-f0-9]{64}$') !== null;
+}
+
+
+function hashData(value) {
+    if (!value) {
+        return value;
+    }
+
+    if (isHashed(value)) {
+        return value;
+    }
+
+    return sha256Sync(value.trim().toLowerCase(), {outputEncoding: 'hex'});
+}
+
+
+function hashDataIfNeeded(mappedData) {
+    if (mappedData.user_data) {
+        for (let key in mappedData.user_data) {
+            if (key === 'em' || key === 'ph' || key === 'ge' || key === 'db' || key === 'ln' || key === 'fn' || key === 'ct' || key === 'st' || key === 'zp' || key === 'country') {
+                mappedData.user_data[key] = hashData(mappedData.user_data[key]);
+            }
+        }
+    }
+
+    return mappedData;
+}
+
+function overrideDataIfNeeded(data,mappedData) {
+    if (data.userDataList) {
+        data.userDataList.forEach(d => {
+            mappedData.user_data[d.name] = d.value;
+        });
+    }
+
+    if (data.customDataList) {
+        data.customDataList.forEach(d => {
+            mappedData.custom_data[d.name] = d.value;
+        });
+    }
+
+    return mappedData;
+}
+
+function addEcommerceData(eventData, mappedData) {
+    if (eventData.items && eventData.items[0]) {
+        mappedData.custom_data.contents = {};
+        mappedData.custom_data.content_type = 'product';
+
+        if (!eventData.items[1]) {
+            if (eventData.items[0].item_name) mappedData.custom_data.content_name = eventData.items[0].item_name;
+            if (eventData.items[0].item_category) mappedData.custom_data.content_category = eventData.items[0].item_category;
+        }
+
+        eventData.items.forEach((d,i) => {
+            mappedData.custom_data.contents[i] = {
+                'id': d.item_id,
+                'quantity': d.quantity,
+                'item_price': d.price,
+            };
+        });
+    }
+
+    if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
+    else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
+    else if (eventData.value) mappedData.custom_data.value = eventData.value;
+
+    if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
+    if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
+
+
+    if (mappedData.event_name === 'Purchase') {
+        if (!mappedData.custom_data.currency) {
+            mappedData.custom_data.currency = 'USD';
+        }
+        if (!mappedData.custom_data.value) {
+            mappedData.custom_data.value = 0;
+        }
+    }
+
+    return mappedData;
+}
+
+function addUserData(eventData, mappedData) {
+    if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
+
+    if (eventData.external_id) mappedData.user_data.external_id = eventData.external_id;
+    else if (eventData.user_id) mappedData.user_data.external_id = eventData.user_id;
+    else if (eventData.userId) mappedData.user_data.external_id = eventData.userId;
+
+    if (eventData.subscription_id) mappedData.user_data.subscription_id = eventData.subscription_id;
+    else if (eventData.subscriptionId) mappedData.user_data.subscription_id = eventData.subscriptionId;
+
+    if (eventData.lead_id) mappedData.user_data.lead_id = eventData.lead_id;
+    else if (eventData.leadId) mappedData.user_data.lead_id = eventData.leadId;
+
+    if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
+    else if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
+    else if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
+    else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.last_name) mappedData.user_data.ln = eventData.user_data.address.last_name;
+
+    if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
+    else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
+    else if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
+    else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.first_name) mappedData.user_data.fn = eventData.user_data.address.first_name;
+
+    if (eventData.email) mappedData.user_data.em = eventData.email;
+    else if (eventData.user_data && eventData.user_data.email_address) mappedData.user_data.em = eventData.user_data.email_address;
+
+    if (eventData.phone) mappedData.user_data.ph = eventData.phone;
+    else if (eventData.user_data && eventData.user_data.phone_number) mappedData.user_data.ph = eventData.user_data.phone_number;
+
+    if (eventData.city) mappedData.user_data.ct = eventData.city;
+    else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.city) mappedData.user_data.ct = eventData.user_data.address.city;
+
+    if (eventData.state) mappedData.user_data.st = eventData.state;
+    else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.region) mappedData.user_data.st = eventData.user_data.address.region;
+
+    if (eventData.zip) mappedData.user_data.zp = eventData.zip;
+    else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.postal_code) mappedData.user_data.zp = eventData.user_data.address.postal_code;
+
+    if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
+    else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.country) mappedData.user_data.country = eventData.user_data.address.country;
+
+    if (eventData.gender) mappedData.user_data.ge = eventData.gender;
+
+    return mappedData;
+}
+
+
+function addServerEventData(eventData, data, mappedData) {
+    let serverEventDataList = {};
+
     if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
 
-    let serverEventDataList = [];
     if (data.serverEventDataList) {
         data.serverEventDataList.forEach(d => {
             serverEventDataList[d.name] = d.value;
@@ -551,108 +714,9 @@ function mapEvent() {
         }
     }
 
-    //
-    // User data
-    //
-    if (fbc) mappedData.user_data.fbc = fbc;
-    if (fbp) mappedData.user_data.fbp = fbp;
-
-    if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
-
-    if (eventData.external_id) mappedData.user_data.external_id = eventData.external_id;
-    if (eventData.user_id) mappedData.user_data.external_id = eventData.user_id;
-    if (eventData.userId) mappedData.user_data.external_id = eventData.userId;
-
-    if (eventData.subscription_id) mappedData.user_data.subscription_id = eventData.subscription_id;
-    if (eventData.subscriptionId) mappedData.user_data.subscription_id = eventData.subscriptionId;
-
-    if (eventData.lead_id) mappedData.user_data.lead_id = eventData.lead_id;
-    if (eventData.leadId) mappedData.user_data.lead_id = eventData.leadId;
-
-    if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
-    if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
-    if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
-
-    if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
-    if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
-    if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
-
-    if (eventData.email) mappedData.user_data.em = eventData.email;
-    if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-    if (eventData.gender) mappedData.user_data.ge = eventData.gender;
-    if (eventData.city) mappedData.user_data.ct = eventData.city;
-    if (eventData.state) mappedData.user_data.st = eventData.state;
-    if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-    if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
-
-
-    //
-    // Custom data
-    //
-    if (eventData.items && eventData.items[0]) {
-        mappedData.custom_data.contents = {};
-        mappedData.custom_data.content_type = 'product';
-
-        if (!eventData.items[1]) {
-            if (eventData.items[0].item_name) mappedData.custom_data.content_name = eventData.items[0].item_name;
-            if (eventData.items[0].item_category) mappedData.custom_data.content_category = eventData.items[0].item_category;
-        }
-
-        eventData.items.forEach((d,i) => {
-            mappedData.custom_data.contents[i] = {
-                'id': d.item_id,
-                'quantity': d.quantity,
-                'item_price': d.price,
-            };
-        });
-    }
-
-    if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
-    if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
-    if (eventData.value) mappedData.custom_data.value = eventData.value;
-
-    if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
-    if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
-
-
-    if (eventName === 'Purchase') {
-        if (!mappedData.custom_data.currency) {
-            mappedData.custom_data.currency = 'USD';
-        }
-        if (!mappedData.custom_data.value) {
-            mappedData.custom_data.value = 0;
-        }
-    }
-
-
-    //
-    // Overriding
-    //
-    if (data.userDataList) {
-        data.userDataList.forEach(d => {
-            mappedData.user_data[d.name] = d.value;
-        });
-    }
-
-    if (data.customDataList) {
-        data.customDataList.forEach(d => {
-            mappedData.custom_data[d.name] = d.value;
-        });
-    }
-
-    if (isDebug) {
-        logToConsole('Event raw data: ', eventData);
-        logToConsole('Facebook mapped data: ', mappedData);
-    }
-
     return mappedData;
 }
 
-
-function enc(data) {
-    data = data || '';
-    return encodeUriComponent(data);
-}
 
 
 ___SERVER_PERMISSIONS___
