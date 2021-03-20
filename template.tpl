@@ -36,7 +36,7 @@ ___TEMPLATE_PARAMETERS___
     "selectItems": [
       {
         "value": "inherit",
-        "displayValue": "Inherit from GA Client"
+        "displayValue": "Inherit from client"
       },
       {
         "value": "override",
@@ -201,8 +201,12 @@ ___TEMPLATE_PARAMETERS___
         "name": "serverEventDataList",
         "simpleTableColumns": [
           {
-            "valueValidators": [],
-            "defaultValue": "",
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ],
+            "defaultValue": "event_id",
             "displayName": "Property Name",
             "name": "name",
             "isUnique": true,
@@ -250,8 +254,7 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "type": "SIMPLE_TABLE",
-        "newRowButtonText": "Add property",
-        "enablingConditions": []
+        "newRowButtonText": "Add property"
       }
     ],
     "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can override."
@@ -266,8 +269,12 @@ ___TEMPLATE_PARAMETERS___
         "name": "userDataList",
         "simpleTableColumns": [
           {
-            "valueValidators": [],
-            "defaultValue": "",
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ],
+            "defaultValue": "em",
             "displayName": "Property Name",
             "name": "name",
             "isUnique": true,
@@ -355,11 +362,10 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "type": "SIMPLE_TABLE",
-        "newRowButtonText": "Add property",
-        "enablingConditions": []
+        "newRowButtonText": "Add property"
       }
     ],
-    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/user-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what user data parameters you can add to the call. If the documentation calls for the parameter to be hashed, you \u003cstrong\u003emust\u003c/strong\u003e hash it with SHA256 or the hit will not be sent to Facebook."
+    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/user-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what user data parameters you can add to the call. If the documentation requires the parameter to be hashed, you \u003cstrong\u003emust\u003c/strong\u003e hash it with SHA256, or the tag will do this automatically before sending the event to Facebook."
   },
   {
     "displayName": "Custom Data",
@@ -371,7 +377,11 @@ ___TEMPLATE_PARAMETERS___
         "name": "customDataList",
         "simpleTableColumns": [
           {
-            "valueValidators": [],
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ],
             "defaultValue": "",
             "displayName": "Property Name",
             "name": "name",
@@ -386,8 +396,7 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "type": "SIMPLE_TABLE",
-        "newRowButtonText": "Add property",
-        "enablingConditions": []
+        "newRowButtonText": "Add property"
       }
     ],
     "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can add to the call."
@@ -896,3 +905,5 @@ setup: ''
 ___NOTES___
 
 Created on 10/11/2020, 18:14:02
+
+
