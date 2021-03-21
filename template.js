@@ -275,6 +275,7 @@ function addUserData(eventData, mappedData) {
     else if (eventData.user_data && eventData.user_data.address && eventData.user_data.address.country) mappedData.user_data.country = eventData.user_data.address.country;
 
     if (eventData.gender) mappedData.user_data.ge = eventData.gender;
+    if (eventData.db) mappedData.user_data.db = eventData.db;
 
     return mappedData;
 }
