@@ -1,0 +1,4 @@
+homepage: "https://gtm-server.com/"
+versions:
+  - sha: 8e78a97cc999b99b632213673395643e2d72b1e9
+    changeNotes: Initial release.
