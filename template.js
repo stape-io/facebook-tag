@@ -21,7 +21,7 @@ const fbp = getCookieValues('_fbp')[0];
 if (!fbc) {
     let url = eventData.page_location;
 
-    if (url.indexOf('fbclid=') !== -1) {
+    if (url && url.indexOf('fbclid=') !== -1) {
         fbc = 'fb.1.' + getTimestampMillis() + '.' + url.split('fbclid=')[1].split('&')[0];
     }
 }

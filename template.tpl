@@ -14,7 +14,13 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "Event Data to FB Conversion API",
-  "categories": ["ADVERTISING", "ANALYTICS", "CONVERSIONS", "MARKETING", "REMARKETING"],
+  "categories": [
+    "ADVERTISING",
+    "ANALYTICS",
+    "CONVERSIONS",
+    "MARKETING",
+    "REMARKETING"
+  ],
   "brand": {
     "id": "brand_dummy",
     "displayName": "GTM Server",
@@ -430,7 +436,7 @@ const fbp = getCookieValues('_fbp')[0];
 if (!fbc) {
     let url = eventData.page_location;
 
-    if (url.indexOf('fbclid=') !== -1) {
+    if (url && url.indexOf('fbclid=') !== -1) {
         fbc = 'fb.1.' + getTimestampMillis() + '.' + url.split('fbclid=')[1].split('&')[0];
     }
 }
@@ -718,7 +724,6 @@ function addServerEventData(eventData, data, mappedData) {
 
     return mappedData;
 }
-
 
 
 ___SERVER_PERMISSIONS___
