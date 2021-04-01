@@ -1,4 +1,6 @@
 homepage: "https://gtm-server.com/"
 versions:
+  - sha: 41ac303c128151473c41ed02e7f590fb676afe2b
+    changeNotes: Fix bug with fbp cookie.
   - sha: 8e78a97cc999b99b632213673395643e2d72b1e9
     changeNotes: Initial release.
