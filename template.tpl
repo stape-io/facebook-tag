@@ -543,6 +543,7 @@ function mapEvent(eventData, data) {
     mappedData = addUserData(eventData, mappedData);
     mappedData = addEcommerceData(eventData, mappedData);
     mappedData = overrideDataIfNeeded(data, mappedData);
+    mappedData = cleanupData(mappedData);
     mappedData = hashDataIfNeeded(mappedData);
 
     if (isDebug) {
@@ -593,7 +594,7 @@ function hashDataIfNeeded(mappedData) {
     return mappedData;
 }
 
-function overrideDataIfNeeded(data,mappedData) {
+function overrideDataIfNeeded(data, mappedData) {
     if (data.userDataList) {
         data.userDataList.forEach(d => {
             mappedData.user_data[d.name] = d.value;
@@ -604,6 +605,34 @@ function overrideDataIfNeeded(data,mappedData) {
         data.customDataList.forEach(d => {
             mappedData.custom_data[d.name] = d.value;
         });
+    }
+
+    return mappedData;
+}
+
+function cleanupData(mappedData) {
+    if (mappedData.user_data) {
+        let userData = {};
+
+        for(let userDataKey in mappedData.user_data) {
+            if (mappedData.user_data[userDataKey]) {
+                userData[userDataKey] = mappedData.user_data[userDataKey];
+            }
+        }
+
+        mappedData.user_data = userData;
+    }
+
+    if (mappedData.custom_data) {
+        let customData = {};
+
+        for(let customDataKey in mappedData.custom_data) {
+            if (mappedData.custom_data[customDataKey]) {
+                customData[customDataKey] = mappedData.custom_data[customDataKey];
+            }
+        }
+
+        mappedData.custom_data = customData;
     }
 
     return mappedData;
