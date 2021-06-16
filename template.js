@@ -134,6 +134,7 @@ function mapEvent(eventData, data) {
     if (isDebug) {
         logToConsole('Event raw data: ', eventData);
         logToConsole('Facebook mapped data: ', mappedData);
+        logToConsole('Facebook test_event_code: ', data.testId);
     }
 
     return mappedData;
