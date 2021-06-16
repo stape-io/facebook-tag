@@ -1,5 +1,7 @@
 homepage: "https://gtm-server.com/"
 versions:
+  - sha: b0294bcbf4f2d53dbc98fe20d188d5dfdb3efc76
+    changeNotes: Added logging test_event_code in console.
   - sha: 49794efe772c2c703ee3901563cb9f602b96959a
     changeNotes: Added empty data check.
   - sha: 829cee46f43fe4fdbf09ddabdad51e6cecbeca5b
