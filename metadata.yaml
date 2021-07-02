@@ -1,4 +1,4 @@
-homepage: "https://gtm-server.com/"
+homepage: "https://stape.io/"
 versions:
   - sha: b0294bcbf4f2d53dbc98fe20d188d5dfdb3efc76
     changeNotes: Added logging test_event_code in console.
