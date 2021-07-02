@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 55fe746aa10d21440819ce2a142aa3132d2e3934
+    changeNotes: Move to Stape.
   - sha: b0294bcbf4f2d53dbc98fe20d188d5dfdb3efc76
     changeNotes: Added logging test_event_code in console.
   - sha: 49794efe772c2c703ee3901563cb9f602b96959a
