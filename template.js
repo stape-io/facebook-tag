@@ -16,7 +16,10 @@ const isDebug = containerVersion.debugMode;
 const eventData = getAllEventData();
 
 let fbc = getCookieValues('_fbc')[0];
-const fbp = getCookieValues('_fbp')[0];
+let fbp = getCookieValues('_fbp')[0];
+
+if (!fbc) fbc = eventData._fbc;
+if (!fbp) fbp = eventData._fbp;
 
 if (!fbc) {
     let url = eventData.page_location;
@@ -41,9 +44,10 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
             setCookie('_fbc', fbc, {
                 domain: 'auto',
                 path: '/',
-                'max-age': 15552000, // 6 month
                 samesite: 'Lax',
-                secure: true
+                secure: true,
+                'max-age': 63072000, // 2 years
+                httpOnly: false
             });
         }
 
@@ -51,9 +55,10 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
             setCookie('_fbp', fbp, {
                 domain: 'auto',
                 path: '/',
-                'max-age': 15552000, // 6 month
                 samesite: 'Lax',
-                secure: true
+                secure: true,
+                'max-age': 63072000, // 2 years
+                httpOnly: false
             });
         }
 
