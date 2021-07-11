@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: f29413a6c3816f1554c22df90656e1bdf3e35e95
+    changeNotes: Cookies from event data.
   - sha: 55fe746aa10d21440819ce2a142aa3132d2e3934
     changeNotes: Move to Stape.
   - sha: b0294bcbf4f2d53dbc98fe20d188d5dfdb3efc76
