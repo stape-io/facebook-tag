@@ -671,7 +671,7 @@ function addEcommerceData(eventData, mappedData) {
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
 
-    if (mappedData.event_name === 'Purchase') {
+    if (mappedData.event_name === 'Purchase' || mappedData.event_name === 'ViewContent') {
         if (!mappedData.custom_data.currency) {
             mappedData.custom_data.currency = 'USD';
         }
