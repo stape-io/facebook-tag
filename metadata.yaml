@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 684bdfae385fe8c37d0a5ae37c8173a97d7bedc7
+    changeNotes: Add gtm-msr check.
   - sha: f29413a6c3816f1554c22df90656e1bdf3e35e95
     changeNotes: Cookies from event data.
   - sha: 55fe746aa10d21440819ce2a142aa3132d2e3934
