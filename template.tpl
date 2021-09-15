@@ -429,6 +429,11 @@ const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
 
 const eventData = getAllEventData();
+let url = eventData.page_location;
+
+if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
+    return data.gtmOnSuccess();
+}
 
 let fbc = getCookieValues('_fbc')[0];
 let fbp = getCookieValues('_fbp')[0];
@@ -437,8 +442,6 @@ if (!fbc) fbc = eventData._fbc;
 if (!fbp) fbp = eventData._fbp;
 
 if (!fbc) {
-    let url = eventData.page_location;
-
     if (url && url.indexOf('fbclid=') !== -1) {
         fbc = 'fb.1.' + getTimestampMillis() + '.' + url.split('fbclid=')[1].split('&')[0];
     }
