@@ -484,7 +484,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
     } else {
         data.gtmOnFailure();
     }
-}, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST', timeout: 3500}, postBody);
+}, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST'}, postBody);
 
 
 function getEventName(data) {
@@ -577,10 +577,15 @@ function isHashed(value) {
     return value.match('^[A-Fa-f0-9]{64}$') !== null;
 }
 
-
 function hashData(value) {
     if (!value) {
         return value;
+    }
+
+    if (typeof value === 'object') {
+        return value.map(val => {
+            return hashData(val);
+        });
     }
 
     if (isHashed(value)) {
@@ -589,7 +594,6 @@ function hashData(value) {
 
     return sha256Sync(value.trim().toLowerCase(), {outputEncoding: 'hex'});
 }
-
 
 function hashDataIfNeeded(mappedData) {
     if (mappedData.user_data) {

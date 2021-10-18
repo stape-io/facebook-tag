@@ -69,7 +69,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
     } else {
         data.gtmOnFailure();
     }
-}, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST', timeout: 3500}, postBody);
+}, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST'}, postBody);
 
 
 function getEventName(data) {
@@ -172,7 +172,7 @@ function hashData(value) {
             return hashData(val);
         });
     }
-    
+
     if (isHashed(value)) {
         return value;
     }
