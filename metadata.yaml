@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: a447e327deef6726e0b69a06dddc173347e33f21
+    changeNotes: Removed request timeout and added support of array user data variables.
   - sha: 2d5698a4e5dfd2f592ef86bafb5abe8b6da1ae29
     changeNotes: Update Graph API version to 12.
   - sha: 684bdfae385fe8c37d0a5ae37c8173a97d7bedc7
