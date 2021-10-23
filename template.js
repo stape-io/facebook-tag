@@ -9,6 +9,7 @@ const getCookieValues = require('getCookieValues');
 const getContainerVersion = require('getContainerVersion');
 const logToConsole = require('logToConsole');
 const sha256Sync = require('sha256Sync');
+const decodeUriComponent = require('decodeUriComponent');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -28,7 +29,12 @@ if (!fbp) fbp = eventData._fbp;
 
 if (!fbc) {
     if (url && url.indexOf('fbclid=') !== -1) {
-        fbc = 'fb.1.' + getTimestampMillis() + '.' + url.split('fbclid=')[1].split('&')[0];
+        let fbclid = url.split('fbclid=')[1].split('&')[0];
+
+        if (fbclid) {
+            fbclid = decodeUriComponent(fbclid);
+            fbc = 'fb.1.' + getTimestampMillis() + '.' + fbclid;
+        }
     }
 }
 
