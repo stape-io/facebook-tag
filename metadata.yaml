@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: e6c3e6c5fe852a33d7251095f4994dfefb59305e
+    changeNotes: Add decoding fbclid parameter.
   - sha: a447e327deef6726e0b69a06dddc173347e33f21
     changeNotes: Removed request timeout and added support of array user data variables.
   - sha: 2d5698a4e5dfd2f592ef86bafb5abe8b6da1ae29
