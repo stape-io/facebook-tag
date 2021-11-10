@@ -333,7 +333,8 @@ function addUserData(eventData, mappedData) {
 function addServerEventData(eventData, data, mappedData) {
     let serverEventDataList = {};
 
-    if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
+    if (eventData.event_id) mappedData.event_id = eventData.event_id;
+    else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
 
     if (data.serverEventDataList) {
         data.serverEventDataList.forEach(d => {
