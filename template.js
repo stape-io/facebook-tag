@@ -42,14 +42,14 @@ if (!fbc && url) {
 
 const apiVersion = '12.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
-let postBody = 'data=' + enc(JSON.stringify([mapEvent(eventData, data)]));
+const postBody = {data: [mapEvent(eventData, data)], partner_agent: 'stape-gtmss-2.0.0'};
 
-if (data.testId) {
-    postBody += '&test_event_code=' + enc(data.testId);
+if(eventData.test_event_code || data.testId) {
+    postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
 sendHttpRequest(postUrl, (statusCode, headers, body) => {
-    if (statusCode >= 200 && statusCode < 400) {
+    if (statusCode >= 200 && statusCode < 300) {
         if (fbc) {
             setCookie('_fbc', fbc, {
                 domain: 'auto',
@@ -76,7 +76,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
     } else {
         data.gtmOnFailure();
     }
-}, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST'}, postBody);
+}, {headers: {'content-type': 'application/json'}, method: 'POST'}, JSON.stringify(postBody));
 
 
 function getEventName(data) {
@@ -85,6 +85,7 @@ function getEventName(data) {
 
         let gaToFacebookEventName = {
             'page_view': 'PageView',
+            "gtm.dom": "PageView",
             'add_payment_info': 'AddPaymentInfo',
             'add_to_cart': 'AddToCart',
             'add_to_wishlist': 'AddToWishlist',
@@ -128,7 +129,7 @@ function mapEvent(eventData, data) {
         event_name: eventName,
         action_source: 'website',
         event_source_url: eventData.page_location,
-        event_time: Math.floor(getTimestampMillis() / 1000),
+        event_time: Math.round(getTimestampMillis() / 1000),
         custom_data: {},
         user_data: {
             client_ip_address: eventData.ip_override,
@@ -254,11 +255,16 @@ function addEcommerceData(eventData, mappedData) {
         }
 
         eventData.items.forEach((d,i) => {
-            mappedData.custom_data.contents[i] = {
-                'id': d.item_id,
-                'quantity': d.quantity,
-                'item_price': d.price,
-            };
+            let content = {};
+
+            if (d.item.item_id) content.id = d.item_id;
+            if (d.item.item_name) content.title = d.item_name;
+            if (d.item.price) content.item_price = d.price;
+            if (d.item.item_brand) content.brand = d.item_brand;
+            if (d.item.quantity) content.quantity = d.quantity;
+            if (d.item.item_category) content.category = d.item_category;
+
+            mappedData.custom_data.contents[i] = content;
         });
     }
 
@@ -266,6 +272,7 @@ function addEcommerceData(eventData, mappedData) {
     else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
     else if (eventData.value) mappedData.custom_data.value = eventData.value;
 
+    if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
     if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
