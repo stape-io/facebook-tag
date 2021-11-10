@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 6a64107cfb0c98ac6da47e0d9df3b55029e545e2
+    changeNotes: Update parsing of EE events.
   - sha: e6c3e6c5fe852a33d7251095f4994dfefb59305e
     changeNotes: Add decoding fbclid parameter.
   - sha: a447e327deef6726e0b69a06dddc173347e33f21
