@@ -425,6 +425,8 @@ const getContainerVersion = require('getContainerVersion');
 const logToConsole = require('logToConsole');
 const sha256Sync = require('sha256Sync');
 const decodeUriComponent = require('decodeUriComponent');
+const parseUrl = require('parseUrl');
+const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -442,28 +444,27 @@ let fbp = getCookieValues('_fbp')[0];
 if (!fbc) fbc = eventData._fbc;
 if (!fbp) fbp = eventData._fbp;
 
-if (!fbc) {
-    if (url && url.indexOf('fbclid=') !== -1) {
-        let fbclid = url.split('fbclid=')[1].split('&')[0];
+if (!fbc && url) {
+    const urlParsed = parseUrl(url);
 
-        if (fbclid) {
-            fbclid = decodeUriComponent(fbclid);
-            fbc = 'fb.1.' + getTimestampMillis() + '.' + fbclid;
-        }
+    if (urlParsed && urlParsed.searchParams.fbclid) {
+        const subdomainIndex = computeEffectiveTldPlusOne(url).split('.').length - 1;
+
+        fbc = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
     }
 }
 
 
 const apiVersion = '12.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
-let postBody = 'data=' + enc(JSON.stringify([mapEvent(eventData, data)]));
+const postBody = {data: [mapEvent(eventData, data)], partner_agent: 'stape-gtmss-2.0.0'};
 
-if (data.testId) {
-    postBody += '&test_event_code=' + enc(data.testId);
+if(eventData.test_event_code || data.testId) {
+    postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
 sendHttpRequest(postUrl, (statusCode, headers, body) => {
-    if (statusCode >= 200 && statusCode < 400) {
+    if (statusCode >= 200 && statusCode < 300) {
         if (fbc) {
             setCookie('_fbc', fbc, {
                 domain: 'auto',
@@ -490,7 +491,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
     } else {
         data.gtmOnFailure();
     }
-}, {headers: {content_type: 'application/x-www-form-urlencoded'}, method: 'POST'}, postBody);
+}, {headers: {'content-type': 'application/json'}, method: 'POST'}, JSON.stringify(postBody));
 
 
 function getEventName(data) {
@@ -499,6 +500,7 @@ function getEventName(data) {
 
         let gaToFacebookEventName = {
             'page_view': 'PageView',
+            "gtm.dom": "PageView",
             'add_payment_info': 'AddPaymentInfo',
             'add_to_cart': 'AddToCart',
             'add_to_wishlist': 'AddToWishlist',
@@ -542,7 +544,7 @@ function mapEvent(eventData, data) {
         event_name: eventName,
         action_source: 'website',
         event_source_url: eventData.page_location,
-        event_time: Math.floor(getTimestampMillis() / 1000),
+        event_time: Math.round(getTimestampMillis() / 1000),
         custom_data: {},
         user_data: {
             client_ip_address: eventData.ip_override,
@@ -658,21 +660,38 @@ function cleanupData(mappedData) {
 }
 
 function addEcommerceData(eventData, mappedData) {
+    let currencyFromItems = '';
+    let valueFromItems = 0;
+
     if (eventData.items && eventData.items[0]) {
         mappedData.custom_data.contents = {};
         mappedData.custom_data.content_type = 'product';
+        currencyFromItems = eventData.items[0].currency;
 
         if (!eventData.items[1]) {
             if (eventData.items[0].item_name) mappedData.custom_data.content_name = eventData.items[0].item_name;
             if (eventData.items[0].item_category) mappedData.custom_data.content_category = eventData.items[0].item_category;
+
+            if (eventData.items[0].price) {
+                mappedData.custom_data.value = eventData.items[0].quantity ? eventData.items[0].quantity * eventData.items[0].price : eventData.items[0].price;
+            }
         }
 
         eventData.items.forEach((d,i) => {
-            mappedData.custom_data.contents[i] = {
-                'id': d.item_id,
-                'quantity': d.quantity,
-                'item_price': d.price,
-            };
+            let content = {};
+
+            if (d.item_id) content.id = d.item_id;
+            if (d.item_name) content.title = d.item_name;
+            if (d.item_brand) content.brand = d.item_brand;
+            if (d.quantity) content.quantity = d.quantity;
+            if (d.item_category) content.category = d.item_category;
+
+            if (d.price) {
+                content.item_price = d.price;
+                valueFromItems += d.quantity ? d.quantity * d.price : d.price;
+            }
+
+            mappedData.custom_data.contents[i] = content;
         });
     }
 
@@ -681,6 +700,9 @@ function addEcommerceData(eventData, mappedData) {
     else if (eventData.value) mappedData.custom_data.value = eventData.value;
 
     if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
+    else if (currencyFromItems) mappedData.custom_data.currency = currencyFromItems;
+
+    if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
 
@@ -688,8 +710,9 @@ function addEcommerceData(eventData, mappedData) {
         if (!mappedData.custom_data.currency) {
             mappedData.custom_data.currency = 'USD';
         }
+
         if (!mappedData.custom_data.value) {
-            mappedData.custom_data.value = 0;
+            mappedData.custom_data.value = valueFromItems ? valueFromItems : 1;
         }
     }
 
@@ -747,7 +770,8 @@ function addUserData(eventData, mappedData) {
 function addServerEventData(eventData, data, mappedData) {
     let serverEventDataList = {};
 
-    if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
+    if (eventData.event_id) mappedData.event_id = eventData.event_id;
+    else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
 
     if (data.serverEventDataList) {
         data.serverEventDataList.forEach(d => {

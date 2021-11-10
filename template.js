@@ -245,24 +245,36 @@ function cleanupData(mappedData) {
 }
 
 function addEcommerceData(eventData, mappedData) {
+    let currencyFromItems = '';
+    let valueFromItems = 0;
+
     if (eventData.items && eventData.items[0]) {
         mappedData.custom_data.contents = {};
         mappedData.custom_data.content_type = 'product';
+        currencyFromItems = eventData.items[0].currency;
 
         if (!eventData.items[1]) {
             if (eventData.items[0].item_name) mappedData.custom_data.content_name = eventData.items[0].item_name;
             if (eventData.items[0].item_category) mappedData.custom_data.content_category = eventData.items[0].item_category;
+
+            if (eventData.items[0].price) {
+                mappedData.custom_data.value = eventData.items[0].quantity ? eventData.items[0].quantity * eventData.items[0].price : eventData.items[0].price;
+            }
         }
 
         eventData.items.forEach((d,i) => {
             let content = {};
 
-            if (d.item.item_id) content.id = d.item_id;
-            if (d.item.item_name) content.title = d.item_name;
-            if (d.item.price) content.item_price = d.price;
-            if (d.item.item_brand) content.brand = d.item_brand;
-            if (d.item.quantity) content.quantity = d.quantity;
-            if (d.item.item_category) content.category = d.item_category;
+            if (d.item_id) content.id = d.item_id;
+            if (d.item_name) content.title = d.item_name;
+            if (d.item_brand) content.brand = d.item_brand;
+            if (d.quantity) content.quantity = d.quantity;
+            if (d.item_category) content.category = d.item_category;
+
+            if (d.price) {
+                content.item_price = d.price;
+                valueFromItems += d.quantity ? d.quantity * d.price : d.price;
+            }
 
             mappedData.custom_data.contents[i] = content;
         });
@@ -272,8 +284,10 @@ function addEcommerceData(eventData, mappedData) {
     else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
     else if (eventData.value) mappedData.custom_data.value = eventData.value;
 
-    if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
     if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
+    else if (currencyFromItems) mappedData.custom_data.currency = currencyFromItems;
+
+    if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
 
@@ -281,8 +295,9 @@ function addEcommerceData(eventData, mappedData) {
         if (!mappedData.custom_data.currency) {
             mappedData.custom_data.currency = 'USD';
         }
+
         if (!mappedData.custom_data.value) {
-            mappedData.custom_data.value = 0;
+            mappedData.custom_data.value = valueFromItems ? valueFromItems : 1;
         }
     }
 
