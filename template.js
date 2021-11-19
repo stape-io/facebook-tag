@@ -233,7 +233,7 @@ function cleanupData(mappedData) {
         let customData = {};
 
         for(let customDataKey in mappedData.custom_data) {
-            if (mappedData.custom_data[customDataKey]) {
+            if (mappedData.custom_data[customDataKey] || customDataKey === 'value') {
                 customData[customDataKey] = mappedData.custom_data[customDataKey];
             }
         }
@@ -297,7 +297,7 @@ function addEcommerceData(eventData, mappedData) {
         }
 
         if (!mappedData.custom_data.value) {
-            mappedData.custom_data.value = valueFromItems ? valueFromItems : 1;
+            mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
         }
     }
 
