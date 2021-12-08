@@ -15,8 +15,6 @@ But the difference between web and server tracking is that pixel requests are pr
 - [Event deduplication for Facebook Conversion API](https://stape.io/how-to-set-up-facebook-event-deduplication-in-google-tag-manager/)
 - [How to set up server side tagging: Universal Analytics, GA4, and Facebook Conversion API](https://stape.io/google-tag-manager-server-side-how-to-set-up-server-universal-analytics-ga4-and-facebook-conversion-api/)
 
-![Facebook tag](https://stape.io/wp-content/uploads/2020/11/GTM_Facebook_test_2-1536x983.png)
-
 ## Open Source
 
 Facebook Tag for GTM Server Side is developing and maintained by [Stape Team](https://stape.io/) under the Apache 2.0 license.
