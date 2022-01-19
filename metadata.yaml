@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: fd6b9cff5da4c7a866f04ccbbe64a47ea4816bb2
+    changeNotes: Update Logs handling.
   - sha: b2c9faae271b0131c5e5b370ef52edb13a0686c7
     changeNotes: Fix purchase with 0 value issue.
   - sha: 6a64107cfb0c98ac6da47e0d9df3b55029e545e2
