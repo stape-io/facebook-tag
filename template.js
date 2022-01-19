@@ -12,9 +12,11 @@ const sha256Sync = require('sha256Sync');
 const decodeUriComponent = require('decodeUriComponent');
 const parseUrl = require('parseUrl');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
+const getRequestHeader = require('getRequestHeader');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
+const traceId = getRequestHeader('trace-id');
 
 const eventData = getAllEventData();
 let url = eventData.page_location;
@@ -42,13 +44,38 @@ if (!fbc && url) {
 
 const apiVersion = '12.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
-const postBody = {data: [mapEvent(eventData, data)], partner_agent: 'stape-gtmss-2.0.0'};
+const mappedEventData = mapEvent(eventData, data);
+const postBody = {data: [mappedEventData], partner_agent: 'stape-gtmss-2.0.0'};
 
 if(eventData.test_event_code || data.testId) {
     postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
+if (isDebug || data.logInProduction) {
+    logToConsole(JSON.stringify({
+        'Name': 'Facebook',
+        'Type': 'Request',
+        'TraceId': traceId,
+        'EventName': mappedEventData.event_name,
+        'RequestMethod': 'POST',
+        'RequestUrl': postUrl,
+        'RequestBody': postBody,
+    }));
+}
+
 sendHttpRequest(postUrl, (statusCode, headers, body) => {
+    if (isDebug || data.logInProduction) {
+        logToConsole(JSON.stringify({
+            'Name': 'Facebook',
+            'Type': 'Response',
+            'TraceId': traceId,
+            'EventName': mappedEventData.event_name,
+            'ResponseStatusCode': statusCode,
+            'ResponseHeaders': headers,
+            'ResponseBody': body,
+        }));
+    }
+
     if (statusCode >= 200 && statusCode < 300) {
         if (fbc) {
             setCookie('_fbc', fbc, {
@@ -146,12 +173,6 @@ function mapEvent(eventData, data) {
     mappedData = overrideDataIfNeeded(data, mappedData);
     mappedData = cleanupData(mappedData);
     mappedData = hashDataIfNeeded(mappedData);
-
-    if (isDebug) {
-        logToConsole('Event raw data: ', eventData);
-        logToConsole('Facebook mapped data: ', mappedData);
-        logToConsole('Facebook test_event_code: ', data.testId);
-    }
 
     return mappedData;
 }

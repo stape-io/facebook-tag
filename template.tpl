@@ -407,6 +407,21 @@ ___TEMPLATE_PARAMETERS___
       }
     ],
     "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can add to the call."
+  },
+  {
+    "displayName": "Logs Settings",
+    "name": "logsGroup",
+    "groupStyle": "ZIPPY_CLOSED",
+    "type": "GROUP",
+    "subParams": [
+      {
+        "type": "CHECKBOX",
+        "name": "logInProduction",
+        "checkboxText": "Always log to console",
+        "simpleValueType": true,
+        "help": "When enabled, tag records logs not only in debug mode."
+      }
+    ]
   }
 ]
 
@@ -427,9 +442,11 @@ const sha256Sync = require('sha256Sync');
 const decodeUriComponent = require('decodeUriComponent');
 const parseUrl = require('parseUrl');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
+const getRequestHeader = require('getRequestHeader');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
+const traceId = getRequestHeader('trace-id');
 
 const eventData = getAllEventData();
 let url = eventData.page_location;
@@ -457,13 +474,38 @@ if (!fbc && url) {
 
 const apiVersion = '12.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
-const postBody = {data: [mapEvent(eventData, data)], partner_agent: 'stape-gtmss-2.0.0'};
+const mappedEventData = mapEvent(eventData, data);
+const postBody = {data: [mappedEventData], partner_agent: 'stape-gtmss-2.0.0'};
 
 if(eventData.test_event_code || data.testId) {
     postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
+if (isDebug || data.logInProduction) {
+    logToConsole(JSON.stringify({
+        'Name': 'Facebook',
+        'Type': 'Request',
+        'TraceId': traceId,
+        'EventName': mappedEventData.event_name,
+        'RequestMethod': 'POST',
+        'RequestUrl': postUrl,
+        'RequestBody': postBody,
+    }));
+}
+
 sendHttpRequest(postUrl, (statusCode, headers, body) => {
+    if (isDebug || data.logInProduction) {
+        logToConsole(JSON.stringify({
+            'Name': 'Facebook',
+            'Type': 'Response',
+            'TraceId': traceId,
+            'EventName': mappedEventData.event_name,
+            'ResponseStatusCode': statusCode,
+            'ResponseHeaders': headers,
+            'ResponseBody': body,
+        }));
+    }
+
     if (statusCode >= 200 && statusCode < 300) {
         if (fbc) {
             setCookie('_fbc', fbc, {
@@ -561,12 +603,6 @@ function mapEvent(eventData, data) {
     mappedData = overrideDataIfNeeded(data, mappedData);
     mappedData = cleanupData(mappedData);
     mappedData = hashDataIfNeeded(mappedData);
-
-    if (isDebug) {
-        logToConsole('Event raw data: ', eventData);
-        logToConsole('Facebook mapped data: ', mappedData);
-        logToConsole('Facebook test_event_code: ', data.testId);
-    }
 
     return mappedData;
 }
@@ -1019,10 +1055,13 @@ ___SERVER_PERMISSIONS___
           "key": "environments",
           "value": {
             "type": 1,
-            "string": "debug"
+            "string": "all"
           }
         }
       ]
+    },
+    "clientAnnotations": {
+      "isEditedByUser": true
     },
     "isRequired": true
   },
@@ -1033,6 +1072,71 @@ ___SERVER_PERMISSIONS___
         "versionId": "1"
       },
       "param": []
+    },
+    "isRequired": true
+  },
+  {
+    "instance": {
+      "key": {
+        "publicId": "read_request",
+        "versionId": "1"
+      },
+      "param": [
+        {
+          "key": "headerWhitelist",
+          "value": {
+            "type": 2,
+            "listItem": [
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "headerName"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "trace-id"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "key": "headersAllowed",
+          "value": {
+            "type": 8,
+            "boolean": true
+          }
+        },
+        {
+          "key": "requestAccess",
+          "value": {
+            "type": 1,
+            "string": "specific"
+          }
+        },
+        {
+          "key": "headerAccess",
+          "value": {
+            "type": 1,
+            "string": "specific"
+          }
+        },
+        {
+          "key": "queryParameterAccess",
+          "value": {
+            "type": 1,
+            "string": "any"
+          }
+        }
+      ]
+    },
+    "clientAnnotations": {
+      "isEditedByUser": true
     },
     "isRequired": true
   }
