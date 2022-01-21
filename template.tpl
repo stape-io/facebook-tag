@@ -415,11 +415,24 @@ ___TEMPLATE_PARAMETERS___
     "type": "GROUP",
     "subParams": [
       {
-        "type": "CHECKBOX",
-        "name": "logInProduction",
-        "checkboxText": "Always log to console",
+        "type": "RADIO",
+        "name": "logType",
+        "radioItems": [
+          {
+            "value": "no",
+            "displayValue": "Do not log"
+          },
+          {
+            "value": "debug",
+            "displayValue": "Log to console during debug and preview"
+          },
+          {
+            "value": "always",
+            "displayValue": "Always log to console"
+          }
+        ],
         "simpleValueType": true,
-        "help": "When enabled, tag records logs not only in debug mode."
+        "defaultValue": "debug"
       }
     ]
   }
@@ -446,6 +459,7 @@ const getRequestHeader = require('getRequestHeader');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
+const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = getRequestHeader('trace-id');
 
 const eventData = getAllEventData();
@@ -461,7 +475,7 @@ let fbp = getCookieValues('_fbp')[0];
 if (!fbc) fbc = eventData._fbc;
 if (!fbp) fbp = eventData._fbp;
 
-if (!fbc && url) {
+if (url) {
     const urlParsed = parseUrl(url);
 
     if (urlParsed && urlParsed.searchParams.fbclid) {
@@ -481,7 +495,7 @@ if(eventData.test_event_code || data.testId) {
     postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
-if (isDebug || data.logInProduction) {
+if (isLoggingEnabled) {
     logToConsole(JSON.stringify({
         'Name': 'Facebook',
         'Type': 'Request',
@@ -494,7 +508,7 @@ if (isDebug || data.logInProduction) {
 }
 
 sendHttpRequest(postUrl, (statusCode, headers, body) => {
-    if (isDebug || data.logInProduction) {
+    if (isLoggingEnabled) {
         logToConsole(JSON.stringify({
             'Name': 'Facebook',
             'Type': 'Response',
@@ -831,6 +845,22 @@ function addServerEventData(eventData, data, mappedData) {
     }
 
     return mappedData;
+}
+
+function determinateIsLoggingEnabled() {
+    if (!data.logType) {
+        return isDebug;
+    }
+
+    if (data.logType === 'no') {
+        return false;
+    }
+
+    if (data.logType === 'debug') {
+        return isDebug;
+    }
+
+    return data.logType === 'always';
 }
 
 
