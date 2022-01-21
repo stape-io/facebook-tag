@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: e942db7481fa7511652c21e555eb7cb6807a9f00
+    changeNotes: Fix fbclid rewrite issue.
   - sha: fd6b9cff5da4c7a866f04ccbbe64a47ea4816bb2
     changeNotes: Update Logs handling.
   - sha: b2c9faae271b0131c5e5b370ef52edb13a0686c7
