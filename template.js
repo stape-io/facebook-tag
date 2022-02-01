@@ -13,6 +13,7 @@ const decodeUriComponent = require('decodeUriComponent');
 const parseUrl = require('parseUrl');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 const getRequestHeader = require('getRequestHeader');
+const generateRandom = require('generateRandom');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -34,12 +35,13 @@ if (!fbp) fbp = eventData._fbp;
 
 if (url) {
     const urlParsed = parseUrl(url);
+    const subdomainIndex = computeEffectiveTldPlusOne(url).split('.').length - 1;
 
     if (urlParsed && urlParsed.searchParams.fbclid) {
-        const subdomainIndex = computeEffectiveTldPlusOne(url).split('.').length - 1;
-
         fbc = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
     }
+
+    fbp = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 9999999999);
 }
 
 
