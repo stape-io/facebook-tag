@@ -41,7 +41,7 @@ if (url) {
         fbc = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
     }
 
-    fbp = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 9999999999);
+    fbp = fbp || 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 9999999999);
 }
 
 
