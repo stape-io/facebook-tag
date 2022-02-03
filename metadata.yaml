@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: c0d818469595322de6cf960537541b929b75848a
+    changeNotes: Add option for generating _fbp cookie
   - sha: e942db7481fa7511652c21e555eb7cb6807a9f00
     changeNotes: Fix fbclid rewrite issue.
   - sha: fd6b9cff5da4c7a866f04ccbbe64a47ea4816bb2
