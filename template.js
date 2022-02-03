@@ -43,7 +43,7 @@ if (url) {
 }
 
 if (!fbp && data.generateFbp) {
-    fbp = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1, 2147483647);
+    fbp = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
 }
 
 
