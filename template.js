@@ -12,6 +12,7 @@ const sha256Sync = require('sha256Sync');
 const decodeUriComponent = require('decodeUriComponent');
 const parseUrl = require('parseUrl');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
+const generateRandom = require('generateRandom');
 const getRequestHeader = require('getRequestHeader');
 
 const containerVersion = getContainerVersion();
@@ -20,7 +21,8 @@ const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = getRequestHeader('trace-id');
 
 const eventData = getAllEventData();
-let url = eventData.page_location;
+const url = eventData.page_location || getRequestHeader('referer');
+const subdomainIndex = computeEffectiveTldPlusOne(url).split('.').length - 1;
 
 if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
     return data.gtmOnSuccess();
@@ -36,10 +38,12 @@ if (url) {
     const urlParsed = parseUrl(url);
 
     if (urlParsed && urlParsed.searchParams.fbclid) {
-        const subdomainIndex = computeEffectiveTldPlusOne(url).split('.').length - 1;
-
         fbc = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
     }
+}
+
+if (!fbp && data.generateFbp) {
+    fbp = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1, 2147483647);
 }
 
 
