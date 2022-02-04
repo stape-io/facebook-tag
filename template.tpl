@@ -471,7 +471,7 @@ const traceId = getRequestHeader('trace-id');
 
 const eventData = getAllEventData();
 const url = eventData.page_location || getRequestHeader('referer');
-const subdomainIndex = computeEffectiveTldPlusOne(url).split('.').length - 1;
+const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
 
 if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
     return data.gtmOnSuccess();
@@ -487,12 +487,12 @@ if (url) {
     const urlParsed = parseUrl(url);
 
     if (urlParsed && urlParsed.searchParams.fbclid) {
-        fbc = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
+        fbc = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
     }
 }
 
 if (!fbp && data.generateFbp) {
-    fbp = 'fb.' + subdomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
+    fbp = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
 }
 
 
