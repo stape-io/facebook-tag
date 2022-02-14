@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 5f64498e045668af2ef53a936c517cb159fb39af
+    changeNotes: Update graph api version
   - sha: cb59fd813c0b3a3bf7bbbc4610fa0e0d401d9e2d
     changeNotes: Fix sub domain index obtaining
   - sha: c7ab7f39e676d06a108ec0f05793cffb8b6023ba
