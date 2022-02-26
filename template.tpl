@@ -545,7 +545,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 samesite: 'Lax',
                 secure: true,
                 'max-age': 63072000, // 2 years
-                httpOnly: !!data.useHttpOnlyCookie
+                HttpOnly: !!data.useHttpOnlyCookie
             });
         }
 
@@ -556,7 +556,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 samesite: 'Lax',
                 secure: true,
                 'max-age': 63072000, // 2 years
-                httpOnly: !!data.useHttpOnlyCookie
+                HttpOnly: !!data.useHttpOnlyCookie
             });
         }
 
