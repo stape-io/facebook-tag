@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 484bcb40ed517788ef1962a06baae4c39b179e40
+    changeNotes: Update HttpOnly cookie option
   - sha: c408e9798474f30c97a3b672b4f8da8100f88f6f
     changeNotes: Add HttpOnly cookies option
   - sha: 5f64498e045668af2ef53a936c517cb159fb39af
