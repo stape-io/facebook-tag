@@ -205,6 +205,13 @@ ___TEMPLATE_PARAMETERS___
     "simpleValueType": true
   },
   {
+    "type": "CHECKBOX",
+    "name": "useHttpOnlyCookie",
+    "checkboxText": "Use HttpOnly cookies",
+    "simpleValueType": true,
+    "help": "Forbids JavaScript from accessing the cookie if enabled."
+  },
+  {
     "displayName": "Server Event Data Override",
     "name": "serverEventDataListGroup",
     "groupStyle": "ZIPPY_CLOSED",
@@ -538,7 +545,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 samesite: 'Lax',
                 secure: true,
                 'max-age': 63072000, // 2 years
-                httpOnly: false
+                httpOnly: !!data.useHttpOnlyCookie
             });
         }
 
@@ -549,7 +556,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 samesite: 'Lax',
                 secure: true,
                 'max-age': 63072000, // 2 years
-                httpOnly: false
+                httpOnly: !!data.useHttpOnlyCookie
             });
         }
 
