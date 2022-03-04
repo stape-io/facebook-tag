@@ -470,6 +470,7 @@ const parseUrl = require('parseUrl');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 const generateRandom = require('generateRandom');
 const getRequestHeader = require('getRequestHeader');
+const getType = require('getType');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -508,7 +509,7 @@ const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pix
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {data: [mappedEventData], partner_agent: 'stape-gtmss-2.0.0'};
 
-if(eventData.test_event_code || data.testId) {
+if (eventData.test_event_code || data.testId) {
     postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
@@ -657,7 +658,13 @@ function hashData(value) {
         return value;
     }
 
-    if (typeof value === 'object') {
+    const type = getType(value);
+
+    if (type === 'undefined' || value === 'undefined') {
+        return undefined;
+    }
+
+    if (type === 'object') {
         return value.map(val => {
             return hashData(val);
         });
@@ -702,7 +709,7 @@ function cleanupData(mappedData) {
     if (mappedData.user_data) {
         let userData = {};
 
-        for(let userDataKey in mappedData.user_data) {
+        for (let userDataKey in mappedData.user_data) {
             if (mappedData.user_data[userDataKey]) {
                 userData[userDataKey] = mappedData.user_data[userDataKey];
             }
@@ -714,7 +721,7 @@ function cleanupData(mappedData) {
     if (mappedData.custom_data) {
         let customData = {};
 
-        for(let customDataKey in mappedData.custom_data) {
+        for (let customDataKey in mappedData.custom_data) {
             if (mappedData.custom_data[customDataKey] || customDataKey === 'value') {
                 customData[customDataKey] = mappedData.custom_data[customDataKey];
             }
@@ -744,7 +751,7 @@ function addEcommerceData(eventData, mappedData) {
             }
         }
 
-        eventData.items.forEach((d,i) => {
+        eventData.items.forEach((d, i) => {
             let content = {};
 
             if (d.item_id) content.id = d.item_id;
