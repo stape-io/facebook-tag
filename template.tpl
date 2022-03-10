@@ -495,7 +495,9 @@ if (url) {
     const urlParsed = parseUrl(url);
 
     if (urlParsed && urlParsed.searchParams.fbclid) {
-        fbc = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
+        if (!fbc || (fbc && fbc.split('.')[fbc.split('.').length - 1] !== decodeUriComponent(urlParsed.searchParams.fbclid))) {
+            fbc = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
+        }
     }
 }
 
