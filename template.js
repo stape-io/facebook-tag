@@ -15,6 +15,7 @@ const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 const generateRandom = require('generateRandom');
 const getRequestHeader = require('getRequestHeader');
 const getType = require('getType');
+const makeString = require('makeString');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -196,7 +197,7 @@ function isHashed(value) {
         return false;
     }
 
-    return value.match('^[A-Fa-f0-9]{64}$') !== null;
+    return makeString(value).match('^[A-Fa-f0-9]{64}$') !== null;
 }
 
 function hashData(value) {
@@ -220,7 +221,7 @@ function hashData(value) {
         return value;
     }
 
-    return sha256Sync(value.trim().toLowerCase(), {outputEncoding: 'hex'});
+    return sha256Sync(makeString(value).trim().toLowerCase(), {outputEncoding: 'hex'});
 }
 
 function hashDataIfNeeded(mappedData) {
