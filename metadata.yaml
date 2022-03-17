@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 5d2b08ac460345a175c28749bcf95b9a50f4399e
+    changeNotes: Update cookies lifetime. Fix issue with integer phone number parsing
   - sha: 28276fe13f6a4dd34739257779a1ca00ac6ecd48
     changeNotes: Update _fbc generation logic
   - sha: 6cbb8468b2c85b647d392a19b9d77ef4e7b2c60e
