@@ -92,7 +92,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 path: '/',
                 samesite: 'Lax',
                 secure: true,
-                'max-age': 63072000, // 2 years
+                'max-age': 7776000, // 90 days
                 HttpOnly: !!data.useHttpOnlyCookie
             });
         }
@@ -103,7 +103,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 path: '/',
                 samesite: 'Lax',
                 secure: true,
-                'max-age': 63072000, // 2 years
+                'max-age': 7776000, // 90 days
                 HttpOnly: !!data.useHttpOnlyCookie
             });
         }
