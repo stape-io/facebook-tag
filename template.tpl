@@ -471,6 +471,7 @@ const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 const generateRandom = require('generateRandom');
 const getRequestHeader = require('getRequestHeader');
 const getType = require('getType');
+const makeString = require('makeString');
 
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
@@ -506,7 +507,7 @@ if (!fbp && data.generateFbp) {
 }
 
 
-const apiVersion = '13.0';
+const apiVersion = '14.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {data: [mappedEventData], partner_agent: 'stape-gtmss-2.0.0'};
@@ -547,7 +548,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 path: '/',
                 samesite: 'Lax',
                 secure: true,
-                'max-age': 63072000, // 2 years
+                'max-age': 7776000, // 90 days
                 HttpOnly: !!data.useHttpOnlyCookie
             });
         }
@@ -558,7 +559,7 @@ sendHttpRequest(postUrl, (statusCode, headers, body) => {
                 path: '/',
                 samesite: 'Lax',
                 secure: true,
-                'max-age': 63072000, // 2 years
+                'max-age': 7776000, // 90 days
                 HttpOnly: !!data.useHttpOnlyCookie
             });
         }
@@ -652,7 +653,7 @@ function isHashed(value) {
         return false;
     }
 
-    return value.match('^[A-Fa-f0-9]{64}$') !== null;
+    return makeString(value).match('^[A-Fa-f0-9]{64}$') !== null;
 }
 
 function hashData(value) {
@@ -676,7 +677,7 @@ function hashData(value) {
         return value;
     }
 
-    return sha256Sync(value.trim().toLowerCase(), {outputEncoding: 'hex'});
+    return sha256Sync(makeString(value).trim().toLowerCase(), {outputEncoding: 'hex'});
 }
 
 function hashDataIfNeeded(mappedData) {
