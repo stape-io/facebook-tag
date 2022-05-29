@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 4f371f6410a1669dc748c4b185b25e6f88e74888
+    changeNotes: Update to API v14
   - sha: 5d2b08ac460345a175c28749bcf95b9a50f4399e
     changeNotes: Update cookies lifetime. Fix issue with integer phone number parsing
   - sha: 28276fe13f6a4dd34739257779a1ca00ac6ecd48
