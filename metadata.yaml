@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 929203274f1a6a24c5d9d15cd6b6894962b24129
+    changeNotes: Update phone, city, email parsing
   - sha: 4f371f6410a1669dc748c4b185b25e6f88e74888
     changeNotes: Update to API v14
   - sha: 5d2b08ac460345a175c28749bcf95b9a50f4399e
