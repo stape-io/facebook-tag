@@ -17,10 +17,8 @@ const getRequestHeader = require('getRequestHeader');
 const getType = require('getType');
 const makeString = require('makeString');
 
-const containerVersion = getContainerVersion();
-const isDebug = containerVersion.debugMode;
 const isLoggingEnabled = determinateIsLoggingEnabled();
-const traceId = getRequestHeader('trace-id');
+const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
 
 const eventData = getAllEventData();
 const url = eventData.page_location || getRequestHeader('referer');
@@ -200,7 +198,7 @@ function isHashed(value) {
     return makeString(value).match('^[A-Fa-f0-9]{64}$') !== null;
 }
 
-function hashData(value) {
+function hashData(key, value) {
     if (!value) {
         return value;
     }
@@ -213,7 +211,7 @@ function hashData(value) {
 
     if (type === 'object') {
         return value.map(val => {
-            return hashData(val);
+            return hashData(key, val);
         });
     }
 
@@ -221,14 +219,22 @@ function hashData(value) {
         return value;
     }
 
-    return sha256Sync(makeString(value).trim().toLowerCase(), {outputEncoding: 'hex'});
+    value = makeString(value).trim().toLowerCase();
+
+    if (key === 'ph') {
+        value = value.split(' ').join('').split('-').join('').split('(').join('').split(')').join('').split('+').join('');
+    } else if (key === 'ct') {
+        value = value.split(' ').join('');
+    }
+
+    return sha256Sync(value, {outputEncoding: 'hex'});
 }
 
 function hashDataIfNeeded(mappedData) {
     if (mappedData.user_data) {
         for (let key in mappedData.user_data) {
             if (key === 'em' || key === 'ph' || key === 'ge' || key === 'db' || key === 'ln' || key === 'fn' || key === 'ct' || key === 'st' || key === 'zp' || key === 'country') {
-                mappedData.user_data[key] = hashData(mappedData.user_data[key]);
+                mappedData.user_data[key] = hashData(key, mappedData.user_data[key]);
             }
         }
     }
@@ -365,6 +371,7 @@ function addUserData(eventData, mappedData) {
 
     if (eventData.email) mappedData.user_data.em = eventData.email;
     else if (eventData.user_data && eventData.user_data.email_address) mappedData.user_data.em = eventData.user_data.email_address;
+    else if (eventData.user_data && eventData.user_data.email) mappedData.user_data.em = eventData.user_data.email;
 
     if (eventData.phone) mappedData.user_data.ph = eventData.phone;
     else if (eventData.user_data && eventData.user_data.phone_number) mappedData.user_data.ph = eventData.user_data.phone_number;
@@ -419,6 +426,12 @@ function addServerEventData(eventData, data, mappedData) {
 }
 
 function determinateIsLoggingEnabled() {
+    const containerVersion = getContainerVersion();
+    const isDebug = !!(
+        containerVersion &&
+        (containerVersion.debugMode || containerVersion.previewMode)
+    );
+
     if (!data.logType) {
         return isDebug;
     }
