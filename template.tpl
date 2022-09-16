@@ -505,7 +505,7 @@ if (!fbp && data.generateFbp) {
 }
 
 
-const apiVersion = '14.0';
+const apiVersion = '15.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {data: [mappedEventData], partner_agent: 'stape-gtmss-2.0.0'};
