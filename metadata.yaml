@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 5cdadd0e6deba7aabcb4d7a6c1a912d35173213f
+    changeNotes: Update IP parsing
   - sha: c3d968f99d75e60663ad3a05382121375998c260
     changeNotes: Update api version
   - sha: 929203274f1a6a24c5d9d15cd6b6894962b24129
