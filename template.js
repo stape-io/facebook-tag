@@ -16,6 +16,7 @@ const generateRandom = require('generateRandom');
 const getRequestHeader = require('getRequestHeader');
 const getType = require('getType');
 const makeString = require('makeString');
+const makeNumber = require('makeNumber');
 
 const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
@@ -166,10 +167,13 @@ function mapEvent(eventData, data) {
         event_time: Math.round(getTimestampMillis() / 1000),
         custom_data: {},
         user_data: {
-            client_ip_address: eventData.ip_override,
             client_user_agent: eventData.user_agent,
         }
     };
+
+    if (eventData.ip_override) {
+        mappedData.user_data.client_ip_address = eventData.ip_override.split(' ').join('').split(',')[0];
+    }
 
     if (fbc) mappedData.user_data.fbc = fbc;
     if (fbp) mappedData.user_data.fbp = fbp;
@@ -314,8 +318,8 @@ function addEcommerceData(eventData, mappedData) {
             if (d.item_category) content.category = d.item_category;
 
             if (d.price) {
-                content.item_price = d.price;
-                valueFromItems += d.quantity ? d.quantity * d.price : d.price;
+                content.item_price = makeNumber(d.price);
+                valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
             }
 
             mappedData.custom_data.contents[i] = content;
