@@ -357,7 +357,7 @@ function addEcommerceData(eventData, mappedData) {
   let valueFromItems = 0;
 
   if (eventData.items && eventData.items[0]) {
-    mappedData.custom_data.contents = {};
+    mappedData.custom_data.contents = [];
     mappedData.custom_data.content_type = 'product';
     currencyFromItems = eventData.items[0].currency;
 
@@ -391,7 +391,7 @@ function addEcommerceData(eventData, mappedData) {
           : content.item_price;
       }
 
-      mappedData.custom_data.contents[i] = content;
+      mappedData.custom_data.contents.push(content);
     });
   }
 
@@ -424,6 +424,12 @@ function addEcommerceData(eventData, mappedData) {
 }
 
 function addUserData(eventData, mappedData) {
+  const address =
+    eventData.user_data &&
+    eventData.user_data.address &&
+    eventData.user_data.address[0]
+      ? eventData.user_data.address[0]
+      : {};
   if (eventData.fb_login_id)
     mappedData.user_data.fb_login_id = eventData.fb_login_id;
 
@@ -445,22 +451,12 @@ function addUserData(eventData, mappedData) {
   if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
   else if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
   else if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
-  else if (
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address.last_name
-  )
-    mappedData.user_data.ln = eventData.user_data.address.last_name;
+  else if (address.last_name) mappedData.user_data.ln = address.last_name;
 
   if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
   else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
   else if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
-  else if (
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address.first_name
-  )
-    mappedData.user_data.fn = eventData.user_data.address.first_name;
+  else if (address.first_name) mappedData.user_data.fn = address.first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
   else if (eventData.user_data && eventData.user_data.email_address)
@@ -473,37 +469,17 @@ function addUserData(eventData, mappedData) {
     mappedData.user_data.ph = eventData.user_data.phone_number;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
-  else if (
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address.city
-  )
-    mappedData.user_data.ct = eventData.user_data.address.city;
+  else if (address.city) mappedData.user_data.ct = address.city;
 
   if (eventData.state) mappedData.user_data.st = eventData.state;
-  else if (
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address.region
-  )
-    mappedData.user_data.st = eventData.user_data.address.region;
+  else if (address.region) mappedData.user_data.st = address.region;
 
   if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-  else if (
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address.postal_code
-  )
-    mappedData.user_data.zp = eventData.user_data.address.postal_code;
+  else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
 
   if (eventData.countryCode)
     mappedData.user_data.country = eventData.countryCode;
-  else if (
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address.country
-  )
-    mappedData.user_data.country = eventData.user_data.address.country;
+  else if (address.country) mappedData.user_data.country = address.country;
 
   if (eventData.gender) mappedData.user_data.ge = eventData.gender;
   if (eventData.db) mappedData.user_data.db = eventData.db;
