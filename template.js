@@ -424,12 +424,10 @@ function addEcommerceData(eventData, mappedData) {
 }
 
 function addUserData(eventData, mappedData) {
-  const address =
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address[0]
-      ? eventData.user_data.address[0]
-      : {};
+  let address = {};
+  if(eventData.user_data && eventData.user_data.address) {
+    address = eventData.user_data.address[0] || eventData.user_data.address
+  }
   if (eventData.fb_login_id)
     mappedData.user_data.fb_login_id = eventData.fb_login_id;
 
