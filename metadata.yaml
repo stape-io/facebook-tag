@@ -1,6 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
-  - sha: 3dbf50e9b23044a278d7e17546e2d411820ba9e1
+  - sha: f29fe72428d6aa216da994675844f3d9318257d1
     changeNotes: Fix Data Tag address object
   - sha: a2658d259bb57f5c658c1b62511612a3d0022452
     changeNotes: Fix for user_data.address and custom_data.contents
