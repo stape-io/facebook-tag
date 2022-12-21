@@ -45,7 +45,7 @@ if (url) {
       !fbc ||
       (fbc &&
         fbc.split('.')[fbc.split('.').length - 1] !==
-          decodeUriComponent(urlParsed.searchParams.fbclid))
+        decodeUriComponent(urlParsed.searchParams.fbclid))
     ) {
       fbc =
         'fb.' +
@@ -430,7 +430,7 @@ function addUserData(eventData, mappedData) {
     user_data = eventData.user_data;
     const addressType = getType(user_data.address);
     if(addressType === 'object' || addressType === 'array') {
-      address = user_data.address[0] || user_data.address
+      address = user_data.address[0] || user_data.address;
     }
   }
   if (eventData.fb_login_id)
