@@ -880,12 +880,15 @@ function addEcommerceData(eventData, mappedData) {
 }
 
 function addUserData(eventData, mappedData) {
-  const address =
-    eventData.user_data &&
-    eventData.user_data.address &&
-    eventData.user_data.address[0]
-      ? eventData.user_data.address[0]
-      : {};
+  let address = {};
+  let user_data = {};
+  if(getType(eventData.user_data) === 'object') {
+    user_data = eventData.user_data;
+    const addressType = getType(user_data.address);
+    if(addressType === 'object' || addressType === 'array') {
+      address = user_data.address[0] || user_data.address
+    }
+  }
   if (eventData.fb_login_id)
     mappedData.user_data.fb_login_id = eventData.fb_login_id;
 
@@ -907,34 +910,41 @@ function addUserData(eventData, mappedData) {
   if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
   else if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
   else if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
+  else if (eventData.last_name) mappedData.user_data.ln = eventData.last_name;
+  else if (user_data.last_name) mappedData.user_data.ln = user_data.last_name;
   else if (address.last_name) mappedData.user_data.ln = address.last_name;
 
   if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
   else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
   else if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
+  else if (eventData.first_name) mappedData.user_data.fn = eventData.first_name;
+  else if (user_data.first_name) mappedData.user_data.fn = user_data.first_name;
   else if (address.first_name) mappedData.user_data.fn = address.first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
-  else if (eventData.user_data && eventData.user_data.email_address)
-    mappedData.user_data.em = eventData.user_data.email_address;
-  else if (eventData.user_data && eventData.user_data.email)
-    mappedData.user_data.em = eventData.user_data.email;
+  else if (user_data.email_address) mappedData.user_data.em = user_data.email_address;
+  else if (user_data.email) mappedData.user_data.em = user_data.email;
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-  else if (eventData.user_data && eventData.user_data.phone_number)
-    mappedData.user_data.ph = eventData.user_data.phone_number;
+  else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
 
   if (eventData.state) mappedData.user_data.st = eventData.state;
+  else if (eventData.region) mappedData.user_data.st = eventData.region;
+  else if (user_data.region) mappedData.user_data.st = user_data.region;
   else if (address.region) mappedData.user_data.st = address.region;
 
   if (eventData.zip) mappedData.user_data.zp = eventData.zip;
+  else if (eventData.postal_code) mappedData.user_data.zp = eventData.postal_code;
+  else if (user_data.postal_code) mappedData.user_data.zp = user_data.postal_code;
   else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
 
   if (eventData.countryCode)
     mappedData.user_data.country = eventData.countryCode;
+  else if (eventData.country) mappedData.user_data.country = eventData.country;
+  else if (user_data.country) mappedData.user_data.country = user_data.country;
   else if (address.country) mappedData.user_data.country = address.country;
 
   if (eventData.gender) mappedData.user_data.ge = eventData.gender;
