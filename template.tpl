@@ -199,6 +199,14 @@ ___TEMPLATE_PARAMETERS___
     "valueHint": "TEST123"
   },
   {
+    "type": "TEXT",
+    "name": "itemIdKey",
+    "displayName": "Custom Item Id Key",
+    "simpleValueType": true,
+    "help": "You can specify a custom key, which will be used to set the content item id, by default item_id will be used. This may be useful if you are using WooCommerce extensions.",
+    "canBeEmptyString": true
+  },
+  {
     "type": "CHECKBOX",
     "name": "generateFbp",
     "checkboxText": "Generate _fbp cookie if it not exist",
@@ -831,10 +839,10 @@ function addEcommerceData(eventData, mappedData) {
       }
     }
 
+    const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
     eventData.items.forEach((d, i) => {
       let content = {};
-
-      if (d.item_id) content.id = d.item_id;
+      if (d[itemIdKey]) content.id = d[itemIdKey];
       if (d.item_name) content.title = d.item_name;
       if (d.item_brand) content.brand = d.item_brand;
       if (d.quantity) content.quantity = d.quantity;
@@ -882,10 +890,10 @@ function addEcommerceData(eventData, mappedData) {
 function addUserData(eventData, mappedData) {
   let address = {};
   let user_data = {};
-  if(getType(eventData.user_data) === 'object') {
+  if (getType(eventData.user_data) === 'object') {
     user_data = eventData.user_data;
     const addressType = getType(user_data.address);
-    if(addressType === 'object' || addressType === 'array') {
+    if (addressType === 'object' || addressType === 'array') {
       address = user_data.address[0] || user_data.address;
     }
   }
@@ -922,11 +930,13 @@ function addUserData(eventData, mappedData) {
   else if (address.first_name) mappedData.user_data.fn = address.first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
-  else if (user_data.email_address) mappedData.user_data.em = user_data.email_address;
+  else if (user_data.email_address)
+    mappedData.user_data.em = user_data.email_address;
   else if (user_data.email) mappedData.user_data.em = user_data.email;
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-  else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
+  else if (user_data.phone_number)
+    mappedData.user_data.ph = user_data.phone_number;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
@@ -937,8 +947,10 @@ function addUserData(eventData, mappedData) {
   else if (address.region) mappedData.user_data.st = address.region;
 
   if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-  else if (eventData.postal_code) mappedData.user_data.zp = eventData.postal_code;
-  else if (user_data.postal_code) mappedData.user_data.zp = user_data.postal_code;
+  else if (eventData.postal_code)
+    mappedData.user_data.zp = eventData.postal_code;
+  else if (user_data.postal_code)
+    mappedData.user_data.zp = user_data.postal_code;
   else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
 
   if (eventData.countryCode)
