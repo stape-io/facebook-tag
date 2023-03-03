@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: cb756e60a81ab023fafe47f67b94da18b73500ab
+    changeNotes: Fix custom data empty value
   - sha: 924d235d7be7fc420579e67359477b53942c6b19
     changeNotes: Compatibility with gtm4wp Product ID prefix
   - sha: 2077fa87cc809781fe3d70e35f8108516340c8d7
