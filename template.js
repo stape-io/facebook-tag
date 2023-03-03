@@ -329,7 +329,7 @@ function cleanupData(mappedData) {
     let userData = {};
 
     for (let userDataKey in mappedData.user_data) {
-      if (mappedData.user_data[userDataKey]) {
+      if (isValidValue(mappedData.user_data[userDataKey])) {
         userData[userDataKey] = mappedData.user_data[userDataKey];
       }
     }
@@ -341,7 +341,7 @@ function cleanupData(mappedData) {
     let customData = {};
 
     for (let customDataKey in mappedData.custom_data) {
-      if (mappedData.custom_data[customDataKey] || customDataKey === 'value') {
+      if (isValidValue(mappedData.custom_data[customDataKey])) {
         customData[customDataKey] = mappedData.custom_data[customDataKey];
       }
     }
@@ -350,6 +350,11 @@ function cleanupData(mappedData) {
   }
 
   return mappedData;
+}
+
+function isValidValue(value) {
+  const valueType = getType(value);
+  return valueType !== 'null' && valueType !== 'undefined' && value !== '';
 }
 
 function addEcommerceData(eventData, mappedData) {
