@@ -718,7 +718,7 @@ function hashData(key, value) {
     return undefined;
   }
 
-  if (type === 'object') {
+  if (type === 'array') {
     return value.map((val) => {
       return hashData(key, val);
     });
