@@ -532,7 +532,7 @@ if (!fbp && data.generateFbp) {
     generateRandom(1000000000, 2147483647);
 }
 
-const apiVersion = '15.0';
+const apiVersion = '16.0';
 const postUrl =
   'https://graph.facebook.com/v' +
   apiVersion +
@@ -566,6 +566,23 @@ if (isLoggingEnabled) {
   );
 }
 
+const cookieOptions = {
+  domain: 'auto',
+  path: '/',
+  samesite: 'Lax',
+  secure: true,
+  'max-age': 7776000, // 90 days
+  HttpOnly: !!data.useHttpOnlyCookie,
+};
+
+if (fbc) {
+  setCookie('_fbc', fbc, cookieOptions);
+}
+
+if (fbp) {
+  setCookie('_fbp', fbp, cookieOptions);
+}
+
 sendHttpRequest(
   postUrl,
   (statusCode, headers, body) => {
@@ -584,28 +601,6 @@ sendHttpRequest(
     }
 
     if (statusCode >= 200 && statusCode < 300) {
-      if (fbc) {
-        setCookie('_fbc', fbc, {
-          domain: 'auto',
-          path: '/',
-          samesite: 'Lax',
-          secure: true,
-          'max-age': 7776000, // 90 days
-          HttpOnly: !!data.useHttpOnlyCookie,
-        });
-      }
-
-      if (fbp) {
-        setCookie('_fbp', fbp, {
-          domain: 'auto',
-          path: '/',
-          samesite: 'Lax',
-          secure: true,
-          'max-age': 7776000, // 90 days
-          HttpOnly: !!data.useHttpOnlyCookie,
-        });
-      }
-
       data.gtmOnSuccess();
     } else {
       data.gtmOnFailure();
