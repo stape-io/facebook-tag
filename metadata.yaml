@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 675fb8c147e5217dec98c73994a068a6d494610e
+    changeNotes: Api version update to 16.0
   - sha: bcf04363b30e8b376c9aebfb803d962c60e0a03a
     changeNotes: Fix for hasData function
   - sha: cb756e60a81ab023fafe47f67b94da18b73500ab
