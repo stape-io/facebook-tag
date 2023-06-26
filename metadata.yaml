@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 8188fa5822006aa40764b747a9cf3c26438f5542
+    changeNotes: Add ability to use OptimisticScenario
   - sha: 675fb8c147e5217dec98c73994a068a6d494610e
     changeNotes: Api version update to 16.0
   - sha: bcf04363b30e8b376c9aebfb803d962c60e0a03a
