@@ -167,6 +167,52 @@ ___TEMPLATE_PARAMETERS___
     ]
   },
   {
+    "type": "SELECT",
+    "name": "actionSource",
+    "displayName": "Action Source",
+    "selectItems": [
+      {
+        "value": "website",
+        "displayValue": "Website"
+      },
+      {
+        "value": "email",
+        "displayValue": "Email"
+      },
+      {
+        "value": "app",
+        "displayValue": "App"
+      },
+      {
+        "value": "phone_call",
+        "displayValue": "Phone Call"
+      },
+      {
+        "value": "chat",
+        "displayValue": "Chat"
+      },
+      {
+        "value": "physical_store",
+        "displayValue": "Physical Store"
+      },
+      {
+        "value": "system_generated",
+        "displayValue": "System Generated"
+      },
+      {
+        "value": "other",
+        "displayValue": "Other"
+      }
+    ],
+    "simpleValueType": true,
+    "valueValidators": [
+      {
+        "type": "NON_EMPTY"
+      }
+    ],
+    "defaultValue": "website"
+  },
+  {
     "type": "TEXT",
     "name": "accessToken",
     "displayName": "API Access Token",
@@ -224,7 +270,7 @@ ___TEMPLATE_PARAMETERS___
     "name": "useOptimisticScenario",
     "checkboxText": "Use Optimistic Scenario",
     "simpleValueType": true,
-    "help": "The tag will call gtmOnSuccess() without waiting for a response from the API"
+    "help": "The tag will call gtmOnSuccess() without waiting for a response from the API. This will speed up sGTM response time however your tag will always return the status fired successfully even in case it is not."
   },
   {
     "displayName": "Server Event Data Override",
@@ -247,10 +293,6 @@ ___TEMPLATE_PARAMETERS___
             "isUnique": true,
             "type": "SELECT",
             "selectItems": [
-              {
-                "value": "action_source",
-                "displayValue": "Action Source"
-              },
               {
                 "value": "event_time",
                 "displayValue": "Event Time"
@@ -386,6 +428,14 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "fb_login_id",
                 "displayValue": "FB Login ID"
+              },
+              {
+                "value": "anon_id",
+                "displayValue": "Install ID"
+              },
+              {
+                "value": "madid",
+                "displayValue": "Mobile Advertiser ID"
               }
             ]
           },
@@ -403,11 +453,96 @@ ___TEMPLATE_PARAMETERS___
     "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/user-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what user data parameters you can add to the call. If the documentation requires the parameter to be hashed, you \u003cstrong\u003emust\u003c/strong\u003e hash it with SHA256, or the tag will do this automatically before sending the event to Facebook."
   },
   {
+    "displayName": "App Data",
+    "name": "appDataListGroup",
+    "groupStyle": "ZIPPY_CLOSED",
+    "type": "GROUP",
+    "subParams": [
+      {
+        "type": "LABEL",
+        "name": "appDataLabel",
+        "displayName": "App Parameters that you can send to Meta you can find \u003ca target\u003d\"_blank\" href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\"\u003eby this link\u003c/a\u003e."
+      },
+      {
+        "name": "appDataList",
+        "simpleTableColumns": [
+          {
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ],
+            "defaultValue": "",
+            "displayName": "Property Name",
+            "name": "name",
+            "isUnique": true,
+            "type": "SELECT",
+            "selectItems": [
+              {
+                "value": "advertiser_tracking_enabled",
+                "displayValue": "Advertiser Tracking Enabled"
+              },
+              {
+                "value": "application_tracking_enabled",
+                "displayValue": "Application Tracking Enabled"
+              },
+              {
+                "value": "extinfo",
+                "displayValue": "Ext Info"
+              },
+              {
+                "value": "campaign_ids",
+                "displayValue": "Campaign IDs"
+              },
+              {
+                "value": "install_referrer",
+                "displayValue": "Install Referrer"
+              },
+              {
+                "value": "installer_package",
+                "displayValue": "Installer Package"
+              },
+              {
+                "value": "url_schemes",
+                "displayValue": "URL Schemes"
+              },
+              {
+                "value": "windows_attribution_id",
+                "displayValue": "Windows Attribution ID"
+              }
+            ]
+          },
+          {
+            "defaultValue": "",
+            "displayName": "Property Value",
+            "name": "value",
+            "type": "TEXT"
+          }
+        ],
+        "type": "SIMPLE_TABLE",
+        "newRowButtonText": "Add property"
+      }
+    ],
+    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can add to the call.",
+    "enablingConditions": [
+      {
+        "paramName": "actionSource",
+        "paramValue": "app",
+        "type": "EQUALS"
+      }
+    ]
+  },
+  {
     "displayName": "Custom Data",
     "name": "customDataListGroup",
     "groupStyle": "ZIPPY_CLOSED",
     "type": "GROUP",
     "subParams": [
+      {
+        "type": "LABEL",
+        "name": "customDataLabel",
+        "displayName": "Standard Parameters that you can send to Meta you can find \u003ca target\u003d\"_blank\" href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\"\u003eby this link\u003c/a\u003e."
+      },
       {
         "name": "customDataList",
         "simpleTableColumns": [
@@ -539,7 +674,7 @@ if (!fbp && data.generateFbp) {
     generateRandom(1000000000, 2147483647);
 }
 
-const apiVersion = '16.0';
+const apiVersion = '17.0';
 const postUrl =
   'https://graph.facebook.com/v' +
   apiVersion +
@@ -550,7 +685,7 @@ const postUrl =
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.0.0',
+  partner_agent: 'stape-gtmss-2.1.0',
 };
 
 if (eventData.test_event_code || data.testId) {
@@ -589,7 +724,6 @@ if (fbc) {
 if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
-
 sendHttpRequest(
   postUrl,
   (statusCode, headers, body) => {
@@ -617,8 +751,6 @@ sendHttpRequest(
   { headers: { 'content-type': 'application/json' }, method: 'POST' },
   JSON.stringify(postBody)
 );
-
-
 
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
@@ -673,14 +805,18 @@ function mapEvent(eventData, data) {
 
   let mappedData = {
     event_name: eventName,
-    action_source: 'website',
-    event_source_url: eventData.page_location,
+    action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
     custom_data: {},
-    user_data: {
-      client_user_agent: eventData.user_agent,
-    },
+    user_data: {},
   };
+
+  if (mappedData.action_source === 'app') {
+    mappedData.app_data = {};
+  }
+
+  if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
+  if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
 
   if (eventData.ip_override) {
     mappedData.user_data.client_ip_address = eventData.ip_override
@@ -692,10 +828,11 @@ function mapEvent(eventData, data) {
   if (fbc) mappedData.user_data.fbc = fbc;
   if (fbp) mappedData.user_data.fbp = fbp;
 
-  mappedData = addServerEventData(eventData, data, mappedData);
+  mappedData = addServerEventData(eventData, mappedData);
   mappedData = addUserData(eventData, mappedData);
+  mappedData = addAppData(eventData, mappedData);
   mappedData = addEcommerceData(eventData, mappedData);
-  mappedData = overrideDataIfNeeded(data, mappedData);
+  mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
 
@@ -780,7 +917,7 @@ function hashDataIfNeeded(mappedData) {
   return mappedData;
 }
 
-function overrideDataIfNeeded(data, mappedData) {
+function overrideDataIfNeeded(mappedData) {
   if (data.userDataList) {
     data.userDataList.forEach((d) => {
       mappedData.user_data[d.name] = d.value;
@@ -790,6 +927,12 @@ function overrideDataIfNeeded(data, mappedData) {
   if (data.customDataList) {
     data.customDataList.forEach((d) => {
       mappedData.custom_data[d.name] = d.value;
+    });
+  }
+
+  if (data.appDataList && mappedData.action_source === 'app') {
+    data.appDataList.forEach((d) => {
+      mappedData.app_data[d.name] = d.value;
     });
   }
 
@@ -819,6 +962,18 @@ function cleanupData(mappedData) {
     }
 
     mappedData.custom_data = customData;
+  }
+
+  if (mappedData.app_data) {
+    let appData = {};
+
+    for (let appDataKey in mappedData.app_data) {
+      if (isValidValue(mappedData.app_data[appDataKey])) {
+        appData[appDataKey] = mappedData.app_data[appDataKey];
+      }
+    }
+
+    mappedData.app_data = appData;
   }
 
   return mappedData;
@@ -884,6 +1039,7 @@ function addEcommerceData(eventData, mappedData) {
 
   if (eventData.search_term)
     mappedData.custom_data.search_string = eventData.search_term;
+
   if (eventData.transaction_id)
     mappedData.custom_data.order_id = eventData.transaction_id;
 
@@ -912,6 +1068,12 @@ function addUserData(eventData, mappedData) {
   }
   if (eventData.fb_login_id)
     mappedData.user_data.fb_login_id = eventData.fb_login_id;
+
+  if (eventData.anon_id)
+    mappedData.user_data.anon_id = eventData.anon_id;
+
+  if (eventData.madid)
+    mappedData.user_data.madid = eventData.madid;
 
   if (eventData.external_id)
     mappedData.user_data.external_id = eventData.external_id;
@@ -978,7 +1140,7 @@ function addUserData(eventData, mappedData) {
   return mappedData;
 }
 
-function addServerEventData(eventData, data, mappedData) {
+function addServerEventData(eventData, mappedData) {
   let serverEventDataList = {};
 
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
@@ -992,8 +1154,6 @@ function addServerEventData(eventData, data, mappedData) {
   }
 
   if (serverEventDataList) {
-    if (serverEventDataList.action_source)
-      mappedData.action_source = serverEventDataList.action_source;
     if (serverEventDataList.event_time)
       mappedData.event_time = serverEventDataList.event_time;
     if (serverEventDataList.event_source_url)
@@ -1015,6 +1175,45 @@ function addServerEventData(eventData, data, mappedData) {
           serverEventDataList.data_processing_options_state;
     }
   }
+
+  return mappedData;
+}
+
+function addAppData(eventData, mappedData) {
+  if (mappedData.action_source !== 'app') {
+    return mappedData;
+  }
+
+  if (getType(eventData.app_data) === 'object') {
+    mappedData.app_data = eventData.app_data;
+
+    return mappedData;
+  }
+
+  if (eventData.advertiser_tracking_enabled)
+    mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled;
+
+  if (eventData.application_tracking_enabled)
+    mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled;
+
+  if (eventData.extinfo)
+    mappedData.app_data.extinfo = eventData.extinfo;
+
+  if (eventData.campaign_ids)
+    mappedData.app_data.campaign_ids = eventData.campaign_ids;
+
+  if (eventData.install_referrer)
+    mappedData.app_data.install_referrer = eventData.install_referrer;
+
+  if (eventData.installer_package)
+    mappedData.app_data.installer_package = eventData.installer_package;
+
+  if (eventData.url_schemes)
+    mappedData.app_data.url_schemes = eventData.url_schemes;
+
+  if (eventData.windows_attribution_id)
+    mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
+
 
   return mappedData;
 }

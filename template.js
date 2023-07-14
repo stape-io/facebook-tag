@@ -68,7 +68,7 @@ if (!fbp && data.generateFbp) {
     generateRandom(1000000000, 2147483647);
 }
 
-const apiVersion = '16.0';
+const apiVersion = '17.0';
 const postUrl =
   'https://graph.facebook.com/v' +
   apiVersion +
@@ -79,7 +79,7 @@ const postUrl =
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.0.0',
+  partner_agent: 'stape-gtmss-2.1.0',
 };
 
 if (eventData.test_event_code || data.testId) {
@@ -199,14 +199,18 @@ function mapEvent(eventData, data) {
 
   let mappedData = {
     event_name: eventName,
-    action_source: 'website',
-    event_source_url: eventData.page_location,
+    action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
     custom_data: {},
-    user_data: {
-      client_user_agent: eventData.user_agent,
-    },
+    user_data: {},
   };
+
+  if (mappedData.action_source === 'app') {
+    mappedData.app_data = {};
+  }
+
+  if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
+  if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
 
   if (eventData.ip_override) {
     mappedData.user_data.client_ip_address = eventData.ip_override
@@ -218,10 +222,11 @@ function mapEvent(eventData, data) {
   if (fbc) mappedData.user_data.fbc = fbc;
   if (fbp) mappedData.user_data.fbp = fbp;
 
-  mappedData = addServerEventData(eventData, data, mappedData);
+  mappedData = addServerEventData(eventData, mappedData);
   mappedData = addUserData(eventData, mappedData);
+  mappedData = addAppData(eventData, mappedData);
   mappedData = addEcommerceData(eventData, mappedData);
-  mappedData = overrideDataIfNeeded(data, mappedData);
+  mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
 
@@ -306,7 +311,7 @@ function hashDataIfNeeded(mappedData) {
   return mappedData;
 }
 
-function overrideDataIfNeeded(data, mappedData) {
+function overrideDataIfNeeded(mappedData) {
   if (data.userDataList) {
     data.userDataList.forEach((d) => {
       mappedData.user_data[d.name] = d.value;
@@ -316,6 +321,12 @@ function overrideDataIfNeeded(data, mappedData) {
   if (data.customDataList) {
     data.customDataList.forEach((d) => {
       mappedData.custom_data[d.name] = d.value;
+    });
+  }
+
+  if (data.appDataList && mappedData.action_source === 'app') {
+    data.appDataList.forEach((d) => {
+      mappedData.app_data[d.name] = d.value;
     });
   }
 
@@ -345,6 +356,18 @@ function cleanupData(mappedData) {
     }
 
     mappedData.custom_data = customData;
+  }
+
+  if (mappedData.app_data) {
+    let appData = {};
+
+    for (let appDataKey in mappedData.app_data) {
+      if (isValidValue(mappedData.app_data[appDataKey])) {
+        appData[appDataKey] = mappedData.app_data[appDataKey];
+      }
+    }
+
+    mappedData.app_data = appData;
   }
 
   return mappedData;
@@ -410,6 +433,7 @@ function addEcommerceData(eventData, mappedData) {
 
   if (eventData.search_term)
     mappedData.custom_data.search_string = eventData.search_term;
+
   if (eventData.transaction_id)
     mappedData.custom_data.order_id = eventData.transaction_id;
 
@@ -438,6 +462,12 @@ function addUserData(eventData, mappedData) {
   }
   if (eventData.fb_login_id)
     mappedData.user_data.fb_login_id = eventData.fb_login_id;
+
+  if (eventData.anon_id)
+    mappedData.user_data.anon_id = eventData.anon_id;
+
+  if (eventData.madid)
+    mappedData.user_data.madid = eventData.madid;
 
   if (eventData.external_id)
     mappedData.user_data.external_id = eventData.external_id;
@@ -504,7 +534,7 @@ function addUserData(eventData, mappedData) {
   return mappedData;
 }
 
-function addServerEventData(eventData, data, mappedData) {
+function addServerEventData(eventData, mappedData) {
   let serverEventDataList = {};
 
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
@@ -518,8 +548,6 @@ function addServerEventData(eventData, data, mappedData) {
   }
 
   if (serverEventDataList) {
-    if (serverEventDataList.action_source)
-      mappedData.action_source = serverEventDataList.action_source;
     if (serverEventDataList.event_time)
       mappedData.event_time = serverEventDataList.event_time;
     if (serverEventDataList.event_source_url)
@@ -541,6 +569,45 @@ function addServerEventData(eventData, data, mappedData) {
           serverEventDataList.data_processing_options_state;
     }
   }
+
+  return mappedData;
+}
+
+function addAppData(eventData, mappedData) {
+  if (mappedData.action_source !== 'app') {
+    return mappedData;
+  }
+
+  if (getType(eventData.app_data) === 'object') {
+    mappedData.app_data = eventData.app_data;
+
+    return mappedData;
+  }
+
+  if (eventData.advertiser_tracking_enabled)
+    mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled;
+
+  if (eventData.application_tracking_enabled)
+    mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled;
+
+  if (eventData.extinfo)
+    mappedData.app_data.extinfo = eventData.extinfo;
+
+  if (eventData.campaign_ids)
+    mappedData.app_data.campaign_ids = eventData.campaign_ids;
+
+  if (eventData.install_referrer)
+    mappedData.app_data.install_referrer = eventData.install_referrer;
+
+  if (eventData.installer_package)
+    mappedData.app_data.installer_package = eventData.installer_package;
+
+  if (eventData.url_schemes)
+    mappedData.app_data.url_schemes = eventData.url_schemes;
+
+  if (eventData.windows_attribution_id)
+    mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
+
 
   return mappedData;
 }
