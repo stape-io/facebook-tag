@@ -961,6 +961,8 @@ function cleanupData(mappedData) {
       }
     }
 
+    if (customData.value === 0 || customData.value === '0') customData.value = '0.00';
+
     mappedData.custom_data = customData;
   }
 
