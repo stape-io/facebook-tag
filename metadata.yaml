@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: cddd6fe15a357fc2e8e7bc70d5d5b5f026c83795
+    changeNotes: Add EventEnhancement option
   - sha: 6e567485dd161d2ca270b61c6da49280905b5b92
     changeNotes: Fix issue with integer value
   - sha: 65ef2f6e3510da8c910d7c024eca04af7372005c
