@@ -200,6 +200,10 @@ ___TEMPLATE_PARAMETERS___
         "displayValue": "System Generated"
       },
       {
+        "value": "business_messaging",
+        "displayValue": "Business Messaging"
+      },
+      {
         "value": "other",
         "displayValue": "Other"
       }
@@ -211,6 +215,36 @@ ___TEMPLATE_PARAMETERS___
       }
     ],
     "defaultValue": "website"
+  },
+  {
+    "type": "SELECT",
+    "name": "messaging_channel",
+    "displayName": "Messaging Channel",
+    "macrosInSelect": false,
+    "selectItems": [
+      {
+        "value": "messenger",
+        "displayValue": "Messenger"
+      },
+      {
+        "value": "whatsapp",
+        "displayValue": "WhatsApp"
+      }
+    ],
+    "simpleValueType": true,
+    "defaultValue": "messenger",
+    "enablingConditions": [
+      {
+        "paramName": "actionSource",
+        "paramValue": "business_messaging",
+        "type": "EQUALS"
+      }
+    ],
+    "valueValidators": [
+      {
+        "type": "NON_EMPTY"
+      }
+    ]
   },
   {
     "type": "TEXT",
@@ -443,6 +477,18 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "madid",
                 "displayValue": "Mobile Advertiser ID"
+              },
+              {
+                "value": "page_id",
+                "displayValue": "Page ID"
+              },
+              {
+                "value": "page_scoped_user_id",
+                "displayValue": "Page Scoped User ID"
+              },
+              {
+                "value": "ctwa_clid",
+                "displayValue": "Ctwa clid"
               }
             ]
           },
@@ -664,7 +710,7 @@ if (!fbp && data.generateFbp) {
   fbp = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
 }
 
-const apiVersion = '17.0';
+const apiVersion = '18.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 const mappedEventData = mapEvent(eventData, data);
 
@@ -805,6 +851,10 @@ function mapEvent(eventData, data) {
     mappedData.app_data = {};
   }
 
+  if (mappedData.action_source === 'business_messaging') {
+    mappedData.messaging_channel = data.messaging_channel;
+  }
+
   if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
   if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
 
@@ -886,19 +936,9 @@ function hashData(key, value) {
 
 function hashDataIfNeeded(mappedData) {
   if (mappedData.user_data) {
+    const keysToHash = ['em', 'ph', 'ge', 'db', 'ln', 'fn', 'ct', 'st', 'zp', 'country'];
     for (let key in mappedData.user_data) {
-      if (
-        key === 'em' ||
-        key === 'ph' ||
-        key === 'ge' ||
-        key === 'db' ||
-        key === 'ln' ||
-        key === 'fn' ||
-        key === 'ct' ||
-        key === 'st' ||
-        key === 'zp' ||
-        key === 'country'
-      ) {
+      if (keysToHash.indexOf(key) !== -1) {
         mappedData.user_data[key] = hashData(key, mappedData.user_data[key]);
       }
     }
