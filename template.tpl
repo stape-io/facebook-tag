@@ -1027,7 +1027,7 @@ function addEcommerceData(eventData, mappedData) {
 
     if (!eventData.items[1]) {
       if (eventData.items[0].item_name) mappedData.custom_data.content_name = eventData.items[0].item_name;
-      if (eventData.items[0].item_category) mappedData.custom_data.content_category = eventData.items[0].item_category;
+      if (eventData.items[0].item_category) mappedData.custom_data.content_category = mapItemCategoriesToContentCategory(eventData.items[0]);
 
       if (eventData.items[0].price) {
         mappedData.custom_data.value = eventData.items[0].quantity
@@ -1043,7 +1043,7 @@ function addEcommerceData(eventData, mappedData) {
       if (d.item_name) content.title = d.item_name;
       if (d.item_brand) content.brand = d.item_brand;
       if (d.quantity) content.quantity = d.quantity;
-      if (d.item_category) content.category = d.item_category;
+      if (d.item_category) content.category = mapItemCategoriesToContentCategory(d);
 
       if (d.price) {
         content.item_price = makeNumber(d.price);
@@ -1258,6 +1258,16 @@ function enhanceEventData(userData) {
   }
 
   return userData;
+}
+
+function mapItemCategoriesToContentCategory(item) {
+  const categories = [item.item_category];
+  let categoryLevel = 2;
+  while (item['item_category' + categoryLevel]) {
+    categories.push(item['item_category' + categoryLevel]);
+    categoryLevel++;
+  }
+  return categories.filter(category => !!category).join(' > ');
 }
 
 function determinateIsLoggingEnabled() {
