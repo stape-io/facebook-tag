@@ -1628,6 +1628,51 @@ ___SERVER_PERMISSIONS___
                     "string": "referer"
                   }
                 ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "headerName"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "X-Appengine-Country"
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "headerName"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "X-Appengine-Region"
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "headerName"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "X-Appengine-City"
+                  }
+                ]
               }
             ]
           }
@@ -1688,5 +1733,3 @@ setup: ''
 ___NOTES___
 
 Created on 10/11/2020, 18:14:02
-
-
