@@ -19,6 +19,8 @@ const makeString = require('makeString');
 const makeNumber = require('makeNumber');
 const toBase64 = require('toBase64');
 const fromBase64 = require('fromBase64');
+const createRegex = require('createRegex');
+const testRegex = require('testRegex');
 
 const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
@@ -257,17 +259,7 @@ function hashData(key, value) {
   value = makeString(value).trim().toLowerCase();
 
   if (key === 'ph') {
-    value = value
-      .split(' ')
-      .join('')
-      .split('-')
-      .join('')
-      .split('(')
-      .join('')
-      .split(')')
-      .join('')
-      .split('+')
-      .join('');
+    value = normalizePhoneNumber(value);
   } else if (key === 'ct') {
     value = value.split(' ').join('');
   }
@@ -599,6 +591,14 @@ function enhanceEventData(userData) {
   }
 
   return userData;
+}
+
+function normalizePhoneNumber(phoneNumber) {
+  if (!phoneNumber) return phoneNumber;
+  const itemRegex = createRegex('^[0-9]$');
+  return phoneNumber.split('')
+    .filter((item) => testRegex(itemRegex, item))
+    .join('');
 }
 
 function determinateIsLoggingEnabled() {
