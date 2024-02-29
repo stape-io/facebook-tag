@@ -625,6 +625,31 @@ ___TEMPLATE_PARAMETERS___
     "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can add to the call."
   },
   {
+    "type": "GROUP",
+    "name": "consentSettingsGroup",
+    "displayName": "Consent Settings",
+    "groupStyle": "ZIPPY_CLOSED",
+    "subParams": [
+      {
+        "type": "RADIO",
+        "name": "adStorageConsent",
+        "displayName": "",
+        "radioItems": [
+          {
+            "value": "optional",
+            "displayValue": "Send data always"
+          },
+          {
+            "value": "required",
+            "displayValue": "Send data in case marketing consent given"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "optional"
+      }
+    ]
+  },
+  {
     "displayName": "Logs Settings",
     "name": "logsGroup",
     "groupStyle": "ZIPPY_CLOSED",
@@ -685,6 +710,11 @@ const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
 
 const eventData = getAllEventData();
+
+if(!isConsentGivenOrNotRequired()) {
+  return data.gtmOnSuccess();
+}
+
 const url = eventData.page_location || getRequestHeader('referer');
 const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
 
@@ -741,7 +771,7 @@ if (isLoggingEnabled) {
       EventName: mappedEventData.event_name,
       RequestMethod: 'POST',
       RequestUrl: postUrl,
-      RequestBody: postBody,
+      RequestBody: postBody
     })
   );
 }
@@ -752,7 +782,7 @@ const cookieOptions = {
   samesite: 'Lax',
   secure: true,
   'max-age': 7776000, // 90 days
-  HttpOnly: !!data.useHttpOnlyCookie,
+  HttpOnly: !!data.useHttpOnlyCookie
 };
 
 if (fbc) {
@@ -774,7 +804,7 @@ sendHttpRequest(
           EventName: mappedEventData.event_name,
           ResponseStatusCode: statusCode,
           ResponseHeaders: headers,
-          ResponseBody: body,
+          ResponseBody: body
         })
       );
     }
@@ -793,6 +823,7 @@ sendHttpRequest(
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
 }
+
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
     let eventName = eventData.event_name;
@@ -823,7 +854,7 @@ function getEventName(data) {
       'gtm4wp.productClickEEC': 'ViewContent',
       'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
       'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
-      'gtm4wp.orderCompletedEEC': 'Purchase',
+      'gtm4wp.orderCompletedEEC': 'Purchase'
     };
 
     if (!gaToFacebookEventName[eventName]) {
@@ -846,7 +877,7 @@ function mapEvent(eventData, data) {
     action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
     custom_data: {},
-    user_data: {},
+    user_data: {}
   };
 
   if (mappedData.action_source === 'app') {
@@ -1212,7 +1243,7 @@ function setGtmEecCookie(userData) {
     samesite: 'strict',
     secure: true,
     'max-age': 7776000, // 90 days
-    HttpOnly: true,
+    HttpOnly: true
   });
 }
 
@@ -1258,6 +1289,13 @@ function normalizePhoneNumber(phoneNumber) {
   return phoneNumber.split('')
     .filter((item) => testRegex(itemRegex, item))
     .join('');
+}
+
+function isConsentGivenOrNotRequired() {
+  if (data.adStorageConsent !== 'required') return true;
+  if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
+  const xGaGcs = getRequestHeader('x-ga-gcs') || ''; // x-ga-gcs is a string like "G110"
+  return xGaGcs[3] === '1';
 }
 
 function determinateIsLoggingEnabled() {
@@ -1614,6 +1652,21 @@ ___SERVER_PERMISSIONS___
                   {
                     "type": 1,
                     "string": "referer"
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "headerName"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "x-ga-gcs"
                   }
                 ]
               }
