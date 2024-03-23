@@ -21,6 +21,7 @@ const toBase64 = require('toBase64');
 const fromBase64 = require('fromBase64');
 const createRegex = require('createRegex');
 const testRegex = require('testRegex');
+const Promise = require('Promise');
 
 const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
@@ -53,8 +54,23 @@ if (!fbp && data.generateFbp) {
   fbp = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
 }
 
-const apiVersion = '18.0';
-const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
+const cookieOptions = {
+  domain: 'auto',
+  path: '/',
+  samesite: 'Lax',
+  secure: true,
+  'max-age': 7776000, // 90 days
+  HttpOnly: !!data.useHttpOnlyCookie,
+};
+
+if (fbc) {
+  setCookie('_fbc', fbc, cookieOptions);
+}
+
+if (fbp) {
+  setCookie('_fbp', fbp, cookieOptions);
+}
+
 const mappedEventData = mapEvent(eventData, data);
 
 if (data.enableEventEnhancement) {
@@ -73,67 +89,81 @@ if (eventData.test_event_code || data.testId) {
     : data.testId;
 }
 
-if (isLoggingEnabled) {
-  logToConsole(
-    JSON.stringify({
-      Name: 'Facebook',
-      Type: 'Request',
-      TraceId: traceId,
-      EventName: mappedEventData.event_name,
-      RequestMethod: 'POST',
-      RequestUrl: postUrl,
-      RequestBody: postBody,
-    })
+const flattenedPixelIdAndAccessTokenList = flattenPixelIdAndAccessTokenList(data.pixelIdAndAccessTokenTable);
+
+const requests = flattenedPixelIdAndAccessTokenList.map((pixelIdAndAccessTokenObj) => {
+  const pixelId = pixelIdAndAccessTokenObj.pixelId;
+  const accessToken = pixelIdAndAccessTokenObj.accessToken;
+  const apiVersion = '18.0';
+  const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(pixelId) + '/events?access_token=' + enc(accessToken);
+  if (isLoggingEnabled) {
+    logToConsole(
+      JSON.stringify({
+        Name: 'Facebook',
+        Type: 'Request',
+        TraceId: traceId,
+        EventName: mappedEventData.event_name,
+        RequestMethod: 'POST',
+        RequestUrl: postUrl,
+        RequestBody: postBody,
+      })
+    );
+  }
+  return sendHttpRequest(
+    postUrl,
+    { headers: { 'content-type': 'application/json' }, method: 'POST' },
+    JSON.stringify(postBody)
   );
-}
+});
 
-const cookieOptions = {
-  domain: 'auto',
-  path: '/',
-  samesite: 'Lax',
-  secure: true,
-  'max-age': 7776000, // 90 days
-  HttpOnly: !!data.useHttpOnlyCookie,
-};
-
-if (fbc) {
-  setCookie('_fbc', fbc, cookieOptions);
-}
-
-if (fbp) {
-  setCookie('_fbp', fbp, cookieOptions);
-}
-sendHttpRequest(
-  postUrl,
-  (statusCode, headers, body) => {
-    if (isLoggingEnabled) {
-      logToConsole(
-        JSON.stringify({
-          Name: 'Facebook',
-          Type: 'Response',
-          TraceId: traceId,
-          EventName: mappedEventData.event_name,
-          ResponseStatusCode: statusCode,
-          ResponseHeaders: headers,
-          ResponseBody: body,
-        })
-      );
-    }
+Promise.all(requests)
+  .then((results) => {
+    let someRequestFailed = false;
+  
+    results.forEach((result) => {
+      if (isLoggingEnabled) {
+        logToConsole(
+          JSON.stringify({
+            Name: 'Facebook',
+            Type: 'Response',
+            TraceId: traceId,
+            EventName: mappedEventData.event_name,
+            ResponseStatusCode: result.statusCode,
+            ResponseHeaders: result.headers,
+            ResponseBody: result.body,
+          })
+        );
+      }
+      
+      if (result.statusCode < 200 || result.statusCode >= 300) {
+        someRequestFailed = true;
+        logToConsole(
+          JSON.stringify({
+            Name: 'Facebook',
+            Type: 'Response',
+            TraceId: traceId,
+            EventName: mappedEventData.event_name,
+            ResponseStatusCode: result.statusCode,
+            ResponseHeaders: result.headers,
+            ResponseBody: result.body,
+          })
+        );
+      }
+    });
+  
     if (!data.useOptimisticScenario) {
-      if (statusCode >= 200 && statusCode < 300) {
-        data.gtmOnSuccess();
-      } else {
+      if (someRequestFailed) {
         data.gtmOnFailure();
+      } else {
+        data.gtmOnSuccess();
       }
     }
-  },
-  { headers: { 'content-type': 'application/json' }, method: 'POST' },
-  JSON.stringify(postBody)
-);
+  });
 
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
 }
+
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
     let eventName = eventData.event_name;
@@ -621,4 +651,48 @@ function determinateIsLoggingEnabled() {
   }
 
   return data.logType === 'always';
+}
+
+function flattenPixelIdAndAccessTokenList(pixelIdAndAccessTokenArray) {
+  /*
+    Input:
+    [
+      { pixelId: '111111', accessToken: 'aaaaaaa' },                - OK
+      { pixelId: '222222', accessToken: 'bbbbbbb' },                - OK
+      { pixelId: '333333,444444', accessToken: 'ccccccc' },         - OK
+      { pixelId: '555555,666666', accessToken: 'ddddddd,eeeeeee' }  - OK
+      { pixelId: '555555', accessToken: 'ddddddd,eeeeeee' }         - Not OK. The code will not handle this scenario.
+    ]
+    
+    Expected output:
+    [
+      { pixelId: '111111', accessToken: 'aaaaaaa' },
+      { pixelId: '222222', accessToken: 'bbbbbbb' },
+      { pixelId: '333333', accessToken: 'ccccccc' },
+      { pixelId: '444444', accessToken: 'ccccccc' },
+      { pixelId: '555555', accessToken: 'ddddddd' }
+      { pixelId: '666666', accessToken: 'eeeeeee' }
+    ]
+  */
+  const isValid = (id) => {
+    return !(!id || id.indexOf('undefined') !== -1 || id.indexOf('null') !== -1);
+  };
+  
+  const flattenedPixelIdAndAccessTokenList = 
+    pixelIdAndAccessTokenArray
+    .reduce((acc, currentPixelIdAndAccesTokenObj) => {
+      const pixelIds = (currentPixelIdAndAccesTokenObj.pixelId || '').split(',');
+      const accessTokens = (currentPixelIdAndAccesTokenObj.accessToken || '').split(',');
+      pixelIds.forEach((pixelId, index) => {
+        acc.push({
+          pixelId: pixelId.trim(), 
+          accessToken: (accessTokens.length > 1 ? accessTokens[index] : accessTokens[0]).trim()
+        });
+      });
+      return acc;
+    }, [])
+    .filter(pixelIdAndAccessTokenObj => {
+      return isValid(pixelIdAndAccessTokenObj.pixelId) && isValid(pixelIdAndAccessTokenObj.accessToken);
+    });
+  return flattenedPixelIdAndAccessTokenList;
 }
