@@ -1,6 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
-  - sha: 0beaf3b9270708515cb2035c1ae14b0de438107c
+  - sha: fb581b23ff67bd9986bdde03a6cb5decbb85b74b
     changeNotes: Add support for multiple Pixel IDs and API Access Tokens
   - sha: 44b60bf1f406af83ee98144b192d43b6c052308c
     changeNotes: Version update, Business messenger support
