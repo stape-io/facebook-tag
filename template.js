@@ -27,6 +27,11 @@ const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
 
 const eventData = getAllEventData();
+
+if(!isConsentGivenOrNotRequired()) {
+  return data.gtmOnSuccess();
+}
+
 const url = eventData.page_location || getRequestHeader('referer');
 const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
 
@@ -54,13 +59,30 @@ if (!fbp && data.generateFbp) {
   fbp = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
 }
 
+const mappedEventData = mapEvent(eventData, data);
+const postBody = {
+  data: [mappedEventData],
+  partner_agent: 'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+};
+
+if (data.enableEventEnhancement) {
+  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
+  setGtmEecCookie(mappedEventData.user_data);
+}
+
+if (eventData.test_event_code || data.testId) {
+  postBody.test_event_code = eventData.test_event_code
+    ? eventData.test_event_code
+    : data.testId;
+}
+
 const cookieOptions = {
   domain: 'auto',
   path: '/',
   samesite: 'Lax',
   secure: true,
   'max-age': 7776000, // 90 days
-  HttpOnly: !!data.useHttpOnlyCookie,
+  HttpOnly: !!data.useHttpOnlyCookie
 };
 
 if (fbc) {
@@ -71,27 +93,15 @@ if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
 
-const mappedEventData = mapEvent(eventData, data);
+const apiVersion = '18.0';
+const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 
-if (data.enableEventEnhancement) {
-  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
-  setGtmEecCookie(mappedEventData.user_data);
+const pixelIdsAndAccessTokens = [{ pixelId: data.pixelId, accessToken: data.accessToken }];
+if (data.enableMultipixelSetup) {
+  pixelIdsAndAccessTokens.concat(data.pixelIdAndAccessTokenTable);
 }
 
-const postBody = {
-  data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
-};
-
-if (eventData.test_event_code || data.testId) {
-  postBody.test_event_code = eventData.test_event_code
-    ? eventData.test_event_code
-    : data.testId;
-}
-
-const flattenedPixelIdAndAccessTokenList = flattenPixelIdAndAccessTokenList(data.pixelIdAndAccessTokenTable);
-
-const requests = flattenedPixelIdAndAccessTokenList.map((pixelIdAndAccessTokenObj) => {
+const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   const pixelId = pixelIdAndAccessTokenObj.pixelId;
   const accessToken = pixelIdAndAccessTokenObj.accessToken;
   const apiVersion = '18.0';
@@ -117,48 +127,37 @@ const requests = flattenedPixelIdAndAccessTokenList.map((pixelIdAndAccessTokenOb
 });
 
 Promise.all(requests)
-  .then((results) => {
-    let someRequestFailed = false;
-  
-    results.forEach((result) => {
-      if (isLoggingEnabled) {
-        logToConsole(
-          JSON.stringify({
-            Name: 'Facebook',
-            Type: 'Response',
-            TraceId: traceId,
-            EventName: mappedEventData.event_name,
-            ResponseStatusCode: result.statusCode,
-            ResponseHeaders: result.headers,
-            ResponseBody: result.body,
-          })
-        );
-      }
-      
-      if (result.statusCode < 200 || result.statusCode >= 300) {
-        someRequestFailed = true;
-        logToConsole(
-          JSON.stringify({
-            Name: 'Facebook',
-            Type: 'Response',
-            TraceId: traceId,
-            EventName: mappedEventData.event_name,
-            ResponseStatusCode: result.statusCode,
-            ResponseHeaders: result.headers,
-            ResponseBody: result.body,
-          })
-        );
-      }
-    });
-  
-    if (!data.useOptimisticScenario) {
-      if (someRequestFailed) {
-        data.gtmOnFailure();
-      } else {
-        data.gtmOnSuccess();
-      }
+.then((results) => {
+  let someRequestFailed = false;
+
+  results.forEach((result) => {
+    if (isLoggingEnabled) {
+      logToConsole(
+        JSON.stringify({
+          Name: 'Facebook',
+          Type: 'Response',
+          TraceId: traceId,
+          EventName: mappedEventData.event_name,
+          ResponseStatusCode: result.statusCode,
+          ResponseHeaders: result.headers,
+          ResponseBody: result.body,
+        })
+      );
+    }
+
+    if (result.statusCode < 200 || result.statusCode >= 300) {
+      someRequestFailed = true;
     }
   });
+
+  if (!data.useOptimisticScenario) {
+    if (someRequestFailed) {
+      data.gtmOnFailure();
+    } else {
+      data.gtmOnSuccess();
+    }
+  }
+});
 
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
@@ -194,7 +193,7 @@ function getEventName(data) {
       'gtm4wp.productClickEEC': 'ViewContent',
       'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
       'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
-      'gtm4wp.orderCompletedEEC': 'Purchase',
+      'gtm4wp.orderCompletedEEC': 'Purchase'
     };
 
     if (!gaToFacebookEventName[eventName]) {
@@ -217,7 +216,7 @@ function mapEvent(eventData, data) {
     action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
     custom_data: {},
-    user_data: {},
+    user_data: {}
   };
 
   if (mappedData.action_source === 'app') {
@@ -583,7 +582,7 @@ function setGtmEecCookie(userData) {
     samesite: 'strict',
     secure: true,
     'max-age': 7776000, // 90 days
-    HttpOnly: true,
+    HttpOnly: true
   });
 }
 
@@ -631,6 +630,13 @@ function normalizePhoneNumber(phoneNumber) {
     .join('');
 }
 
+function isConsentGivenOrNotRequired() {
+  if (data.adStorageConsent !== 'required') return true;
+  if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
+  const xGaGcs = getRequestHeader('x-ga-gcs') || ''; // x-ga-gcs is a string like "G110"
+  return xGaGcs[3] === '1';
+}
+
 function determinateIsLoggingEnabled() {
   const containerVersion = getContainerVersion();
   const isDebug = !!(
@@ -651,48 +657,4 @@ function determinateIsLoggingEnabled() {
   }
 
   return data.logType === 'always';
-}
-
-function flattenPixelIdAndAccessTokenList(pixelIdAndAccessTokenArray) {
-  /*
-    Input:
-    [
-      { pixelId: '111111', accessToken: 'aaaaaaa' },                - OK
-      { pixelId: '222222', accessToken: 'bbbbbbb' },                - OK
-      { pixelId: '333333,444444', accessToken: 'ccccccc' },         - OK
-      { pixelId: '555555,666666', accessToken: 'ddddddd,eeeeeee' }  - OK
-      { pixelId: '555555', accessToken: 'ddddddd,eeeeeee' }         - Not OK. The code will not handle this scenario.
-    ]
-    
-    Expected output:
-    [
-      { pixelId: '111111', accessToken: 'aaaaaaa' },
-      { pixelId: '222222', accessToken: 'bbbbbbb' },
-      { pixelId: '333333', accessToken: 'ccccccc' },
-      { pixelId: '444444', accessToken: 'ccccccc' },
-      { pixelId: '555555', accessToken: 'ddddddd' }
-      { pixelId: '666666', accessToken: 'eeeeeee' }
-    ]
-  */
-  const isValid = (id) => {
-    return !(!id || id.indexOf('undefined') !== -1 || id.indexOf('null') !== -1);
-  };
-  
-  const flattenedPixelIdAndAccessTokenList = 
-    pixelIdAndAccessTokenArray
-    .reduce((acc, currentPixelIdAndAccesTokenObj) => {
-      const pixelIds = (currentPixelIdAndAccesTokenObj.pixelId || '').split(',');
-      const accessTokens = (currentPixelIdAndAccesTokenObj.accessToken || '').split(',');
-      pixelIds.forEach((pixelId, index) => {
-        acc.push({
-          pixelId: pixelId.trim(), 
-          accessToken: (accessTokens.length > 1 ? accessTokens[index] : accessTokens[0]).trim()
-        });
-      });
-      return acc;
-    }, [])
-    .filter(pixelIdAndAccessTokenObj => {
-      return isValid(pixelIdAndAccessTokenObj.pixelId) && isValid(pixelIdAndAccessTokenObj.accessToken);
-    });
-  return flattenedPixelIdAndAccessTokenList;
 }
