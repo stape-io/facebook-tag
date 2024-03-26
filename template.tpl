@@ -1,4 +1,4 @@
-﻿___TERMS_OF_SERVICE___
+___TERMS_OF_SERVICE___
 
 By creating or modifying this file you agree to Google Tag Manager's Community
 Template Gallery Developer Terms of Service available at
@@ -268,7 +268,51 @@ ___TEMPLATE_PARAMETERS___
         "type": "NON_EMPTY"
       }
     ],
-    "help": "Set to a valid Facebook Pixel ID. You can only add a single Pixel ID per tag."
+    "help": "Set to a valid Facebook Pixel ID."
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "enableMultipixelSetup",
+    "checkboxText": "Add Multiple Facebook Pixel IDs",
+    "simpleValueType": true,
+    "help": "Add one Facebook Pixel ID and one Access Token per line",
+    "subParams": [
+      {
+        "type": "SIMPLE_TABLE",
+        "name": "pixelIdAndAccessTokenTable",
+        "simpleTableColumns": [
+          {
+            "defaultValue": "",
+            "displayName": "Facebook Pixel ID",
+            "name": "pixelId",
+            "type": "TEXT",
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ]
+          },
+          {
+            "defaultValue": "",
+            "displayName": "API Access Token",
+            "name": "accessToken",
+            "type": "TEXT",
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ]
+          }
+        ],
+        "enablingConditions": [
+          {
+            "paramName": "enableMultipixelSetup",
+            "paramValue": true,
+            "type": "EQUALS"
+          }
+        ]
+      }
+    ]
   },
   {
     "type": "TEXT",
@@ -705,6 +749,7 @@ const toBase64 = require('toBase64');
 const fromBase64 = require('fromBase64');
 const createRegex = require('createRegex');
 const testRegex = require('testRegex');
+const Promise = require('Promise');
 
 const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
@@ -742,38 +787,21 @@ if (!fbp && data.generateFbp) {
   fbp = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
 }
 
-const apiVersion = '18.0';
-const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 const mappedEventData = mapEvent(eventData, data);
+const postBody = {
+  data: [mappedEventData],
+  partner_agent: 'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+};
 
 if (data.enableEventEnhancement) {
   mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
   setGtmEecCookie(mappedEventData.user_data);
 }
 
-const postBody = {
-  data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
-};
-
 if (eventData.test_event_code || data.testId) {
   postBody.test_event_code = eventData.test_event_code
     ? eventData.test_event_code
     : data.testId;
-}
-
-if (isLoggingEnabled) {
-  logToConsole(
-    JSON.stringify({
-      Name: 'Facebook',
-      Type: 'Request',
-      TraceId: traceId,
-      EventName: mappedEventData.event_name,
-      RequestMethod: 'POST',
-      RequestUrl: postUrl,
-      RequestBody: postBody
-    })
-  );
 }
 
 const cookieOptions = {
@@ -792,9 +820,45 @@ if (fbc) {
 if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
-sendHttpRequest(
-  postUrl,
-  (statusCode, headers, body) => {
+
+const apiVersion = '18.0';
+const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
+
+let pixelIdsAndAccessTokens = [{ pixelId: data.pixelId, accessToken: data.accessToken }];
+if (data.enableMultipixelSetup) {
+  pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(data.pixelIdAndAccessTokenTable);
+}
+
+const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
+  const pixelId = pixelIdAndAccessTokenObj.pixelId;
+  const accessToken = pixelIdAndAccessTokenObj.accessToken;
+  const apiVersion = '18.0';
+  const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(pixelId) + '/events?access_token=' + enc(accessToken);
+  if (isLoggingEnabled) {
+    logToConsole(
+      JSON.stringify({
+        Name: 'Facebook',
+        Type: 'Request',
+        TraceId: traceId,
+        EventName: mappedEventData.event_name,
+        RequestMethod: 'POST',
+        RequestUrl: postUrl,
+        RequestBody: postBody,
+      })
+    );
+  }
+  return sendHttpRequest(
+    postUrl,
+    { headers: { 'content-type': 'application/json' }, method: 'POST' },
+    JSON.stringify(postBody)
+  );
+});
+
+Promise.all(requests)
+.then((results) => {
+  let someRequestFailed = false;
+
+  results.forEach((result) => {
     if (isLoggingEnabled) {
       logToConsole(
         JSON.stringify({
@@ -802,23 +866,26 @@ sendHttpRequest(
           Type: 'Response',
           TraceId: traceId,
           EventName: mappedEventData.event_name,
-          ResponseStatusCode: statusCode,
-          ResponseHeaders: headers,
-          ResponseBody: body
+          ResponseStatusCode: result.statusCode,
+          ResponseHeaders: result.headers,
+          ResponseBody: result.body
         })
       );
     }
-    if (!data.useOptimisticScenario) {
-      if (statusCode >= 200 && statusCode < 300) {
-        data.gtmOnSuccess();
-      } else {
-        data.gtmOnFailure();
-      }
+
+    if (result.statusCode < 200 || result.statusCode >= 300) {
+      someRequestFailed = true;
     }
-  },
-  { headers: { 'content-type': 'application/json' }, method: 'POST' },
-  JSON.stringify(postBody)
-);
+  });
+
+  if (!data.useOptimisticScenario) {
+    if (someRequestFailed) {
+      data.gtmOnFailure();
+    } else {
+      data.gtmOnSuccess();
+    }
+  }
+});
 
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
