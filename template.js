@@ -96,9 +96,9 @@ if (fbp) {
 const apiVersion = '18.0';
 const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
 
-const pixelIdsAndAccessTokens = [{ pixelId: data.pixelId, accessToken: data.accessToken }];
+let pixelIdsAndAccessTokens = [{ pixelId: data.pixelId, accessToken: data.accessToken }];
 if (data.enableMultipixelSetup) {
-  pixelIdsAndAccessTokens.concat(data.pixelIdAndAccessTokenTable);
+  pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(data.pixelIdAndAccessTokenTable);
 }
 
 const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
