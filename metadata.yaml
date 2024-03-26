@@ -1,6 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
-  - sha: c434f11ca6ea1d9ce83536130633ddb21720c3ca
+  - sha: b44ac56b2e4066c4a8c47922b63a88e82d73fe9b
     changeNotes: Add support for multiple Pixel IDs and API Access Tokens
   - sha: eddabe8e81fef2235bcdd9c5d38e2a2a714ec681
     changeNotes: Consent settings section.
