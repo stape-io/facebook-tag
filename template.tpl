@@ -868,7 +868,7 @@ Promise.all(requests)
           EventName: mappedEventData.event_name,
           ResponseStatusCode: result.statusCode,
           ResponseHeaders: result.headers,
-          ResponseBody: result.body,
+          ResponseBody: result.body
         })
       );
     }
