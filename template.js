@@ -633,8 +633,8 @@ function normalizePhoneNumber(phoneNumber) {
 function isConsentGivenOrNotRequired() {
   if (data.adStorageConsent !== 'required') return true;
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
-  const xGaGcs = getRequestHeader('x-ga-gcs') || ''; // x-ga-gcs is a string like "G110"
-  return xGaGcs[3] === '1';
+  const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
+  return xGaGcs[2] === '1';
 }
 
 function determinateIsLoggingEnabled() {
