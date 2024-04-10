@@ -334,7 +334,8 @@ ___TEMPLATE_PARAMETERS___
     "type": "CHECKBOX",
     "name": "generateFbp",
     "checkboxText": "Generate _fbp cookie if it not exist",
-    "simpleValueType": true
+    "simpleValueType": true,
+    "defaultValue": true
   },
   {
     "type": "CHECKBOX",
