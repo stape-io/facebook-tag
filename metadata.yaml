@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: f52c18ea4b551123d126179b9436415df80fd7b2
+    changeNotes: gtmeec is turn on by default.
   - sha: 9bd550d560f583805053e794797df3e6e4bb6a4d
     changeNotes: Update default value for generateFbp option.
   - sha: 90497724ccbb843c8f0547dc31c54957d41bbe2b
