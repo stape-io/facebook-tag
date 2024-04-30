@@ -93,9 +93,7 @@ if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
 
-const apiVersion = '18.0';
-const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(data.pixelId) + '/events?access_token=' + enc(data.accessToken);
-
+const apiVersion = '19.0';
 let pixelIdsAndAccessTokens = [{ pixelId: data.pixelId, accessToken: data.accessToken }];
 if (data.enableMultipixelSetup) {
   pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(data.pixelIdAndAccessTokenTable);
@@ -104,7 +102,6 @@ if (data.enableMultipixelSetup) {
 const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   const pixelId = pixelIdAndAccessTokenObj.pixelId;
   const accessToken = pixelIdAndAccessTokenObj.accessToken;
-  const apiVersion = '18.0';
   const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(pixelId) + '/events?access_token=' + enc(accessToken);
   if (isLoggingEnabled) {
     logToConsole(
