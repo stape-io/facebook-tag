@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: b5427f8459f6aac5c56db4b4d95ce2f84b2e4c11
+    changeNotes: Update to API v19.
   - sha: f52c18ea4b551123d126179b9436415df80fd7b2
     changeNotes: gtmeec is turn on by default.
   - sha: 9bd550d560f583805053e794797df3e6e4bb6a4d
