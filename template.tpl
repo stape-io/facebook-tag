@@ -407,6 +407,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "data_processing_options_state",
                 "displayValue": "Data Processing Options State"
+              },
+              {
+                "value": "referrer_url",
+                "displayValue": "Referrer Url"
               }
             ]
           },
@@ -1252,6 +1256,7 @@ function addServerEventData(eventData, mappedData) {
     if (serverEventDataList.event_source_url) mappedData.event_source_url = serverEventDataList.event_source_url;
     if (serverEventDataList.opt_out) mappedData.opt_out = serverEventDataList.opt_out;
     if (serverEventDataList.event_id) mappedData.event_id = serverEventDataList.event_id;
+    if (serverEventDataList.referrer_url) mappedData.referrer_url = serverEventDataList.referrer_url;
 
     if (serverEventDataList.data_processing_options) {
       mappedData.data_processing_options = serverEventDataList.data_processing_options;
