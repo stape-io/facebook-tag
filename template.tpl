@@ -762,12 +762,14 @@ const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
 
 const eventData = getAllEventData();
 
-if(!isConsentGivenOrNotRequired()) {
+if (!isConsentGivenOrNotRequired()) {
   return data.gtmOnSuccess();
 }
 
 const url = eventData.page_location || getRequestHeader('referer');
-const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
+const subDomainIndex = url
+  ? computeEffectiveTldPlusOne(url).split('.').length - 1
+  : 1;
 
 if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
   return data.gtmOnSuccess();
@@ -783,20 +785,38 @@ if (url) {
   const urlParsed = parseUrl(url);
 
   if (urlParsed && urlParsed.searchParams.fbclid) {
-    if (!fbc || (fbc && fbc.split('.')[fbc.split('.').length - 1] !== decodeUriComponent(urlParsed.searchParams.fbclid))) {
-      fbc = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + decodeUriComponent(urlParsed.searchParams.fbclid);
+    if (
+      !fbc ||
+      (fbc &&
+        fbc.split('.')[fbc.split('.').length - 1] !==
+          decodeUriComponent(urlParsed.searchParams.fbclid))
+    ) {
+      fbc =
+        'fb.' +
+        subDomainIndex +
+        '.' +
+        getTimestampMillis() +
+        '.' +
+        decodeUriComponent(urlParsed.searchParams.fbclid);
     }
   }
 }
 
 if (!fbp && data.generateFbp) {
-  fbp = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + generateRandom(1000000000, 2147483647);
+  fbp =
+    'fb.' +
+    subDomainIndex +
+    '.' +
+    getTimestampMillis() +
+    '.' +
+    generateRandom(1000000000, 2147483647);
 }
 
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+  partner_agent:
+    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
 if (data.enableEventEnhancement) {
@@ -828,15 +848,25 @@ if (fbp) {
 }
 
 const apiVersion = '19.0';
-let pixelIdsAndAccessTokens = [{ pixelId: data.pixelId, accessToken: data.accessToken }];
+let pixelIdsAndAccessTokens = [
+  { pixelId: data.pixelId, accessToken: data.accessToken }
+];
 if (data.enableMultipixelSetup) {
-  pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(data.pixelIdAndAccessTokenTable);
+  pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(
+    data.pixelIdAndAccessTokenTable
+  );
 }
 
 const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   const pixelId = pixelIdAndAccessTokenObj.pixelId;
   const accessToken = pixelIdAndAccessTokenObj.accessToken;
-  const postUrl = 'https://graph.facebook.com/v' + apiVersion + '/' + enc(pixelId) + '/events?access_token=' + enc(accessToken);
+  const postUrl =
+    'https://graph.facebook.com/v' +
+    apiVersion +
+    '/' +
+    enc(pixelId) +
+    '/events?access_token=' +
+    enc(accessToken);
   if (isLoggingEnabled) {
     logToConsole(
       JSON.stringify({
@@ -846,7 +876,7 @@ const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
         EventName: mappedEventData.event_name,
         RequestMethod: 'POST',
         RequestUrl: postUrl,
-        RequestBody: postBody,
+        RequestBody: postBody
       })
     );
   }
@@ -857,8 +887,7 @@ const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   );
 });
 
-Promise.all(requests)
-.then((results) => {
+Promise.all(requests).then((results) => {
   let someRequestFailed = false;
 
   results.forEach((result) => {
@@ -958,8 +987,10 @@ function mapEvent(eventData, data) {
     mappedData.messaging_channel = data.messaging_channel;
   }
 
-  if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
-  if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
+  if (eventData.page_location)
+    mappedData.event_source_url = eventData.page_location;
+  if (eventData.user_agent)
+    mappedData.user_data.client_user_agent = eventData.user_agent;
 
   if (eventData.ip_override) {
     mappedData.user_data.client_ip_address = eventData.ip_override
@@ -1029,7 +1060,18 @@ function hashData(key, value) {
 
 function hashDataIfNeeded(mappedData) {
   if (mappedData.user_data) {
-    const keysToHash = ['em', 'ph', 'ge', 'db', 'ln', 'fn', 'ct', 'st', 'zp', 'country'];
+    const keysToHash = [
+      'em',
+      'ph',
+      'ge',
+      'db',
+      'ln',
+      'fn',
+      'ct',
+      'st',
+      'zp',
+      'country'
+    ];
     for (let key in mappedData.user_data) {
       if (keysToHash.indexOf(key) !== -1) {
         mappedData.user_data[key] = hashData(key, mappedData.user_data[key]);
@@ -1084,7 +1126,8 @@ function cleanupData(mappedData) {
       }
     }
 
-    if (customData.value === 0 || customData.value === '0') customData.value = '0.00';
+    if (customData.value === 0 || customData.value === '0')
+      customData.value = '0.00';
 
     mappedData.custom_data = customData;
   }
@@ -1119,8 +1162,11 @@ function addEcommerceData(eventData, mappedData) {
     currencyFromItems = eventData.items[0].currency;
 
     if (!eventData.items[1]) {
-      if (eventData.items[0].item_name) mappedData.custom_data.content_name = eventData.items[0].item_name;
-      if (eventData.items[0].item_category) mappedData.custom_data.content_category = eventData.items[0].item_category;
+      if (eventData.items[0].item_name)
+        mappedData.custom_data.content_name = eventData.items[0].item_name;
+      if (eventData.items[0].item_category)
+        mappedData.custom_data.content_category =
+          eventData.items[0].item_category;
 
       if (eventData.items[0].price) {
         mappedData.custom_data.value = eventData.items[0].quantity
@@ -1149,20 +1195,27 @@ function addEcommerceData(eventData, mappedData) {
     });
   }
 
-  if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
-  else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
+  if (eventData['x-ga-mp1-ev'])
+    mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
+  else if (eventData['x-ga-mp1-tr'])
+    mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
   else if (eventData.value) mappedData.custom_data.value = eventData.value;
 
   if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
-  else if (currencyFromItems) mappedData.custom_data.currency = currencyFromItems;
+  else if (currencyFromItems)
+    mappedData.custom_data.currency = currencyFromItems;
 
-  if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
+  if (eventData.search_term)
+    mappedData.custom_data.search_string = eventData.search_term;
 
-  if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
+  if (eventData.transaction_id)
+    mappedData.custom_data.order_id = eventData.transaction_id;
 
   if (mappedData.event_name === 'Purchase') {
-    if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
-    if (!mappedData.custom_data.value) mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
+    if (!mappedData.custom_data.currency)
+      mappedData.custom_data.currency = 'USD';
+    if (!mappedData.custom_data.value)
+      mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
   }
 
   return mappedData;
@@ -1178,18 +1231,24 @@ function addUserData(eventData, mappedData) {
       address = user_data.address[0] || user_data.address;
     }
   }
-  if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
+  if (eventData.fb_login_id)
+    mappedData.user_data.fb_login_id = eventData.fb_login_id;
 
   if (eventData.anon_id) mappedData.user_data.anon_id = eventData.anon_id;
 
   if (eventData.madid) mappedData.user_data.madid = eventData.madid;
 
-  if (eventData.external_id) mappedData.user_data.external_id = eventData.external_id;
-  else if (eventData.user_id) mappedData.user_data.external_id = eventData.user_id;
-  else if (eventData.userId) mappedData.user_data.external_id = eventData.userId;
+  if (eventData.external_id)
+    mappedData.user_data.external_id = eventData.external_id;
+  else if (eventData.user_id)
+    mappedData.user_data.external_id = eventData.user_id;
+  else if (eventData.userId)
+    mappedData.user_data.external_id = eventData.userId;
 
-  if (eventData.subscription_id) mappedData.user_data.subscription_id = eventData.subscription_id;
-  else if (eventData.subscriptionId) mappedData.user_data.subscription_id = eventData.subscriptionId;
+  if (eventData.subscription_id)
+    mappedData.user_data.subscription_id = eventData.subscription_id;
+  else if (eventData.subscriptionId)
+    mappedData.user_data.subscription_id = eventData.subscriptionId;
 
   if (eventData.lead_id) mappedData.user_data.lead_id = eventData.lead_id;
   else if (eventData.leadId) mappedData.user_data.lead_id = eventData.leadId;
@@ -1209,11 +1268,13 @@ function addUserData(eventData, mappedData) {
   else if (address.first_name) mappedData.user_data.fn = address.first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
-  else if (user_data.email_address) mappedData.user_data.em = user_data.email_address;
+  else if (user_data.email_address)
+    mappedData.user_data.em = user_data.email_address;
   else if (user_data.email) mappedData.user_data.em = user_data.email;
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-  else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
+  else if (user_data.phone_number)
+    mappedData.user_data.ph = user_data.phone_number;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
@@ -1224,11 +1285,14 @@ function addUserData(eventData, mappedData) {
   else if (address.region) mappedData.user_data.st = address.region;
 
   if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-  else if (eventData.postal_code) mappedData.user_data.zp = eventData.postal_code;
-  else if (user_data.postal_code) mappedData.user_data.zp = user_data.postal_code;
+  else if (eventData.postal_code)
+    mappedData.user_data.zp = eventData.postal_code;
+  else if (user_data.postal_code)
+    mappedData.user_data.zp = user_data.postal_code;
   else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
 
-  if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
+  if (eventData.countryCode)
+    mappedData.user_data.country = eventData.countryCode;
   else if (eventData.country) mappedData.user_data.country = eventData.country;
   else if (user_data.country) mappedData.user_data.country = user_data.country;
   else if (address.country) mappedData.user_data.country = address.country;
@@ -1243,7 +1307,8 @@ function addServerEventData(eventData, mappedData) {
   let serverEventDataList = {};
 
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
-  else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
+  else if (eventData.transaction_id)
+    mappedData.event_id = eventData.transaction_id;
 
   if (data.serverEventDataList) {
     data.serverEventDataList.forEach((d) => {
@@ -1252,17 +1317,27 @@ function addServerEventData(eventData, mappedData) {
   }
 
   if (serverEventDataList) {
-    if (serverEventDataList.event_time) mappedData.event_time = serverEventDataList.event_time;
-    if (serverEventDataList.event_source_url) mappedData.event_source_url = serverEventDataList.event_source_url;
-    if (serverEventDataList.opt_out) mappedData.opt_out = serverEventDataList.opt_out;
-    if (serverEventDataList.event_id) mappedData.event_id = serverEventDataList.event_id;
-    if (serverEventDataList.referrer_url) mappedData.referrer_url = serverEventDataList.referrer_url;
+    if (serverEventDataList.event_time)
+      mappedData.event_time = serverEventDataList.event_time;
+    if (serverEventDataList.event_source_url)
+      mappedData.event_source_url = serverEventDataList.event_source_url;
+    if (serverEventDataList.opt_out)
+      mappedData.opt_out = serverEventDataList.opt_out;
+    if (serverEventDataList.event_id)
+      mappedData.event_id = serverEventDataList.event_id;
+    if (serverEventDataList.referrer_url)
+      mappedData.referrer_url = serverEventDataList.referrer_url;
 
     if (serverEventDataList.data_processing_options) {
-      mappedData.data_processing_options = serverEventDataList.data_processing_options;
+      mappedData.data_processing_options =
+        serverEventDataList.data_processing_options;
 
-      if (serverEventDataList.data_processing_options_country) mappedData.data_processing_options_country = serverEventDataList.data_processing_options_country;
-      if (serverEventDataList.data_processing_options_state) mappedData.data_processing_options_state = serverEventDataList.data_processing_options_state;
+      if (serverEventDataList.data_processing_options_country)
+        mappedData.data_processing_options_country =
+          serverEventDataList.data_processing_options_country;
+      if (serverEventDataList.data_processing_options_state)
+        mappedData.data_processing_options_state =
+          serverEventDataList.data_processing_options_state;
     }
   }
 
@@ -1280,14 +1355,24 @@ function addAppData(eventData, mappedData) {
     return mappedData;
   }
 
-  if (eventData.advertiser_tracking_enabled) mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled;
-  if (eventData.application_tracking_enabled) mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled;
+  if (eventData.advertiser_tracking_enabled)
+    mappedData.app_data.advertiser_tracking_enabled =
+      eventData.advertiser_tracking_enabled;
+  if (eventData.application_tracking_enabled)
+    mappedData.app_data.application_tracking_enabled =
+      eventData.application_tracking_enabled;
   if (eventData.extinfo) mappedData.app_data.extinfo = eventData.extinfo;
-  if (eventData.campaign_ids) mappedData.app_data.campaign_ids = eventData.campaign_ids;
-  if (eventData.install_referrer) mappedData.app_data.install_referrer = eventData.install_referrer;
-  if (eventData.installer_package) mappedData.app_data.installer_package = eventData.installer_package;
-  if (eventData.url_schemes) mappedData.app_data.url_schemes = eventData.url_schemes;
-  if (eventData.windows_attribution_id) mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
+  if (eventData.campaign_ids)
+    mappedData.app_data.campaign_ids = eventData.campaign_ids;
+  if (eventData.install_referrer)
+    mappedData.app_data.install_referrer = eventData.install_referrer;
+  if (eventData.installer_package)
+    mappedData.app_data.installer_package = eventData.installer_package;
+  if (eventData.url_schemes)
+    mappedData.app_data.url_schemes = eventData.url_schemes;
+  if (eventData.windows_attribution_id)
+    mappedData.app_data.windows_attribution_id =
+      eventData.windows_attribution_id;
 
   return mappedData;
 }
@@ -1346,9 +1431,12 @@ function enhanceEventData(userData) {
     if (!userData.zp && gtmeecData.zp) userData.zp = gtmeecData.zp;
     if (!userData.ge && gtmeecData.ge) userData.ge = gtmeecData.ge;
     if (!userData.db && gtmeecData.db) userData.db = gtmeecData.db;
-    if (!userData.country && gtmeecData.country) userData.country = gtmeecData.country;
-    if (!userData.external_id && gtmeecData.external_id) userData.external_id = gtmeecData.external_id;
-    if (!userData.fb_login_id && gtmeecData.fb_login_id) userData.fb_login_id = gtmeecData.fb_login_id;
+    if (!userData.country && gtmeecData.country)
+      userData.country = gtmeecData.country;
+    if (!userData.external_id && gtmeecData.external_id)
+      userData.external_id = gtmeecData.external_id;
+    if (!userData.fb_login_id && gtmeecData.fb_login_id)
+      userData.fb_login_id = gtmeecData.fb_login_id;
   }
 
   return userData;
@@ -1357,7 +1445,8 @@ function enhanceEventData(userData) {
 function normalizePhoneNumber(phoneNumber) {
   if (!phoneNumber) return phoneNumber;
   const itemRegex = createRegex('^[0-9]$');
-  return phoneNumber.split('')
+  return phoneNumber
+    .split('')
     .filter((item) => testRegex(itemRegex, item))
     .join('');
 }
