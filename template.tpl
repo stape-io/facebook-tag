@@ -847,7 +847,7 @@ if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
 
-const apiVersion = '19.0';
+const apiVersion = '20.0';
 let pixelIdsAndAccessTokens = [
   { pixelId: data.pixelId, accessToken: data.accessToken }
 ];
@@ -1158,7 +1158,7 @@ function addEcommerceData(eventData, mappedData) {
 
   if (eventData.items && eventData.items[0]) {
     mappedData.custom_data.contents = [];
-    mappedData.custom_data.content_type = 'product';
+    mappedData.custom_data.content_type = eventData.content_type || 'product';
     currencyFromItems = eventData.items[0].currency;
 
     if (!eventData.items[1]) {

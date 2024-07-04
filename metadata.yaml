@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: e1e5321231eaa46c13b397d5cedaa207ecefa7a8
+    changeNotes: Update to API v20 & use content_type from eventData.
   - sha: f0df06cb4531b25e8799aacdc5eb04a537293d96
     changeNotes: Added support for referrer_url.
   - sha: b5427f8459f6aac5c56db4b4d95ce2f84b2e4c11
