@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 5ba35048c523c380b6ed2904a8354c1dd71ec0e1
+    changeNotes: Added common cookie support.
   - sha: 1ab4ccc09f86a65f2e2256b862f2b47f851b9075
     changeNotes: Added support of x-fb-cd-content_type.
   - sha: e1e5321231eaa46c13b397d5cedaa207ecefa7a8

@@ -775,8 +775,10 @@ if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
   return data.gtmOnSuccess();
 }
 
-let fbc = getCookieValues('_fbc')[0];
-let fbp = getCookieValues('_fbp')[0];
+const commonCookie = eventData.common_cookie || {};
+
+let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc;
+let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp;
 
 if (!fbc) fbc = eventData._fbc;
 if (!fbp) fbp = eventData._fbp;
@@ -1406,11 +1408,11 @@ function setGtmEecCookie(userData) {
 
 function enhanceEventData(userData) {
   const cookieValues = getCookieValues('_gtmeec');
-  if (!cookieValues || cookieValues.length === 0) {
+  if ((!cookieValues || cookieValues.length === 0) && !commonCookie._gtmeec) {
     return userData;
   }
 
-  const encodedValue = cookieValues[0];
+  const encodedValue = cookieValues[0] || commonCookie._gtmeec;
   if (!encodedValue) {
     return userData;
   }
