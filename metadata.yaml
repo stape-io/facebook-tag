@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: c34fd4739d50a95080ff35c2024f56d40a8c3986
+    changeNotes: Added external_id hashing.
   - sha: 5ba35048c523c380b6ed2904a8354c1dd71ec0e1
     changeNotes: Added common cookie support.
   - sha: 1ab4ccc09f86a65f2e2256b862f2b47f851b9075
