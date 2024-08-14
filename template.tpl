@@ -1072,7 +1072,8 @@ function hashDataIfNeeded(mappedData) {
       'ct',
       'st',
       'zp',
-      'country'
+      'country',
+      'external_id'
     ];
     for (let key in mappedData.user_data) {
       if (keysToHash.indexOf(key) !== -1) {
