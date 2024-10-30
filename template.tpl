@@ -977,6 +977,7 @@ function mapEvent(eventData, data) {
     event_name: eventName,
     action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
+    referrer_url: eventData.page_referrer,
     custom_data: {},
     user_data: {}
   };
