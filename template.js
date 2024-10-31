@@ -643,6 +643,8 @@ function addAppData(eventData, mappedData) {
   if (eventData.windows_attribution_id)
     mappedData.app_data.windows_attribution_id =
       eventData.windows_attribution_id;
+  if (eventData.page_referrer)
+    mappedData.referrer_url = eventData.page_referrer;
 
   return mappedData;
 }
