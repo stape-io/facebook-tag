@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 98500beca256aaaff968ea21f552546f4e7be5af
+    changeNotes: Added referrer_url from evenData.
   - sha: c34fd4739d50a95080ff35c2024f56d40a8c3986
     changeNotes: Added external_id hashing.
   - sha: 5ba35048c523c380b6ed2904a8354c1dd71ec0e1
