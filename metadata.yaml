@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: a0438d00ee0de8b38b899b83d16cda7899a5f64c
+    changeNotes: Fixed referrer_url mapping place.
   - sha: 98500beca256aaaff968ea21f552546f4e7be5af
     changeNotes: Added referrer_url from evenData.
   - sha: c34fd4739d50a95080ff35c2024f56d40a8c3986
