@@ -257,6 +257,8 @@ function mapEvent(eventData, data) {
 
   if (eventData.page_location)
     mappedData.event_source_url = eventData.page_location;
+  if (eventData.page_referrer)
+    mappedData.referrer_url = eventData.page_referrer;
   if (eventData.user_agent)
     mappedData.user_data.client_user_agent = eventData.user_agent;
 
@@ -643,8 +645,6 @@ function addAppData(eventData, mappedData) {
   if (eventData.windows_attribution_id)
     mappedData.app_data.windows_attribution_id =
       eventData.windows_attribution_id;
-  if (eventData.page_referrer)
-    mappedData.referrer_url = eventData.page_referrer;
 
   return mappedData;
 }
