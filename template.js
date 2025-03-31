@@ -22,9 +22,11 @@ const fromBase64 = require('fromBase64');
 const createRegex = require('createRegex');
 const testRegex = require('testRegex');
 const Promise = require('Promise');
+const BigQuery = require('BigQuery');
 
-const isLoggingEnabled = determinateIsLoggingEnabled();
-const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
+/**********************************************************************************************/
+
+const traceId = getRequestHeader('trace-id');
 
 const eventData = getAllEventData();
 
@@ -33,10 +35,6 @@ if (!isConsentGivenOrNotRequired()) {
 }
 
 const url = eventData.page_location || getRequestHeader('referer');
-const subDomainIndex = url
-  ? computeEffectiveTldPlusOne(url).split('.').length - 1
-  : 1;
-
 if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
   return data.gtmOnSuccess();
 }
@@ -48,6 +46,10 @@ let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp;
 
 if (!fbc) fbc = eventData._fbc;
 if (!fbp) fbp = eventData._fbp;
+
+const subDomainIndex = url
+  ? computeEffectiveTldPlusOne(url).split('.').length - 1
+  : 1;
 
 if (url) {
   const urlParsed = parseUrl(url);
@@ -135,19 +137,17 @@ const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
     enc(pixelId) +
     '/events?access_token=' +
     enc(accessToken);
-  if (isLoggingEnabled) {
-    logToConsole(
-      JSON.stringify({
-        Name: 'Facebook',
-        Type: 'Request',
-        TraceId: traceId,
-        EventName: mappedEventData.event_name,
-        RequestMethod: 'POST',
-        RequestUrl: postUrl,
-        RequestBody: postBody
-      })
-    );
-  }
+
+  log({
+    Name: 'Facebook',
+    Type: 'Request',
+    TraceId: traceId,
+    EventName: mappedEventData.event_name,
+    RequestMethod: 'POST',
+    RequestUrl: postUrl,
+    RequestBody: postBody
+  });
+
   return sendHttpRequest(
     postUrl,
     { headers: { 'content-type': 'application/json' }, method: 'POST' },
@@ -159,19 +159,15 @@ Promise.all(requests).then((results) => {
   let someRequestFailed = false;
 
   results.forEach((result) => {
-    if (isLoggingEnabled) {
-      logToConsole(
-        JSON.stringify({
-          Name: 'Facebook',
-          Type: 'Response',
-          TraceId: traceId,
-          EventName: mappedEventData.event_name,
-          ResponseStatusCode: result.statusCode,
-          ResponseHeaders: result.headers,
-          ResponseBody: result.body
-        })
-      );
-    }
+    log({
+      Name: 'Facebook',
+      Type: 'Response',
+      TraceId: traceId,
+      EventName: mappedEventData.event_name,
+      ResponseStatusCode: result.statusCode,
+      ResponseHeaders: result.headers,
+      ResponseBody: result.body
+    });
 
     if (result.statusCode < 200 || result.statusCode >= 300) {
       someRequestFailed = true;
@@ -191,11 +187,14 @@ if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
 }
 
+/**********************************************************************************************/
+// Vendor related functions
+
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
-    let eventName = eventData.event_name;
+    const eventName = eventData.event_name;
 
-    let gaToFacebookEventName = {
+    const gaToFacebookEventName = {
       page_view: 'PageView',
       'gtm.dom': 'PageView',
       add_payment_info: 'AddPaymentInfo',
@@ -237,7 +236,7 @@ function getEventName(data) {
 }
 
 function mapEvent(eventData, data) {
-  let eventName = getEventName(data);
+  const eventName = getEventName(data);
 
   let mappedData = {
     event_name: eventName,
@@ -281,19 +280,6 @@ function mapEvent(eventData, data) {
   mappedData = hashDataIfNeeded(mappedData);
 
   return mappedData;
-}
-
-function enc(data) {
-  data = data || '';
-  return encodeUriComponent(data);
-}
-
-function isHashed(value) {
-  if (!value) {
-    return false;
-  }
-
-  return makeString(value).match('^[A-Fa-f0-9]{64}$') !== null;
 }
 
 function hashData(key, value) {
@@ -377,7 +363,7 @@ function overrideDataIfNeeded(mappedData) {
 
 function cleanupData(mappedData) {
   if (mappedData.user_data) {
-    let userData = {};
+    const userData = {};
 
     for (let userDataKey in mappedData.user_data) {
       if (isValidValue(mappedData.user_data[userDataKey])) {
@@ -389,7 +375,7 @@ function cleanupData(mappedData) {
   }
 
   if (mappedData.custom_data) {
-    let customData = {};
+    const customData = {};
 
     for (let customDataKey in mappedData.custom_data) {
       if (isValidValue(mappedData.custom_data[customDataKey])) {
@@ -404,7 +390,7 @@ function cleanupData(mappedData) {
   }
 
   if (mappedData.app_data) {
-    let appData = {};
+    const appData = {};
 
     for (let appDataKey in mappedData.app_data) {
       if (isValidValue(mappedData.app_data[appDataKey])) {
@@ -416,11 +402,6 @@ function cleanupData(mappedData) {
   }
 
   return mappedData;
-}
-
-function isValidValue(value) {
-  const valueType = getType(value);
-  return valueType !== 'null' && valueType !== 'undefined' && value !== '';
 }
 
 function addEcommerceData(eventData, mappedData) {
@@ -449,7 +430,7 @@ function addEcommerceData(eventData, mappedData) {
 
     const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
     eventData.items.forEach((d, i) => {
-      let content = {};
+      const content = {};
       if (d[itemIdKey]) content.id = d[itemIdKey];
       if (d.item_name) content.title = d.item_name;
       if (d.item_brand) content.brand = d.item_brand;
@@ -576,7 +557,7 @@ function addUserData(eventData, mappedData) {
 }
 
 function addServerEventData(eventData, mappedData) {
-  let serverEventDataList = {};
+  const serverEventDataList = {};
 
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
   else if (eventData.transaction_id)
@@ -650,7 +631,7 @@ function addAppData(eventData, mappedData) {
 }
 
 function setGtmEecCookie(userData) {
-  let gtmeecCookie = {};
+  const gtmeecCookie = {};
 
   if (userData.em) gtmeecCookie.em = userData.em;
   if (userData.ph) gtmeecCookie.ph = userData.ph;
@@ -714,6 +695,24 @@ function enhanceEventData(userData) {
   return userData;
 }
 
+/**********************************************************************************************/
+// Helpers
+
+function enc(data) {
+  data = data || '';
+  return encodeUriComponent(data);
+}
+
+function isHashed(value) {
+  if (!value) return false;
+  return makeString(value).match('^[A-Fa-f0-9]{64}$') !== null;
+}
+
+function isValidValue(value) {
+  const valueType = getType(value);
+  return valueType !== 'null' && valueType !== 'undefined' && value !== '';
+}
+
 function normalizePhoneNumber(phoneNumber) {
   if (!phoneNumber) return phoneNumber;
   const itemRegex = createRegex('^[0-9]$');
@@ -728,6 +727,79 @@ function isConsentGivenOrNotRequired() {
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
   return xGaGcs[2] === '1';
+}
+
+function log(rawDataToLog) {
+  const logDestinationsHandlers = {};
+  if (determinateIsLoggingEnabled())
+    logDestinationsHandlers.console = logConsole;
+  if (determinateIsLoggingEnabledForBigQuery())
+    logDestinationsHandlers.bigQuery = logToBigQuery;
+
+  // Key mappings for each log destination
+  const keyMappings = {
+    // No transformation for Console is needed.
+    bigQuery: {
+      Name: 'tag_name',
+      Type: 'type',
+      TraceId: 'trace_id',
+      EventName: 'event_name',
+      RequestMethod: 'request_method',
+      RequestUrl: 'request_url',
+      RequestBody: 'request_body',
+      ResponseStatusCode: 'response_status_code',
+      ResponseHeaders: 'response_headers',
+      ResponseBody: 'response_body'
+    }
+  };
+
+  for (const logDestination in logDestinationsHandlers) {
+    const handler = logDestinationsHandlers[logDestination];
+    if (!handler) continue;
+
+    const mapping = keyMappings[logDestination];
+    const dataToLog = mapping ? {} : rawDataToLog;
+    // Map keys based on the log destination
+    if (mapping) {
+      for (const key in rawDataToLog) {
+        const mappedKey = mapping[key] || key; // Fallback to original key if no mapping exists
+        dataToLog[mappedKey] = rawDataToLog[key];
+      }
+    }
+
+    handler(dataToLog);
+  }
+}
+
+function logConsole(dataToLog) {
+  logToConsole(JSON.stringify(dataToLog));
+}
+
+function logToBigQuery(dataToLog) {
+  const connectionInfo = {
+    projectId: data.logBigQueryProjectId,
+    datasetId: data.logBigQueryDatasetId,
+    tableId: data.logBigQueryTableId
+  };
+
+  // timestamp is required.
+  dataToLog.timestamp = getTimestampMillis();
+
+  // Columns with type JSON need to be stringified.
+  ['request_body', 'response_headers', 'response_body'].forEach((p) => {
+    const value = dataToLog[p];
+    // These types don't need to be stringified.
+    if (['string', 'null', 'undefined'].indexOf(getType(value)) === -1)
+      dataToLog[p] = JSON.stringify(value);
+  });
+
+  // assertApi doesn't work for 'BigQuery.insert()'. It's needed to convert BigQuery into a function when testing.
+  // Ref: https://gtm-gear.com/posts/gtm-templates-testing/
+  const bigquery =
+    getType(BigQuery) === 'function'
+      ? BigQuery() /* Only during Unit Tests */
+      : BigQuery;
+  bigquery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
 }
 
 function determinateIsLoggingEnabled() {
@@ -750,4 +822,9 @@ function determinateIsLoggingEnabled() {
   }
 
   return data.logType === 'always';
+}
+
+function determinateIsLoggingEnabledForBigQuery() {
+  if (data.bigQueryLogType === 'no') return false;
+  return data.bigQueryLogType === 'always';
 }

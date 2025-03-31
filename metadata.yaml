@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 96b0d62caef253838e47f969171ed03fae8c9ee0
+    changeNotes: Add support for Big Query logging.
   - sha: a0438d00ee0de8b38b899b83d16cda7899a5f64c
     changeNotes: Fixed referrer_url mapping place.
   - sha: 98500beca256aaaff968ea21f552546f4e7be5af
