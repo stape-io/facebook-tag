@@ -5,7 +5,7 @@ You can use this tag for the Google Tag Manager Server Side container to set up 
 It works based on Universal Analytics or Google Analytics 4 requests inside the Google Tag Manager Server Side container.
 Also, it supports custom [Data client](https://github.com/stape-io/data-client) that allows retrieving Data Layer from web containers easier.
 
-Facebook Conversion API (previously Facebook server-side tracking) has the same purpose as Facebook pixel - it tracks what users are doing on your site. 
+Facebook Conversion API (previously Facebook server-side tracking) has the same purpose as Facebook pixel - it tracks what users are doing on your site.
 But the difference between web and server tracking is that pixel requests are processed in the user’s browser, while Facebook conversion API works through the cloud server.
 
 ## How to use Facebook tag
@@ -17,4 +17,4 @@ But the difference between web and server tracking is that pixel requests are pr
 
 ## Open Source
 
-Facebook Tag for GTM Server Side is developing and maintained by [Stape Team](https://stape.io/) under the Apache 2.0 license.
+The **Facebook Tag for GTM Server Side** is developed and maintained by [Stape Team](https://stape.io/) under the Apache 2.0 license.
