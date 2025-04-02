@@ -787,10 +787,9 @@ function logToBigQuery(dataToLog) {
 
   // Columns with type JSON need to be stringified.
   ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    const value = dataToLog[p];
-    // These types don't need to be stringified.
-    if (['string', 'null', 'undefined'].indexOf(getType(value)) === -1)
-      dataToLog[p] = JSON.stringify(value);
+    // GTM Sandboxed JSON.parse returns undefined for malformed JSON but throws post-execution, causing execution failure.
+    // If fixed, could use: dataToLog[p] = JSON.stringify(JSON.parse(dataToLog[p]) || dataToLog[p]);
+    dataToLog[p] = JSON.stringify(dataToLog[p]);
   });
 
   // assertApi doesn't work for 'BigQuery.insert()'. It's needed to convert BigQuery into a function when testing.
