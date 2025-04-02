@@ -787,16 +787,8 @@ function logToBigQuery(dataToLog) {
 
   // Columns with type JSON need to be stringified.
   ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    // The JSON.parse of GTM Sandboxed JS should not throw and should return undefined if parsing
-    // a malformed JSON. This would be great to parse stringified objects and arrays, so that it's not needed
-    // to convert them back into their original format in BigQuery.
-    // Although it does return undefined and permits the code to continue running,
-    // it throws an error after the execution is complete, making tests and the overall execution to show as failed.
-    // Ref: https://developers.google.com/tag-platform/tag-manager/server-side/api#json
-
-    // If someday this is fixed, the lines below can be changed to this one:
-    // dataToLog[p] = JSON.stringify(JSON.parse(dataToLog[p]) || dataToLog[p]);
-
+    // GTM Sandboxed JSON.parse returns undefined for malformed JSON but throws post-execution, causing execution failure.
+    // If fixed, could use: dataToLog[p] = JSON.stringify(JSON.parse(dataToLog[p]) || dataToLog[p]);
     dataToLog[p] = JSON.stringify(dataToLog[p]);
   });
 
