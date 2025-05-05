@@ -918,7 +918,7 @@ if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
 
-const apiVersion = '20.0';
+const apiVersion = '22.0';
 let pixelIdsAndAccessTokens = [
   { pixelId: data.pixelId, accessToken: data.accessToken }
 ];
@@ -2070,7 +2070,10 @@ ___TESTS___
 
 scenarios:
 - name: Check semantical errors
-  code: runCode(mockData);
+  code: "mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  return {\n    then: (callback) => { \n      callback({ statusCode: 200 });\n\
+    \      return {\n        then: () => {},\n        catch: () => {}\n      };\n\
+    \    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);"
 - name: Should log to console, if the 'Always log to console' option is selected
   code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
     \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
@@ -2079,36 +2082,28 @@ scenarios:
     assertApi('logToConsole').wasCalled();\n"
 - name: Should log to console, if the 'Log during debug and preview' option is selected
     AND is on preview mode
-  code: |
-    mockData.logType = 'debug';
-
-    const expectedDebugMode = true;
-    mock('getContainerVersion', () => {
-      return {
-        debugMode: expectedDebugMode
-      };
-    });
-
-    mock('logToConsole', (logData) => {
-      const parsedLogData = JSON.parse(logData);
-      requiredConsoleKeys.forEach(p => assertThat(parsedLogData[p]).isDefined());
-    });
-
-    runCode(mockData);
-
-    assertApi('logToConsole').wasCalled();
+  code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
+    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n});\n\nmock('logToConsole',\
+    \ (logData) => {\n  const parsedLogData = JSON.parse(logData);\n  requiredConsoleKeys.forEach(p\
+    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
+    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
+    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n"
 - name: Should NOT log to console, if the 'Log during debug and preview' option is
     selected AND is NOT on preview mode
   code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = false;\nmock('getContainerVersion',\
-    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nrunCode(mockData);\n\
-    \nassertApi('logToConsole').wasNotCalled();\n"
+    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n});\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
+    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
+    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n"
 - name: Should NOT log to console, if the 'Do not log' option is selected
-  code: |
-    mockData.logType = 'no';
-
-    runCode(mockData);
-
-    assertApi('logToConsole').wasNotCalled();
+  code: "mockData.logType = 'no';\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
+    \ requestBody) => {\n  return {\n    then: (callback) => { \n      callback({\
+    \ statusCode: 200 });\n      return {\n        then: () => {},\n        catch:\
+    \ () => {}\n      };\n    },\n    catch: (callback) => callback()\n  };\n});\n\
+    \nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n"
 - name: Should log to BQ, if the 'Log to BigQuery' option is selected
   code: "mockData.bigQueryLogType = 'always';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
     // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
@@ -2116,13 +2111,21 @@ scenarios:
     \ assertThat(connectionInfo).isDefined();\n      assertThat(rows).isArray();\n\
     \      assertThat(rows).hasLength(1);\n      requiredBqKeys.forEach(p => assertThat(rows[0][p]).isDefined());\n\
     \      assertThat(options).isEqualTo(expectedBqOptions);\n      return Promise.create((resolve,\
-    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nrunCode(mockData);"
+    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
+    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
+    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
+    \ callback()\n  };\n});\n\nrunCode(mockData);"
 - name: Should NOT log to BQ, if the 'Do not log to BigQuery' option is selected
   code: "mockData.bigQueryLogType = 'no';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
     // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
     \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
     \ fail('BigQuery.insert should not have been called.');\n      return Promise.create((resolve,\
-    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nrunCode(mockData);"
+    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
+    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
+    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
+    \ callback()\n  };\n});\n\nrunCode(mockData);"
 setup: |-
   const JSON = require('JSON');
   const Promise = require('Promise');
