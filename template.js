@@ -117,7 +117,7 @@ if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
 }
 
-const apiVersion = '20.0';
+const apiVersion = '22.0';
 let pixelIdsAndAccessTokens = [
   { pixelId: data.pixelId, accessToken: data.accessToken }
 ];
