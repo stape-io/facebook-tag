@@ -1,6 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
-  - sha: b5a5ecfdac1dbd9b54eea695ece10478ad0c18a0
+  - sha: 98f6ecd0c8114eabbb294d079c1b3e0b8f8aadcd
     changeNotes: Update to API v22. Prevent HTTP requests from triggering when running unit tests.
   - sha: 58e2198a5eda667bfd1753e04f3b1f6c820f9415
     changeNotes: Improve JSON handling for BQ logging.
