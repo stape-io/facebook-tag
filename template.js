@@ -699,8 +699,7 @@ function enhanceEventData(userData) {
 // Helpers
 
 function enc(data) {
-  data = data || '';
-  return encodeUriComponent(data);
+  return encodeUriComponent(data || '');
 }
 
 function isHashed(value) {

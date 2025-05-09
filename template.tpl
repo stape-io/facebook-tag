@@ -1500,8 +1500,7 @@ function enhanceEventData(userData) {
 // Helpers
 
 function enc(data) {
-  data = data || '';
-  return encodeUriComponent(data);
+  return encodeUriComponent(data || '');
 }
 
 function isHashed(value) {
@@ -2078,8 +2077,11 @@ scenarios:
   code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
     \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
     \ (logData) => {\n  const parsedLogData = JSON.parse(logData);\n  requiredConsoleKeys.forEach(p\
-    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nrunCode(mockData);\n\n\
-    assertApi('logToConsole').wasCalled();\n"
+    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
+    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
+    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n"
 - name: Should log to console, if the 'Log during debug and preview' option is selected
     AND is on preview mode
   code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
