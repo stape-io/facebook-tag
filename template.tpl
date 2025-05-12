@@ -941,7 +941,9 @@ if (eventData.test_event_code || data.testId) {
 }
 
 const cookieOptions = {
-  domain: data.overrideCookieDomain ? data.overridenCookieDomain : 'auto',
+  domain: isUIFieldTrue(data.overrideCookieDomain)
+    ? data.overridenCookieDomain
+    : 'auto',
   path: '/',
   samesite: 'Lax',
   secure: true,
@@ -1487,7 +1489,9 @@ function setGtmEecCookie(userData) {
   if (userData.fb_login_id) gtmeecCookie.fb_login_id = userData.fb_login_id;
 
   setCookie('_gtmeec', toBase64(JSON.stringify(gtmeecCookie)), {
-    domain: data.overrideCookieDomain ? data.overridenCookieDomain : 'auto',
+    domain: isUIFieldTrue(data.overrideCookieDomain)
+      ? data.overridenCookieDomain
+      : 'auto',
     path: '/',
     samesite: 'strict',
     secure: true,
@@ -1559,6 +1563,10 @@ function normalizePhoneNumber(phoneNumber) {
     .split('')
     .filter((item) => testRegex(itemRegex, item))
     .join('');
+}
+
+function isUIFieldTrue(field) {
+  return [true, 'true'].indexOf(field) !== -1;
 }
 
 function isConsentGivenOrNotRequired() {
