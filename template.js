@@ -89,11 +89,9 @@ const postBody = {
     'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
-const domain = data.externalDomain ? data.externalDomain : 'auto';
-
 if (data.enableEventEnhancement) {
   mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
-  setGtmEecCookie(mappedEventData.user_data, domain);
+  setGtmEecCookie(mappedEventData.user_data);
 }
 
 if (eventData.test_event_code || data.testId) {
@@ -103,7 +101,7 @@ if (eventData.test_event_code || data.testId) {
 }
 
 const cookieOptions = {
-  domain: domain,
+  domain: data.overrideCookieDomain ? data.overridenCookieDomain : 'auto',
   path: '/',
   samesite: 'Lax',
   secure: true,
@@ -632,7 +630,7 @@ function addAppData(eventData, mappedData) {
   return mappedData;
 }
 
-function setGtmEecCookie(userData, domain) {
+function setGtmEecCookie(userData) {
   const gtmeecCookie = {};
 
   if (userData.em) gtmeecCookie.em = userData.em;
@@ -649,7 +647,7 @@ function setGtmEecCookie(userData, domain) {
   if (userData.fb_login_id) gtmeecCookie.fb_login_id = userData.fb_login_id;
 
   setCookie('_gtmeec', toBase64(JSON.stringify(gtmeecCookie)), {
-    domain: domain,
+    domain: data.overrideCookieDomain ? data.overridenCookieDomain : 'auto',
     path: '/',
     samesite: 'strict',
     secure: true,
