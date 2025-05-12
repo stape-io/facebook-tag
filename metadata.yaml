@@ -1,6 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
-  - sha: 3ba29eb2b74b367cc5b9d26366d33a4804ff2dac
+  - sha: 05b7a1d3f0aef3bb1cf33799fe9cb98d55eee712
     changeNotes: Add cookie domain override field.
   - sha: 98f6ecd0c8114eabbb294d079c1b3e0b8f8aadcd
     changeNotes: Update to API v22. Prevent HTTP requests from triggering when running unit tests.
