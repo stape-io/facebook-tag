@@ -331,6 +331,45 @@ ___TEMPLATE_PARAMETERS___
     "canBeEmptyString": true
   },
   {
+    "type": "SELECT",
+    "name": "overrideCookieDomain",
+    "displayName": "Override the cookie domain",
+    "macrosInSelect": true,
+    "selectItems": [
+      {
+        "value": false,
+        "displayValue": "False"
+      },
+      {
+        "value": true,
+        "displayValue": "True"
+      }
+    ],
+    "simpleValueType": true,
+    "subParams": [
+      {
+        "type": "TEXT",
+        "name": "overridenCookieDomain",
+        "displayName": "Cookie Domain",
+        "simpleValueType": true,
+        "enablingConditions": [
+          {
+            "paramName": "overrideCookieDomain",
+            "paramValue": false,
+            "type": "NOT_EQUALS"
+          }
+        ],
+        "help": "Enable this option to override the cookie domain.\u003cbr\u003eEnter your website\u0027s top-level domain as a fixed value (e.g., example.com). \u003cbr\u003e If left as \"auto\", the top-level domain will be automatically determined using the following priority: \u003cul\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eForwarded\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eX-Forwarded-Host\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eHost\u003c/i\u003e header.\u003c/li\u003e \u003c/ul\u003e",
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ]
+      }
+    ],
+    "defaultValue": false
+  },
+  {
     "type": "CHECKBOX",
     "name": "generateFbp",
     "checkboxText": "Generate _fbp cookie if it not exist",
@@ -902,7 +941,9 @@ if (eventData.test_event_code || data.testId) {
 }
 
 const cookieOptions = {
-  domain: 'auto',
+  domain: isUIFieldTrue(data.overrideCookieDomain)
+    ? data.overridenCookieDomain
+    : 'auto',
   path: '/',
   samesite: 'Lax',
   secure: true,
@@ -1448,7 +1489,9 @@ function setGtmEecCookie(userData) {
   if (userData.fb_login_id) gtmeecCookie.fb_login_id = userData.fb_login_id;
 
   setCookie('_gtmeec', toBase64(JSON.stringify(gtmeecCookie)), {
-    domain: 'auto',
+    domain: isUIFieldTrue(data.overrideCookieDomain)
+      ? data.overridenCookieDomain
+      : 'auto',
     path: '/',
     samesite: 'strict',
     secure: true,
@@ -1520,6 +1563,10 @@ function normalizePhoneNumber(phoneNumber) {
     .split('')
     .filter((item) => testRegex(itemRegex, item))
     .join('');
+}
+
+function isUIFieldTrue(field) {
+  return [true, 'true'].indexOf(field) !== -1;
 }
 
 function isConsentGivenOrNotRequired() {
@@ -2073,6 +2120,30 @@ scenarios:
     \  return {\n    then: (callback) => { \n      callback({ statusCode: 200 });\n\
     \      return {\n        then: () => {},\n        catch: () => {}\n      };\n\
     \    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);"
+- name: Cookie domain is NOT overriden when option is NOT selected
+  code: "mockData.overrideCookieDomain = false;\nmockData.enableEventEnhancement =\
+    \ true;\n\nconst expectedFbp = 'expectedFbp';\nconst expectedFbc = 'expectedFbc';\n\
+    mock('getAllEventData', {\n  _fbp: expectedFbp,\n  _fbc: expectedFbc\n});\n\n\
+    mock('setCookie', (cookieName, cookieValue, cookieOptions, noEncode) => {\n  switch\
+    \ (cookieName) {\n    case '_fbp':\n    case '_fbc':\n    case '_gtmeec':\n  \
+    \    if (cookieOptions.domain !== 'auto') fail('cookieDomain shouldn\\'t have\
+    \ been overriden');\n      break;\n  }\n});\n\nmock('sendHttpRequest', (requestUrl,\
+    \ requestOptions, requestBody) => {\n  return {\n    then: (callback) => { \n\
+    \      callback({ statusCode: 200 });\n      return {\n        then: () => {},\n\
+    \        catch: () => {}\n      };\n    },\n    catch: (callback) => callback()\n\
+    \  };\n});\n\nrunCode(mockData);"
+- name: Cookie domain is overriden when option is selected
+  code: "mockData.overrideCookieDomain = true;\nmockData.overridenCookieDomain = 'example.com';\n\
+    mockData.enableEventEnhancement = true;\n\nconst expectedFbp = 'expectedFbp';\n\
+    const expectedFbc = 'expectedFbc';\nmock('getAllEventData', {\n  _fbp: expectedFbp,\n\
+    \  _fbc: expectedFbc\n});\n\nmock('setCookie', (cookieName, cookieValue, cookieOptions,\
+    \ noEncode) => {\n  switch (cookieName) {\n    case '_fbp':\n    case '_fbc':\n\
+    \    case '_gtmeec':\n      assertThat(cookieOptions.domain).isEqualTo(mockData.overridenCookieDomain);\n\
+    \      break;\n  }\n});\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
+    \ requestBody) => {\n  return {\n    then: (callback) => { \n      callback({\
+    \ statusCode: 200 });\n      return {\n        then: () => {},\n        catch:\
+    \ () => {}\n      };\n    },\n    catch: (callback) => callback()\n  };\n});\n\
+    \nrunCode(mockData);"
 - name: Should log to console, if the 'Always log to console' option is selected
   code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
     \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
