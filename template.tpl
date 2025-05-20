@@ -1450,13 +1450,48 @@ function addAppData(eventData, mappedData) {
     return mappedData;
   }
 
-  if (eventData.advertiser_tracking_enabled)
-    mappedData.app_data.advertiser_tracking_enabled =
-      eventData.advertiser_tracking_enabled;
-  if (eventData.application_tracking_enabled)
-    mappedData.app_data.application_tracking_enabled =
-      eventData.application_tracking_enabled;
-  if (eventData.extinfo) mappedData.app_data.extinfo = eventData.extinfo;
+   if (eventData.advertiser_tracking_enabled !== undefined && eventData.advertiser_tracking_enabled !== null) {
+  mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled;
+  } else {
+  mappedData.app_data.advertiser_tracking_enabled = 1;
+  }
+  if (eventData.application_tracking_enabled !== undefined && eventData.application_tracking_enabled !== null) {
+  mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled;
+  } else {
+  mappedData.app_data.application_tracking_enabled = 1;
+  }
+   if (eventData.extinfo) {
+    mappedData.app_data.extinfo = eventData.extinfo;
+  } else {
+    const extinfoArray = [];
+
+    const platform = eventData['x-ga-platform'] ? makeString(eventData['x-ga-platform']).toLowerCase() : '';
+    if (platform === 'android') {
+      extinfoArray[0] = 'a2';
+    } else if (platform === 'ios') {
+      extinfoArray[0] = 'i2';
+    } else {
+      extinfoArray[0] = '';
+    }
+    
+    extinfoArray[1] = eventData.app_id || ''; // app package name, string
+    extinfoArray[2] = eventData.app_version || ''; // app short version, int or string
+    extinfoArray[3] = 'Version ' + eventData.app_version || ''; // app long version, string
+    extinfoArray[4] = eventData['x-ga-os_version'] ? makeString(eventData['x-ga-os_version']) : ''; // OS version, string
+    extinfoArray[5] = eventData['x-ga-device_model'] || ''; // device model name, string
+    extinfoArray[6] = eventData.language || ''; // locale, string
+    extinfoArray[7] = ''; // placeholder timezone abbreviation, string
+	extinfoArray[8] = ''; // placeholder carrier, string
+	extinfoArray[9] = ''; // placeholder screen width, int64
+  	extinfoArray[10] = ''; // placeholder screen height, int64
+  	extinfoArray[11] = ''; // placeholder screen density, string
+  	extinfoArray[12] = ''; // placeholder CPU cores, int64
+  	extinfoArray[13] = ''; // placeholder external storage size in GB, int64
+  	extinfoArray[14] = ''; // placeholder free space on external storage in GB, int64
+  	extinfoArray[15] = ''; // placeholder device timezone, string
+
+    mappedData.app_data.extinfo = extinfoArray;
+  }
   if (eventData.campaign_ids)
     mappedData.app_data.campaign_ids = eventData.campaign_ids;
   if (eventData.install_referrer)
