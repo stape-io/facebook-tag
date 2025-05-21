@@ -364,7 +364,8 @@ ___TEMPLATE_PARAMETERS___
           {
             "type": "NON_EMPTY"
           }
-        ]
+        ],
+        "defaultValue": "auto"
       }
     ],
     "defaultValue": false
