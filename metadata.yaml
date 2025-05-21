@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 11b4ee5fc6dee9cbdb90d7cb02f9081709f1c933
+    changeNotes: Add default value to overriden cookie domain.
   - sha: 05b7a1d3f0aef3bb1cf33799fe9cb98d55eee712
     changeNotes: Add cookie domain override field.
   - sha: 98f6ecd0c8114eabbb294d079c1b3e0b8f8aadcd
