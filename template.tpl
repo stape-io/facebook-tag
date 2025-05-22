@@ -650,6 +650,10 @@ ___TEMPLATE_PARAMETERS___
                 "displayValue": "URL Schemes"
               },
               {
+                "value": "vendor_id",
+                "displayValue": "Vendor ID"
+              },
+              {
                 "value": "windows_attribution_id",
                 "displayValue": "Windows Attribution ID"
               }
@@ -882,11 +886,8 @@ if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
 
 const commonCookie = eventData.common_cookie || {};
 
-let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc;
-let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp;
-
-if (!fbc) fbc = eventData._fbc;
-if (!fbp) fbp = eventData._fbp;
+let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc;
+let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp;
 
 const subDomainIndex = url
   ? computeEffectiveTldPlusOne(url).split('.').length - 1
@@ -923,24 +924,6 @@ if (!fbp && data.generateFbp) {
     generateRandom(1000000000, 2147483647);
 }
 
-const mappedEventData = mapEvent(eventData, data);
-const postBody = {
-  data: [mappedEventData],
-  partner_agent:
-    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
-};
-
-if (data.enableEventEnhancement) {
-  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
-  setGtmEecCookie(mappedEventData.user_data);
-}
-
-if (eventData.test_event_code || data.testId) {
-  postBody.test_event_code = eventData.test_event_code
-    ? eventData.test_event_code
-    : data.testId;
-}
-
 const cookieOptions = {
   domain: isUIFieldTrue(data.overrideCookieDomain)
     ? data.overridenCookieDomain
@@ -958,6 +941,24 @@ if (fbc) {
 
 if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
+}
+
+const mappedEventData = mapEvent(eventData, data);
+const postBody = {
+  data: [mappedEventData],
+  partner_agent:
+    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+};
+
+if (data.enableEventEnhancement) {
+  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
+  setGtmEecCookie(mappedEventData.user_data);
+}
+
+if (eventData.test_event_code || data.testId) {
+  postBody.test_event_code = eventData.test_event_code
+    ? eventData.test_event_code
+    : data.testId;
 }
 
 const apiVersion = '22.0';
@@ -1355,6 +1356,8 @@ function addUserData(eventData, mappedData) {
   else if (eventData.last_name) mappedData.user_data.ln = eventData.last_name;
   else if (user_data.last_name) mappedData.user_data.ln = user_data.last_name;
   else if (address.last_name) mappedData.user_data.ln = address.last_name;
+  else if (address.sha256_last_name)
+    mappedData.user_data.ln = address.sha256_last_name;
 
   if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
   else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
@@ -1362,11 +1365,15 @@ function addUserData(eventData, mappedData) {
   else if (eventData.first_name) mappedData.user_data.fn = eventData.first_name;
   else if (user_data.first_name) mappedData.user_data.fn = user_data.first_name;
   else if (address.first_name) mappedData.user_data.fn = address.first_name;
+  else if (address.sha256_first_name)
+    mappedData.user_data.fn = address.sha256_first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
   else if (user_data.email_address)
     mappedData.user_data.em = user_data.email_address;
   else if (user_data.email) mappedData.user_data.em = user_data.email;
+  else if (user_data.sha256_email_address)
+    mappedData.user_data.em = user_data.sha256_email_address;
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
   else if (user_data.phone_number)
@@ -1447,17 +1454,37 @@ function addAppData(eventData, mappedData) {
 
   if (getType(eventData.app_data) === 'object') {
     mappedData.app_data = eventData.app_data;
-
     return mappedData;
   }
 
-  if (eventData.advertiser_tracking_enabled)
-    mappedData.app_data.advertiser_tracking_enabled =
-      eventData.advertiser_tracking_enabled;
-  if (eventData.application_tracking_enabled)
-    mappedData.app_data.application_tracking_enabled =
-      eventData.application_tracking_enabled;
-  if (eventData.extinfo) mappedData.app_data.extinfo = eventData.extinfo;
+  mappedData.app_data.advertiser_tracking_enabled =
+    eventData.advertiser_tracking_enabled ? 1 : 0;
+  mappedData.app_data.application_tracking_enabled =
+    eventData.application_tracking_enabled ? 1 : 0;
+  if (eventData.extinfo) {
+    mappedData.app_data.extinfo = eventData.extinfo;
+  } else {
+    const platform = makeString(eventData['x-ga-platform'] || '').toLowerCase();
+    const extinfoArray = [
+      platform === 'android' ? 'a2' : platform === 'ios' ? 'i2' : '', // Required
+      eventData.app_id || '',
+      eventData.app_version || '',
+      eventData.app_version ? 'Version ' + eventData.app_version : '',
+      makeString(eventData['x-ga-os_version'] || ''), // Required
+      eventData['x-ga-device_model'] || '',
+      eventData.language || '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ];
+    mappedData.app_data.extinfo = extinfoArray;
+  }
   if (eventData.campaign_ids)
     mappedData.app_data.campaign_ids = eventData.campaign_ids;
   if (eventData.install_referrer)
@@ -1466,6 +1493,7 @@ function addAppData(eventData, mappedData) {
     mappedData.app_data.installer_package = eventData.installer_package;
   if (eventData.url_schemes)
     mappedData.app_data.url_schemes = eventData.url_schemes;
+  if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
   if (eventData.windows_attribution_id)
     mappedData.app_data.windows_attribution_id =
       eventData.windows_attribution_id;
@@ -1584,7 +1612,6 @@ function log(rawDataToLog) {
   if (determinateIsLoggingEnabledForBigQuery())
     logDestinationsHandlers.bigQuery = logToBigQuery;
 
-  // Key mappings for each log destination
   const keyMappings = {
     // No transformation for Console is needed.
     bigQuery: {
@@ -1607,10 +1634,10 @@ function log(rawDataToLog) {
 
     const mapping = keyMappings[logDestination];
     const dataToLog = mapping ? {} : rawDataToLog;
-    // Map keys based on the log destination
+
     if (mapping) {
       for (const key in rawDataToLog) {
-        const mappedKey = mapping[key] || key; // Fallback to original key if no mapping exists
+        const mappedKey = mapping[key] || key;
         dataToLog[mappedKey] = rawDataToLog[key];
       }
     }
@@ -1630,18 +1657,12 @@ function logToBigQuery(dataToLog) {
     tableId: data.logBigQueryTableId
   };
 
-  // timestamp is required.
   dataToLog.timestamp = getTimestampMillis();
 
-  // Columns with type JSON need to be stringified.
   ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    // GTM Sandboxed JSON.parse returns undefined for malformed JSON but throws post-execution, causing execution failure.
-    // If fixed, could use: dataToLog[p] = JSON.stringify(JSON.parse(dataToLog[p]) || dataToLog[p]);
     dataToLog[p] = JSON.stringify(dataToLog[p]);
   });
 
-  // assertApi doesn't work for 'BigQuery.insert()'. It's needed to convert BigQuery into a function when testing.
-  // Ref: https://gtm-gear.com/posts/gtm-templates-testing/
   const bigquery =
     getType(BigQuery) === 'function'
       ? BigQuery() /* Only during Unit Tests */
@@ -2132,7 +2153,10 @@ scenarios:
     \ requestOptions, requestBody) => {\n  return {\n    then: (callback) => { \n\
     \      callback({ statusCode: 200 });\n      return {\n        then: () => {},\n\
     \        catch: () => {}\n      };\n    },\n    catch: (callback) => callback()\n\
-    \  };\n});\n\nrunCode(mockData);"
+    \  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
+    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
 - name: Cookie domain is overriden when option is selected
   code: "mockData.overrideCookieDomain = true;\nmockData.overridenCookieDomain = 'example.com';\n\
     mockData.enableEventEnhancement = true;\n\nconst expectedFbp = 'expectedFbp';\n\
@@ -2144,7 +2168,10 @@ scenarios:
     \ requestBody) => {\n  return {\n    then: (callback) => { \n      callback({\
     \ statusCode: 200 });\n      return {\n        then: () => {},\n        catch:\
     \ () => {}\n      };\n    },\n    catch: (callback) => callback()\n  };\n});\n\
-    \nrunCode(mockData);"
+    \nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
+    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
 - name: Should log to console, if the 'Always log to console' option is selected
   code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
     \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
@@ -2153,7 +2180,11 @@ scenarios:
     \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
     \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
     \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n"
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n\
+    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
+    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
+    mock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure', ()\
+    \ => fail('gtmOnFailure should not have been called'));"
 - name: Should log to console, if the 'Log during debug and preview' option is selected
     AND is on preview mode
   code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
@@ -2163,7 +2194,11 @@ scenarios:
     \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
     \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
     \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n"
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n\
+    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
+    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
+    mock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure', ()\
+    \ => fail('gtmOnFailure should not have been called'));"
 - name: Should NOT log to console, if the 'Log during debug and preview' option is
     selected AND is NOT on preview mode
   code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = false;\nmock('getContainerVersion',\
@@ -2171,13 +2206,21 @@ scenarios:
     \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
     \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
     \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n"
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n\
+    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
+    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
+    mock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure', ()\
+    \ => fail('gtmOnFailure should not have been called'));"
 - name: Should NOT log to console, if the 'Do not log' option is selected
   code: "mockData.logType = 'no';\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
     \ requestBody) => {\n  return {\n    then: (callback) => { \n      callback({\
     \ statusCode: 200 });\n      return {\n        then: () => {},\n        catch:\
     \ () => {}\n      };\n    },\n    catch: (callback) => callback()\n  };\n});\n\
-    \nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n"
+    \nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n// Workaround\
+    \ because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n// Workaround\
+    \ because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\nmock('gtmOnSuccess',\
+    \ () => assertThat(true).isTrue());\nmock('gtmOnFailure', () => fail('gtmOnFailure\
+    \ should not have been called'));"
 - name: Should log to BQ, if the 'Log to BigQuery' option is selected
   code: "mockData.bigQueryLogType = 'always';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
     // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
@@ -2189,7 +2232,10 @@ scenarios:
     \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
     \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
     \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);"
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
+    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
 - name: Should NOT log to BQ, if the 'Do not log to BigQuery' option is selected
   code: "mockData.bigQueryLogType = 'no';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
     // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
@@ -2199,16 +2245,90 @@ scenarios:
     \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
     \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
     \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);"
+    \ callback()\n  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
+    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
+- name: '[Action Source = App] Request is sent successfully when using Event Data
+    as source'
+  code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
+    \ = undefined;\n\nmock('getAllEventData', {\n  app_data: {\n    advertiser_tracking_enabled:\
+    \ 1,\n    application_tracking_enabled: 0,\n    extinfo: [\n      'a2',\n    \
+    \  'app_id',\n      'app_version',\n      'Version app_version',\n      'os_version',\n\
+    \      'device_model',\n      'language',\n      '',\n      '',\n      '',\n \
+    \     '',\n      '',\n      '',\n      '',\n      '',\n      ''\n    ],\n    campaign_ids:\
+    \ 'expected-campaign_ids',\n    install_referrer: 'expected-install_referrer',\n\
+    \    installer_package: 'expected-installer_package', \n    url_schemes: ['foobar',\
+    \ 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n    windows_attribution_id:\
+    \ 'expected-windows_attribution_id'\n  }\n});\n\nconst expectedRequestBody = {\n\
+    \  data: [\n    {\n      action_source: 'app',\n      event_time: 1747945830,\n\
+    \      custom_data: {},\n      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
+    \ 1,\n        application_tracking_enabled: 0,\n        extinfo: [\n         \
+    \ 'a2',\n          'app_id',\n          'app_version',\n          'Version app_version',\n\
+    \          'os_version',\n          'device_model',\n          'language',\n \
+    \         '',\n          '',\n          '',\n          '',\n          '',\n  \
+    \        '',\n          '',\n          '',\n          ''\n        ],\n       \
+    \ campaign_ids: 'expected-campaign_ids',\n        install_referrer: 'expected-install_referrer',\n\
+    \        installer_package: 'expected-installer_package',\n        url_schemes:\
+    \ ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n        windows_attribution_id:\
+    \ 'expected-windows_attribution_id'\n      }\n    }\n  ],\n  partner_agent: 'stape-gtmss-2.1.1'\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  const parsedBody = JSON.parse(requestBody);\n  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n\
+    \  return {\n    then: (callback) => { \n      callback({ statusCode: 200 });\n\
+    \      return {\n        then: () => {},\n        catch: () => {}\n      };\n\
+    \    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);\n\
+    \n// Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some\
+    \ reason.\n// Workaround because assertApi('gtmOn*').wasCalled() doesn't work\
+    \ for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure',\
+    \ () => fail('gtmOnFailure should not have been called'));"
+- name: '[Action Source = App] Request is sent successfully when using UI data as
+    source'
+  code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
+    \ = [\n  { name: 'advertiser_tracking_enabled', value: '1' },\n  { name: 'application_tracking_enabled',\
+    \ value: '0' },\n  { \n   name: 'extinfo',\n   value: \n     [\n      'a2',\n\
+    \      'app_id',\n      'app_version',\n      'Version app_version',\n      'os_version',\n\
+    \      'device_model',\n      'language',\n      '',\n      '',\n      '',\n \
+    \     '',\n      '',\n      '',\n      '',\n      '',\n      ''\n    ]\n  },\n\
+    \  { name: 'campaign_ids', value: 'expected-campaign_ids' },\n  { name: 'install_referrer',\
+    \ value: 'expected-install_referrer' },\n  { name: 'installer_package', value:\
+    \ 'expected-installer_package' }, \n  { name: 'url_schemes', value: ['foobar',\
+    \ 'abcdef'] },\n  { name: 'vendor_id', value: 'expected-vendor_id' },\n  { name:\
+    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\n\n\
+    mock('getAllEventData', {});\n\nconst expectedRequestBody = {\n  data: [\n   \
+    \ {\n      action_source: 'app',\n      event_time: 1747945830,\n      custom_data:\
+    \ {},\n      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
+    \ '1',\n        application_tracking_enabled: '0',\n        extinfo: [\n     \
+    \     'a2',\n          'app_id',\n          'app_version',\n          'Version\
+    \ app_version',\n          'os_version',\n          'device_model',\n        \
+    \  'language',\n          '',\n          '',\n          '',\n          '',\n \
+    \         '',\n          '',\n          '',\n          '',\n          ''\n   \
+    \     ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
+    \ 'expected-install_referrer',\n        installer_package: 'expected-installer_package',\n\
+    \        url_schemes: ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n\
+    \        windows_attribution_id: 'expected-windows_attribution_id'\n      }\n\
+    \    }\n  ],\n  partner_agent: 'stape-gtmss-2.1.1'\n};\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  const parsedBody = JSON.parse(requestBody);\n\
+    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return {\n    then:\
+    \ (callback) => { \n      callback({ statusCode: 200 });\n      return {\n   \
+    \     then: () => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback)\
+    \ => callback()\n  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
+    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
+    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
 setup: |-
   const JSON = require('JSON');
   const Promise = require('Promise');
 
+  const expectedBigQuerySettings = {
+    logBigQueryProjectId: 'logBigQueryProjectId',
+    logBigQueryDatasetId: 'logBigQueryDatasetId',
+    logBigQueryTableId: 'logBigQueryTableId'
+  };
+
   const requiredConsoleKeys = ['Type', 'TraceId', 'Name'];
   const requiredBqKeys = ['timestamp', 'type', 'trace_id', 'tag_name'];
+  const expectedBqOptions = { ignoreUnknownValues: true };
 
   const expectedValue = 'test';
-  const expectedBqOptions = { ignoreUnknownValues: true };
   const expectedPixelId = '1111111111111';
 
   const mockData = {
@@ -2216,10 +2336,16 @@ setup: |-
     accessToken: expectedValue,
     eventType: 'custom',
     eventName: expectedValue,
-    logBigQueryProjectId: expectedValue,
-    logBigQueryDatasetId: expectedValue,
-    logBigQueryTableId: expectedValue,
+    logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,
+    logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,
+    logBigQueryTableId: expectedBigQuerySettings.logBigQueryTableId,
   };
+
+  mock('getRequestHeader', (header) => {
+    if (header === 'trace-id') return 'expectedTraceId';
+  });
+
+  mock('getTimestampMillis', 1747945830456);
 
 
 ___NOTES___
