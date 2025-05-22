@@ -41,11 +41,8 @@ if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
 
 const commonCookie = eventData.common_cookie || {};
 
-let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc;
-let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp;
-
-if (!fbc) fbc = eventData._fbc;
-if (!fbp) fbp = eventData._fbp;
+let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc;
+let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp;
 
 const subDomainIndex = url
   ? computeEffectiveTldPlusOne(url).split('.').length - 1
@@ -82,24 +79,6 @@ if (!fbp && data.generateFbp) {
     generateRandom(1000000000, 2147483647);
 }
 
-const mappedEventData = mapEvent(eventData, data);
-const postBody = {
-  data: [mappedEventData],
-  partner_agent:
-    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
-};
-
-if (data.enableEventEnhancement) {
-  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
-  setGtmEecCookie(mappedEventData.user_data);
-}
-
-if (eventData.test_event_code || data.testId) {
-  postBody.test_event_code = eventData.test_event_code
-    ? eventData.test_event_code
-    : data.testId;
-}
-
 const cookieOptions = {
   domain: isUIFieldTrue(data.overrideCookieDomain)
     ? data.overridenCookieDomain
@@ -117,6 +96,24 @@ if (fbc) {
 
 if (fbp) {
   setCookie('_fbp', fbp, cookieOptions);
+}
+
+const mappedEventData = mapEvent(eventData, data);
+const postBody = {
+  data: [mappedEventData],
+  partner_agent:
+    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+};
+
+if (data.enableEventEnhancement) {
+  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
+  setGtmEecCookie(mappedEventData.user_data);
+}
+
+if (eventData.test_event_code || data.testId) {
+  postBody.test_event_code = eventData.test_event_code
+    ? eventData.test_event_code
+    : data.testId;
 }
 
 const apiVersion = '22.0';
@@ -514,6 +511,8 @@ function addUserData(eventData, mappedData) {
   else if (eventData.last_name) mappedData.user_data.ln = eventData.last_name;
   else if (user_data.last_name) mappedData.user_data.ln = user_data.last_name;
   else if (address.last_name) mappedData.user_data.ln = address.last_name;
+  else if (address.sha256_last_name)
+    mappedData.user_data.ln = address.sha256_last_name;
 
   if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
   else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
@@ -521,11 +520,15 @@ function addUserData(eventData, mappedData) {
   else if (eventData.first_name) mappedData.user_data.fn = eventData.first_name;
   else if (user_data.first_name) mappedData.user_data.fn = user_data.first_name;
   else if (address.first_name) mappedData.user_data.fn = address.first_name;
+  else if (address.sha256_first_name)
+    mappedData.user_data.fn = address.sha256_first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
   else if (user_data.email_address)
     mappedData.user_data.em = user_data.email_address;
   else if (user_data.email) mappedData.user_data.em = user_data.email;
+  else if (user_data.sha256_email_address)
+    mappedData.user_data.em = user_data.sha256_email_address;
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
   else if (user_data.phone_number)
@@ -606,17 +609,37 @@ function addAppData(eventData, mappedData) {
 
   if (getType(eventData.app_data) === 'object') {
     mappedData.app_data = eventData.app_data;
-
     return mappedData;
   }
 
-  if (eventData.advertiser_tracking_enabled)
-    mappedData.app_data.advertiser_tracking_enabled =
-      eventData.advertiser_tracking_enabled;
-  if (eventData.application_tracking_enabled)
-    mappedData.app_data.application_tracking_enabled =
-      eventData.application_tracking_enabled;
-  if (eventData.extinfo) mappedData.app_data.extinfo = eventData.extinfo;
+  mappedData.app_data.advertiser_tracking_enabled =
+    eventData.advertiser_tracking_enabled ? 1 : 0; // Required
+  mappedData.app_data.application_tracking_enabled =
+    eventData.application_tracking_enabled ? 1 : 0; // Required
+  if (eventData.extinfo) {
+    mappedData.app_data.extinfo = eventData.extinfo;
+  } else {
+    const platform = makeString(eventData['x-ga-platform'] || '').toLowerCase();
+    const extinfoArray = [
+      platform === 'android' ? 'a2' : platform === 'ios' ? 'i2' : '', // Required
+      eventData.app_id || '',
+      eventData.app_version || '',
+      eventData.app_version ? 'Version ' + eventData.app_version : '',
+      makeString(eventData['x-ga-os_version'] || ''), // Required
+      eventData['x-ga-device_model'] || '',
+      eventData.language || '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ];
+    mappedData.app_data.extinfo = extinfoArray;
+  }
   if (eventData.campaign_ids)
     mappedData.app_data.campaign_ids = eventData.campaign_ids;
   if (eventData.install_referrer)
@@ -625,6 +648,7 @@ function addAppData(eventData, mappedData) {
     mappedData.app_data.installer_package = eventData.installer_package;
   if (eventData.url_schemes)
     mappedData.app_data.url_schemes = eventData.url_schemes;
+  if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
   if (eventData.windows_attribution_id)
     mappedData.app_data.windows_attribution_id =
       eventData.windows_attribution_id;
@@ -743,7 +767,6 @@ function log(rawDataToLog) {
   if (determinateIsLoggingEnabledForBigQuery())
     logDestinationsHandlers.bigQuery = logToBigQuery;
 
-  // Key mappings for each log destination
   const keyMappings = {
     // No transformation for Console is needed.
     bigQuery: {
@@ -766,10 +789,10 @@ function log(rawDataToLog) {
 
     const mapping = keyMappings[logDestination];
     const dataToLog = mapping ? {} : rawDataToLog;
-    // Map keys based on the log destination
+
     if (mapping) {
       for (const key in rawDataToLog) {
-        const mappedKey = mapping[key] || key; // Fallback to original key if no mapping exists
+        const mappedKey = mapping[key] || key;
         dataToLog[mappedKey] = rawDataToLog[key];
       }
     }
@@ -789,18 +812,12 @@ function logToBigQuery(dataToLog) {
     tableId: data.logBigQueryTableId
   };
 
-  // timestamp is required.
   dataToLog.timestamp = getTimestampMillis();
 
-  // Columns with type JSON need to be stringified.
   ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    // GTM Sandboxed JSON.parse returns undefined for malformed JSON but throws post-execution, causing execution failure.
-    // If fixed, could use: dataToLog[p] = JSON.stringify(JSON.parse(dataToLog[p]) || dataToLog[p]);
     dataToLog[p] = JSON.stringify(dataToLog[p]);
   });
 
-  // assertApi doesn't work for 'BigQuery.insert()'. It's needed to convert BigQuery into a function when testing.
-  // Ref: https://gtm-gear.com/posts/gtm-templates-testing/
   const bigquery =
     getType(BigQuery) === 'function'
       ? BigQuery() /* Only during Unit Tests */
