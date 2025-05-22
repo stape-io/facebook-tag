@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 3e9e9b3ca3c600f7d1ba1066bbfeaf797f19a156
+    changeNotes: Add parsing of sh256 user data from Common Event Data, improve handling of app events parameters.
   - sha: 11b4ee5fc6dee9cbdb90d7cb02f9081709f1c933
     changeNotes: Add default value to overriden cookie domain.
   - sha: 05b7a1d3f0aef3bb1cf33799fe9cb98d55eee712
