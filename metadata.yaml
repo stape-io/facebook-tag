@@ -1,5 +1,7 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: ef6fa47484f4521a3ba0745d3159e8c694354979
+    changeNotes: Remove non-empty requirement for cookie domain to avoid GTM import bug.
   - sha: 3e9e9b3ca3c600f7d1ba1066bbfeaf797f19a156
     changeNotes: Add parsing of sha256 user data from Common Event Data, improve handling of app events parameters.
   - sha: 11b4ee5fc6dee9cbdb90d7cb02f9081709f1c933
