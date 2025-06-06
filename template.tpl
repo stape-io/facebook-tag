@@ -360,12 +360,8 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "help": "Enable this option to override the cookie domain.\u003cbr\u003eEnter your website\u0027s top-level domain as a fixed value (e.g., example.com). \u003cbr\u003e If left as \"auto\", the top-level domain will be automatically determined using the following priority: \u003cul\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eForwarded\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eX-Forwarded-Host\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eHost\u003c/i\u003e header.\u003c/li\u003e \u003c/ul\u003e",
-        "valueValidators": [
-          {
-            "type": "NON_EMPTY"
-          }
-        ],
-        "defaultValue": "auto"
+        "defaultValue": "auto",
+        "valueHint": "example.com"
       }
     ],
     "defaultValue": false
@@ -926,7 +922,7 @@ if (!fbp && data.generateFbp) {
 
 const cookieOptions = {
   domain: isUIFieldTrue(data.overrideCookieDomain)
-    ? data.overridenCookieDomain
+    ? data.overridenCookieDomain || 'auto'
     : 'auto',
   path: '/',
   samesite: 'Lax',
@@ -1458,9 +1454,9 @@ function addAppData(eventData, mappedData) {
   }
 
   mappedData.app_data.advertiser_tracking_enabled =
-    eventData.advertiser_tracking_enabled ? 1 : 0;
+    eventData.advertiser_tracking_enabled ? 1 : 0; // Required
   mappedData.app_data.application_tracking_enabled =
-    eventData.application_tracking_enabled ? 1 : 0;
+    eventData.application_tracking_enabled ? 1 : 0; // Required
   if (eventData.extinfo) {
     mappedData.app_data.extinfo = eventData.extinfo;
   } else {
@@ -1519,7 +1515,7 @@ function setGtmEecCookie(userData) {
 
   setCookie('_gtmeec', toBase64(JSON.stringify(gtmeecCookie)), {
     domain: isUIFieldTrue(data.overrideCookieDomain)
-      ? data.overridenCookieDomain
+      ? data.overridenCookieDomain || 'auto'
       : 'auto',
     path: '/',
     samesite: 'strict',

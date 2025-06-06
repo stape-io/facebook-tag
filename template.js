@@ -81,7 +81,7 @@ if (!fbp && data.generateFbp) {
 
 const cookieOptions = {
   domain: isUIFieldTrue(data.overrideCookieDomain)
-    ? data.overridenCookieDomain
+    ? data.overridenCookieDomain || 'auto'
     : 'auto',
   path: '/',
   samesite: 'Lax',
@@ -674,7 +674,7 @@ function setGtmEecCookie(userData) {
 
   setCookie('_gtmeec', toBase64(JSON.stringify(gtmeecCookie)), {
     domain: isUIFieldTrue(data.overrideCookieDomain)
-      ? data.overridenCookieDomain
+      ? data.overridenCookieDomain || 'auto'
       : 'auto',
     path: '/',
     samesite: 'strict',
