@@ -116,7 +116,7 @@ if (eventData.test_event_code || data.testId) {
     : data.testId;
 }
 
-const apiVersion = '22.0';
+const apiVersion = '23.0';
 let pixelIdsAndAccessTokens = [
   { pixelId: data.pixelId, accessToken: data.accessToken }
 ];
