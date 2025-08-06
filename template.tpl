@@ -219,8 +219,7 @@ ___TEMPLATE_PARAMETERS___
         "enablingConditions": []
       }
     ],
-    "defaultValue": "website",
-    "help": "\u003cb\u003eEmail\u003c/b\u003e - Conversion happened over email.\n\u003cbr/\u003e\n\u003cb\u003eWebsite\u003c/b\u003e - Conversion was made on your website.\n\u003cbr/\u003e\n\u003cb\u003eApp\u003c/b\u003e - Conversion was made on your mobile app.\n\u003cbr/\u003e\n\u003cb\u003ePhone Call\u003c/b\u003e - Conversion was made over the phone.\n\u003cbr/\u003e\n\u003cb\u003eChat\u003c/b\u003e - Conversion was made via a messaging app, SMS, or online messaging feature.\n\u003cbr/\u003e\n\u003cb\u003ePhysical Store\u003c/b\u003e - Conversion was made in person at your physical store.\n\u003cbr/\u003e\n\u003cb\u003eSystem Generated\u003c/b\u003e - Conversion happened automatically, for example, a subscription renewal that’s set to auto-pay each month.\n\u003cbr/\u003e\n\u003cb\u003eBusiness Messaging\u003c/b\u003e - Conversion was made from ads that click to Messenger, Instagram or WhatsApp.\n\u003cbr/\u003e \n\u003cb\u003eOther\u003c/b\u003e - Conversion happened in a way that is not listed."
+    "defaultValue": "website"
   },
   {
     "type": "SELECT",
@@ -408,11 +407,6 @@ ___TEMPLATE_PARAMETERS___
     "type": "GROUP",
     "subParams": [
       {
-        "type": "LABEL",
-        "name": "serverEventDataLabel",
-        "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event\"\u003ethis documentation\u003c/a\u003e for more details on which Server Event Data parameters you can override.\n\u003cbr/\u003e\u003cbr/\u003e"
-      },
-      {
         "name": "serverEventDataList",
         "simpleTableColumns": [
           {
@@ -558,11 +552,6 @@ ___TEMPLATE_PARAMETERS___
     "type": "GROUP",
     "subParams": [
       {
-        "type": "LABEL",
-        "name": "userDataLabel",
-        "displayName": "User Data is your main \u003ca href\u003d\"https://www.facebook.com/business/help/765081237991954?id\u003d818859032317965\"\u003eEvent Match Quality (EMQ) contributor\u003c/a\u003e. Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/user-data\"\u003ethis documentation\u003c/a\u003e for more details on accepted User Data parameters.\n\u003cbr/\u003e\nThe tag will automatically hash parameters that need it, pre-hashed data is also accepted.\n\u003cbr/\u003e\u003cbr/\u003e"
-      },
-      {
         "type": "SELECT",
         "name": "userDataObject",
         "displayName": "User Data Properties Object",
@@ -706,11 +695,6 @@ ___TEMPLATE_PARAMETERS___
     "name": "appDataListGroup",
     "type": "GROUP",
     "subParams": [
-      {
-        "type": "LABEL",
-        "name": "appDataLabel",
-        "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\"\u003ethis documentation\u003c/a\u003e for more details on which App Data parameters you can send.\n\u003cbr/\u003e\u003cbr/\u003e"
-      },
       {
         "type": "SELECT",
         "name": "appDataObject",
