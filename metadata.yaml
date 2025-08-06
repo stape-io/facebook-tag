@@ -1,7 +1,7 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
-  - sha: d45669a24f7326e8550c1dfc5fbb2330cd888aa7
+  - sha: 0921cc84860b896d71bb851fcc41e4cffad40028
     changeNotes: Added ROAS support. Added support for reading parameters from object. Updated to API v23.
   - sha: ef6fa47484f4521a3ba0745d3159e8c694354979
     changeNotes: Remove non-empty requirement for cookie domain to avoid GTM import bug.
