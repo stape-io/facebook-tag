@@ -215,8 +215,7 @@ ___TEMPLATE_PARAMETERS___
     "simpleValueType": true,
     "valueValidators": [
       {
-        "type": "NON_EMPTY",
-        "enablingConditions": []
+        "type": "NON_EMPTY"
       }
     ],
     "defaultValue": "website"
@@ -695,6 +694,11 @@ ___TEMPLATE_PARAMETERS___
     "name": "appDataListGroup",
     "type": "GROUP",
     "subParams": [
+      {
+        "type": "LABEL",
+        "name": "appDataLabel",
+        "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\"\u003ethis documentation\u003c/a\u003e for more details on which App Data parameters you can send.\n\u003cbr/\u003e\u003cbr/\u003e"
+      },
       {
         "type": "SELECT",
         "name": "appDataObject",
