@@ -24,7 +24,8 @@ const testRegex = require('testRegex');
 const Promise = require('Promise');
 const BigQuery = require('BigQuery');
 
-/**********************************************************************************************/
+/*==============================================================================
+==============================================================================*/
 
 const traceId = getRequestHeader('trace-id');
 
@@ -102,7 +103,7 @@ const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
   partner_agent:
-    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+    'stape-gtmss-2.1.2' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
 if (data.enableEventEnhancement) {
@@ -116,7 +117,6 @@ if (eventData.test_event_code || data.testId) {
     : data.testId;
 }
 
-const apiVersion = '22.0';
 let pixelIdsAndAccessTokens = [
   { pixelId: data.pixelId, accessToken: data.accessToken }
 ];
@@ -125,7 +125,7 @@ if (data.enableMultipixelSetup) {
     data.pixelIdAndAccessTokenTable
   );
 }
-
+const apiVersion = '23.0';
 const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   const pixelId = pixelIdAndAccessTokenObj.pixelId;
   const accessToken = pixelIdAndAccessTokenObj.accessToken;
@@ -186,8 +186,9 @@ if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
 }
 
-/**********************************************************************************************/
-// Vendor related functions
+/*==============================================================================
+  Vendor related functions
+==============================================================================*/
 
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
@@ -274,6 +275,7 @@ function mapEvent(eventData, data) {
   mappedData = addUserData(eventData, mappedData);
   mappedData = addAppData(eventData, mappedData);
   mappedData = addEcommerceData(eventData, mappedData);
+  mappedData = addOriginalEventData(mappedData);
   mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
@@ -339,22 +341,33 @@ function hashDataIfNeeded(mappedData) {
 }
 
 function overrideDataIfNeeded(mappedData) {
+  if (getType(data.userDataObject) === 'object') {
+    mergeObj(mappedData.user_data, data.userDataObject);
+  }
   if (data.userDataList) {
     data.userDataList.forEach((d) => {
       mappedData.user_data[d.name] = d.value;
     });
   }
 
+  if (getType(data.customDataObject) === 'object') {
+    mergeObj(mappedData.custom_data, data.customDataObject);
+  }
   if (data.customDataList) {
     data.customDataList.forEach((d) => {
       mappedData.custom_data[d.name] = d.value;
     });
   }
 
-  if (data.appDataList && mappedData.action_source === 'app') {
-    data.appDataList.forEach((d) => {
-      mappedData.app_data[d.name] = d.value;
-    });
+  if (mappedData.action_source === 'app') {
+    if (getType(data.appDataObject) === 'object') {
+      mergeObj(mappedData.app_data, data.appDataObject);
+    }
+    if (data.appDataList) {
+      data.appDataList.forEach((d) => {
+        mappedData.app_data[d.name] = d.value;
+      });
+    }
   }
 
   return mappedData;
@@ -398,6 +411,19 @@ function cleanupData(mappedData) {
     }
 
     mappedData.app_data = appData;
+  }
+
+  if (mappedData.original_event_data) {
+    const originalEventData = {};
+
+    for (let originalEventDataKey in mappedData.original_event_data) {
+      if (isValidValue(mappedData.original_event_data[originalEventDataKey])) {
+        originalEventData[originalEventDataKey] =
+          mappedData.original_event_data[originalEventDataKey];
+      }
+    }
+
+    mappedData.original_event_data = originalEventData;
   }
 
   return mappedData;
@@ -656,6 +682,23 @@ function addAppData(eventData, mappedData) {
   return mappedData;
 }
 
+function addOriginalEventData(mappedData) {
+  if (mappedData.event_name !== 'AppendValue') {
+    return mappedData;
+  }
+
+  if (data.originalEventDataList) {
+    mappedData.action_source = undefined;
+
+    mappedData.original_event_data = {};
+    data.originalEventDataList.forEach((d) => {
+      mappedData.original_event_data[d.name] = d.value;
+    });
+  }
+
+  return mappedData;
+}
+
 function setGtmEecCookie(userData) {
   const gtmeecCookie = {};
 
@@ -723,8 +766,9 @@ function enhanceEventData(userData) {
   return userData;
 }
 
-/**********************************************************************************************/
-// Helpers
+/*==============================================================================
+  Helpers
+==============================================================================*/
 
 function enc(data) {
   return encodeUriComponent(data || '');
@@ -751,6 +795,13 @@ function normalizePhoneNumber(phoneNumber) {
 
 function isUIFieldTrue(field) {
   return [true, 'true'].indexOf(field) !== -1;
+}
+
+function mergeObj(target, source) {
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) target[key] = source[key];
+  }
+  return target;
 }
 
 function isConsentGivenOrNotRequired() {

@@ -82,6 +82,10 @@ ___TEMPLATE_PARAMETERS___
                     "displayValue": "AddToWishlist"
                   },
                   {
+                    "value": "AppendValue",
+                    "displayValue": "AppendValue"
+                  },
+                  {
                     "value": "CompleteRegistration",
                     "displayValue": "CompleteRegistration"
                   },
@@ -275,7 +279,7 @@ ___TEMPLATE_PARAMETERS___
     "name": "enableMultipixelSetup",
     "checkboxText": "Add Multiple Facebook Pixel IDs",
     "simpleValueType": true,
-    "help": "Add one Facebook Pixel ID and one Access Token per line",
+    "help": "Add one Facebook Pixel ID and one Access Token per line.",
     "subParams": [
       {
         "type": "SIMPLE_TABLE",
@@ -385,7 +389,7 @@ ___TEMPLATE_PARAMETERS___
     "name": "enableEventEnhancement",
     "checkboxText": "Enable Event Enhancement",
     "simpleValueType": true,
-    "help": "Enable Use of HTTP Only Secure Cookie (gtmeec) to Enhance Event Data",
+    "help": "Enable Use of HTTP Only Secure Cookie (gtmeec) to Enhance Event Data.",
     "defaultValue": true
   },
   {
@@ -398,7 +402,7 @@ ___TEMPLATE_PARAMETERS___
   {
     "displayName": "Server Event Data Override",
     "name": "serverEventDataListGroup",
-    "groupStyle": "ZIPPY_CLOSED",
+    "groupStyle": "ZIPPY_OPEN_ON_PARAM",
     "type": "GROUP",
     "subParams": [
       {
@@ -446,7 +450,7 @@ ___TEMPLATE_PARAMETERS___
               },
               {
                 "value": "referrer_url",
-                "displayValue": "Referrer Url"
+                "displayValue": "Referrer URL"
               }
             ]
           },
@@ -460,15 +464,102 @@ ___TEMPLATE_PARAMETERS___
         "type": "SIMPLE_TABLE",
         "newRowButtonText": "Add property"
       }
+    ]
+  },
+  {
+    "type": "GROUP",
+    "name": "originalEventDataListGroup",
+    "displayName": "Original Event Data",
+    "groupStyle": "ZIPPY_OPEN_ON_PARAM",
+    "subParams": [
+      {
+        "type": "LABEL",
+        "name": "originalEventDataLabel",
+        "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/original-event\"\u003ethis documentation\u003c/a\u003e for more details on which Original Event Data parameters you can send.\n\u003cbr/\u003e\nUse these parameters to identify the Original Event that happened at an earlier time. Then, use the \u003ci\u003eAppendValue\u003c/i\u003e event and the other sections to supplement information the Original Event. This is useful for Value Optimization for Profit (using the \u003ci\u003enet_revenue\u003c/i\u003e parameter), allowing you to report the final profit margin after the initial sale has occurred.\n\u003cbr/\u003e\u003cbr/\u003e"
+      },
+      {
+        "type": "SIMPLE_TABLE",
+        "name": "originalEventDataList",
+        "displayName": "",
+        "simpleTableColumns": [
+          {
+            "defaultValue": "",
+            "displayName": "Property Name",
+            "name": "name",
+            "type": "SELECT",
+            "isUnique": true,
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ],
+            "selectItems": [
+              {
+                "value": "event_name",
+                "displayValue": "Original Event Name"
+              },
+              {
+                "value": "event_time",
+                "displayValue": "Original Event Time"
+              },
+              {
+                "value": "order_id",
+                "displayValue": "Original Order ID"
+              },
+              {
+                "value": "event_id",
+                "displayValue": "Original Event ID"
+              }
+            ]
+          },
+          {
+            "defaultValue": "",
+            "displayName": "Property Value",
+            "name": "value",
+            "type": "TEXT",
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ]
+          }
+        ],
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ]
+      }
     ],
-    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can override."
+    "enablingConditions": [
+      {
+        "paramName": "eventNameStandard",
+        "paramValue": "AppendValue",
+        "type": "EQUALS"
+      },
+      {
+        "paramName": "eventNameCustom",
+        "paramValue": "AppendValue",
+        "type": "EQUALS"
+      }
+    ]
   },
   {
     "displayName": "User Data",
     "name": "userDataListGroup",
-    "groupStyle": "ZIPPY_CLOSED",
+    "groupStyle": "ZIPPY_OPEN_ON_PARAM",
     "type": "GROUP",
     "subParams": [
+      {
+        "type": "SELECT",
+        "name": "userDataObject",
+        "displayName": "User Data Properties Object",
+        "macrosInSelect": true,
+        "selectItems": [],
+        "simpleValueType": true,
+        "help": "Provide an object with User Data Properties to merge with the fields below. Any conflicting properties will be overwritten.",
+        "notSetText": "(not set)"
+      },
       {
         "name": "userDataList",
         "simpleTableColumns": [
@@ -530,11 +621,11 @@ ___TEMPLATE_PARAMETERS___
               },
               {
                 "value": "client_ip_address",
-                "displayValue": "Client IP address"
+                "displayValue": "Client IP Address"
               },
               {
                 "value": "client_user_agent",
-                "displayValue": "Client user agent"
+                "displayValue": "Client User Agent"
               },
               {
                 "value": "fbc",
@@ -574,7 +665,15 @@ ___TEMPLATE_PARAMETERS___
               },
               {
                 "value": "ctwa_clid",
-                "displayValue": "Ctwa clid"
+                "displayValue": "Click to WhatsApp ID"
+              },
+              {
+                "value": "ig_account_id",
+                "displayValue": "IG Account ID"
+              },
+              {
+                "value": "ig_sid",
+                "displayValue": "Click to Instagram ID"
               }
             ]
           },
@@ -588,19 +687,27 @@ ___TEMPLATE_PARAMETERS___
         "type": "SIMPLE_TABLE",
         "newRowButtonText": "Add property"
       }
-    ],
-    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/user-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what user data parameters you can add to the call. If the documentation requires the parameter to be hashed, you \u003cstrong\u003emust\u003c/strong\u003e hash it with SHA256, or the tag will do this automatically before sending the event to Facebook."
+    ]
   },
   {
     "displayName": "App Data",
     "name": "appDataListGroup",
-    "groupStyle": "ZIPPY_CLOSED",
     "type": "GROUP",
     "subParams": [
       {
         "type": "LABEL",
         "name": "appDataLabel",
-        "displayName": "App Parameters that you can send to Meta you can find \u003ca target\u003d\"_blank\" href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\"\u003eby this link\u003c/a\u003e."
+        "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\"\u003ethis documentation\u003c/a\u003e for more details on which App Data parameters you can send.\n\u003cbr/\u003e\u003cbr/\u003e"
+      },
+      {
+        "type": "SELECT",
+        "name": "appDataObject",
+        "displayName": "App Data Properties Object",
+        "macrosInSelect": true,
+        "selectItems": [],
+        "simpleValueType": true,
+        "help": "Provide an object with App Data Properties to merge with the fields below. Any conflicting properties will be overwritten.",
+        "notSetText": "(not set)"
       },
       {
         "name": "appDataList",
@@ -666,25 +773,35 @@ ___TEMPLATE_PARAMETERS___
         "newRowButtonText": "Add property"
       }
     ],
-    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can add to the call.",
     "enablingConditions": [
       {
         "paramName": "actionSource",
         "paramValue": "app",
         "type": "EQUALS"
       }
-    ]
+    ],
+    "groupStyle": "ZIPPY_OPEN_ON_PARAM"
   },
   {
     "displayName": "Custom Data",
     "name": "customDataListGroup",
-    "groupStyle": "ZIPPY_CLOSED",
+    "groupStyle": "ZIPPY_OPEN_ON_PARAM",
     "type": "GROUP",
     "subParams": [
       {
         "type": "LABEL",
         "name": "customDataLabel",
-        "displayName": "Standard Parameters that you can send to Meta you can find \u003ca target\u003d\"_blank\" href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\"\u003eby this link\u003c/a\u003e."
+        "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\"\u003ethis documentation\u003c/a\u003e for more details on which Custom Data parameters you can send.\n\u003cbr/\u003e\u003cbr/\u003e"
+      },
+      {
+        "type": "SELECT",
+        "name": "customDataObject",
+        "displayName": "Custom Data Properties Object",
+        "macrosInSelect": true,
+        "selectItems": [],
+        "simpleValueType": true,
+        "help": "Provide an object with Custom Data Properties to merge with the fields below. Any conflicting properties will be overwritten.",
+        "notSetText": "(not set)"
       },
       {
         "name": "customDataList",
@@ -711,8 +828,7 @@ ___TEMPLATE_PARAMETERS___
         "type": "SIMPLE_TABLE",
         "newRowButtonText": "Add property"
       }
-    ],
-    "help": "See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\" target\u003d\"_blank\"\u003ethis documentation\u003c/a\u003e for more details on what data parameters you can add to the call."
+    ]
   },
   {
     "type": "GROUP",
@@ -865,7 +981,8 @@ const testRegex = require('testRegex');
 const Promise = require('Promise');
 const BigQuery = require('BigQuery');
 
-/**********************************************************************************************/
+/*==============================================================================
+==============================================================================*/
 
 const traceId = getRequestHeader('trace-id');
 
@@ -943,7 +1060,7 @@ const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
   partner_agent:
-    'stape-gtmss-2.1.1' + (data.enableEventEnhancement ? '-ee' : '')
+    'stape-gtmss-2.1.2' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
 if (data.enableEventEnhancement) {
@@ -957,7 +1074,6 @@ if (eventData.test_event_code || data.testId) {
     : data.testId;
 }
 
-const apiVersion = '22.0';
 let pixelIdsAndAccessTokens = [
   { pixelId: data.pixelId, accessToken: data.accessToken }
 ];
@@ -966,7 +1082,7 @@ if (data.enableMultipixelSetup) {
     data.pixelIdAndAccessTokenTable
   );
 }
-
+const apiVersion = '23.0';
 const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   const pixelId = pixelIdAndAccessTokenObj.pixelId;
   const accessToken = pixelIdAndAccessTokenObj.accessToken;
@@ -1027,8 +1143,9 @@ if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
 }
 
-/**********************************************************************************************/
-// Vendor related functions
+/*==============================================================================
+  Vendor related functions
+==============================================================================*/
 
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
@@ -1115,6 +1232,7 @@ function mapEvent(eventData, data) {
   mappedData = addUserData(eventData, mappedData);
   mappedData = addAppData(eventData, mappedData);
   mappedData = addEcommerceData(eventData, mappedData);
+  mappedData = addOriginalEventData(mappedData);
   mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
@@ -1180,22 +1298,33 @@ function hashDataIfNeeded(mappedData) {
 }
 
 function overrideDataIfNeeded(mappedData) {
+  if (getType(data.userDataObject) === 'object') {
+    mergeObj(mappedData.user_data, data.userDataObject);
+  }
   if (data.userDataList) {
     data.userDataList.forEach((d) => {
       mappedData.user_data[d.name] = d.value;
     });
   }
 
+  if (getType(data.customDataObject) === 'object') {
+    mergeObj(mappedData.custom_data, data.customDataObject);
+  }
   if (data.customDataList) {
     data.customDataList.forEach((d) => {
       mappedData.custom_data[d.name] = d.value;
     });
   }
 
-  if (data.appDataList && mappedData.action_source === 'app') {
-    data.appDataList.forEach((d) => {
-      mappedData.app_data[d.name] = d.value;
-    });
+  if (mappedData.action_source === 'app') {
+    if (getType(data.appDataObject) === 'object') {
+      mergeObj(mappedData.app_data, data.appDataObject);
+    }
+    if (data.appDataList) {
+      data.appDataList.forEach((d) => {
+        mappedData.app_data[d.name] = d.value;
+      });
+    }
   }
 
   return mappedData;
@@ -1239,6 +1368,19 @@ function cleanupData(mappedData) {
     }
 
     mappedData.app_data = appData;
+  }
+
+  if (mappedData.original_event_data) {
+    const originalEventData = {};
+
+    for (let originalEventDataKey in mappedData.original_event_data) {
+      if (isValidValue(mappedData.original_event_data[originalEventDataKey])) {
+        originalEventData[originalEventDataKey] =
+          mappedData.original_event_data[originalEventDataKey];
+      }
+    }
+
+    mappedData.original_event_data = originalEventData;
   }
 
   return mappedData;
@@ -1497,6 +1639,23 @@ function addAppData(eventData, mappedData) {
   return mappedData;
 }
 
+function addOriginalEventData(mappedData) {
+  if (mappedData.event_name !== 'AppendValue') {
+    return mappedData;
+  }
+
+  if (data.originalEventDataList) {
+    mappedData.action_source = undefined;
+
+    mappedData.original_event_data = {};
+    data.originalEventDataList.forEach((d) => {
+      mappedData.original_event_data[d.name] = d.value;
+    });
+  }
+
+  return mappedData;
+}
+
 function setGtmEecCookie(userData) {
   const gtmeecCookie = {};
 
@@ -1564,8 +1723,9 @@ function enhanceEventData(userData) {
   return userData;
 }
 
-/**********************************************************************************************/
-// Helpers
+/*==============================================================================
+  Helpers
+==============================================================================*/
 
 function enc(data) {
   return encodeUriComponent(data || '');
@@ -1592,6 +1752,13 @@ function normalizePhoneNumber(phoneNumber) {
 
 function isUIFieldTrue(field) {
   return [true, 'true'].indexOf(field) !== -1;
+}
+
+function mergeObj(target, source) {
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) target[key] = source[key];
+  }
+  return target;
 }
 
 function isConsentGivenOrNotRequired() {
@@ -2139,112 +2306,62 @@ scenarios:
     \      return {\n        then: () => {},\n        catch: () => {}\n      };\n\
     \    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);"
 - name: Cookie domain is NOT overriden when option is NOT selected
-  code: "mockData.overrideCookieDomain = false;\nmockData.enableEventEnhancement =\
-    \ true;\n\nconst expectedFbp = 'expectedFbp';\nconst expectedFbc = 'expectedFbc';\n\
-    mock('getAllEventData', {\n  _fbp: expectedFbp,\n  _fbc: expectedFbc\n});\n\n\
-    mock('setCookie', (cookieName, cookieValue, cookieOptions, noEncode) => {\n  switch\
-    \ (cookieName) {\n    case '_fbp':\n    case '_fbc':\n    case '_gtmeec':\n  \
-    \    if (cookieOptions.domain !== 'auto') fail('cookieDomain shouldn\\'t have\
-    \ been overriden');\n      break;\n  }\n});\n\nmock('sendHttpRequest', (requestUrl,\
-    \ requestOptions, requestBody) => {\n  return {\n    then: (callback) => { \n\
-    \      callback({ statusCode: 200 });\n      return {\n        then: () => {},\n\
-    \        catch: () => {}\n      };\n    },\n    catch: (callback) => callback()\n\
-    \  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
-    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
+  code: |-
+    mockData.overrideCookieDomain = false;
+    mockData.enableEventEnhancement = true;
+
+    const expectedFbp = 'expectedFbp';
+    const expectedFbc = 'expectedFbc';
+    mock('getAllEventData', {
+      _fbp: expectedFbp,
+      _fbc: expectedFbc
+    });
+
+    mock('setCookie', (cookieName, cookieValue, cookieOptions, noEncode) => {
+      switch (cookieName) {
+        case '_fbp':
+        case '_fbc':
+        case '_gtmeec':
+          if (cookieOptions.domain !== 'auto') fail('cookieDomain shouldn\'t have been overriden');
+          break;
+      }
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
 - name: Cookie domain is overriden when option is selected
-  code: "mockData.overrideCookieDomain = true;\nmockData.overridenCookieDomain = 'example.com';\n\
-    mockData.enableEventEnhancement = true;\n\nconst expectedFbp = 'expectedFbp';\n\
-    const expectedFbc = 'expectedFbc';\nmock('getAllEventData', {\n  _fbp: expectedFbp,\n\
-    \  _fbc: expectedFbc\n});\n\nmock('setCookie', (cookieName, cookieValue, cookieOptions,\
-    \ noEncode) => {\n  switch (cookieName) {\n    case '_fbp':\n    case '_fbc':\n\
-    \    case '_gtmeec':\n      assertThat(cookieOptions.domain).isEqualTo(mockData.overridenCookieDomain);\n\
-    \      break;\n  }\n});\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
-    \ requestBody) => {\n  return {\n    then: (callback) => { \n      callback({\
-    \ statusCode: 200 });\n      return {\n        then: () => {},\n        catch:\
-    \ () => {}\n      };\n    },\n    catch: (callback) => callback()\n  };\n});\n\
-    \nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
-    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
-- name: Should log to console, if the 'Always log to console' option is selected
-  code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
-    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
-    \ (logData) => {\n  const parsedLogData = JSON.parse(logData);\n  requiredConsoleKeys.forEach(p\
-    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
-    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
-    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n\
-    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
-    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
-    mock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure', ()\
-    \ => fail('gtmOnFailure should not have been called'));"
-- name: Should log to console, if the 'Log during debug and preview' option is selected
-    AND is on preview mode
-  code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
-    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n});\n\nmock('logToConsole',\
-    \ (logData) => {\n  const parsedLogData = JSON.parse(logData);\n  requiredConsoleKeys.forEach(p\
-    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
-    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
-    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasCalled();\n\
-    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
-    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
-    mock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure', ()\
-    \ => fail('gtmOnFailure should not have been called'));"
-- name: Should NOT log to console, if the 'Log during debug and preview' option is
-    selected AND is NOT on preview mode
-  code: "mockData.logType = 'debug';\n\nconst expectedDebugMode = false;\nmock('getContainerVersion',\
-    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n});\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
-    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
-    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n\
-    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
-    // Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n\
-    mock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure', ()\
-    \ => fail('gtmOnFailure should not have been called'));"
-- name: Should NOT log to console, if the 'Do not log' option is selected
-  code: "mockData.logType = 'no';\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
-    \ requestBody) => {\n  return {\n    then: (callback) => { \n      callback({\
-    \ statusCode: 200 });\n      return {\n        then: () => {},\n        catch:\
-    \ () => {}\n      };\n    },\n    catch: (callback) => callback()\n  };\n});\n\
-    \nrunCode(mockData);\n\nassertApi('logToConsole').wasNotCalled();\n// Workaround\
-    \ because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\n// Workaround\
-    \ because assertApi('gtmOn*').wasCalled() doesn't work for some reason.\nmock('gtmOnSuccess',\
-    \ () => assertThat(true).isTrue());\nmock('gtmOnFailure', () => fail('gtmOnFailure\
-    \ should not have been called'));"
-- name: Should log to BQ, if the 'Log to BigQuery' option is selected
-  code: "mockData.bigQueryLogType = 'always';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
-    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
-    \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
-    \ assertThat(connectionInfo).isDefined();\n      assertThat(rows).isArray();\n\
-    \      assertThat(rows).hasLength(1);\n      requiredBqKeys.forEach(p => assertThat(rows[0][p]).isDefined());\n\
-    \      assertThat(options).isEqualTo(expectedBqOptions);\n      return Promise.create((resolve,\
-    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
-    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
-    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
-    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
-- name: Should NOT log to BQ, if the 'Do not log to BigQuery' option is selected
-  code: "mockData.bigQueryLogType = 'no';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
-    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
-    \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
-    \ fail('BigQuery.insert should not have been called.');\n      return Promise.create((resolve,\
-    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  return {\n    then: (callback)\
-    \ => { \n      callback({ statusCode: 200 });\n      return {\n        then: ()\
-    \ => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback) =>\
-    \ callback()\n  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
-    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
+  code: |-
+    mockData.overrideCookieDomain = true;
+    mockData.overridenCookieDomain = 'example.com';
+    mockData.enableEventEnhancement = true;
+
+    const expectedFbp = 'expectedFbp';
+    const expectedFbc = 'expectedFbc';
+    mock('getAllEventData', {
+      _fbp: expectedFbp,
+      _fbc: expectedFbc
+    });
+
+    mock('setCookie', (cookieName, cookieValue, cookieOptions, noEncode) => {
+      switch (cookieName) {
+        case '_fbp':
+        case '_fbc':
+        case '_gtmeec':
+          assertThat(cookieOptions.domain).isEqualTo(mockData.overridenCookieDomain);
+          break;
+      }
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
 - name: '[Action Source = App] Request is sent successfully when using Event Data
     as source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
@@ -2257,26 +2374,23 @@ scenarios:
     \    installer_package: 'expected-installer_package', \n    url_schemes: ['foobar',\
     \ 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n    windows_attribution_id:\
     \ 'expected-windows_attribution_id'\n  }\n});\n\nconst expectedRequestBody = {\n\
-    \  data: [\n    {\n      action_source: 'app',\n      event_time: 1747945830,\n\
-    \      custom_data: {},\n      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
-    \ 1,\n        application_tracking_enabled: 0,\n        extinfo: [\n         \
-    \ 'a2',\n          'app_id',\n          'app_version',\n          'Version app_version',\n\
-    \          'os_version',\n          'device_model',\n          'language',\n \
-    \         '',\n          '',\n          '',\n          '',\n          '',\n  \
-    \        '',\n          '',\n          '',\n          ''\n        ],\n       \
-    \ campaign_ids: 'expected-campaign_ids',\n        install_referrer: 'expected-install_referrer',\n\
-    \        installer_package: 'expected-installer_package',\n        url_schemes:\
-    \ ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n        windows_attribution_id:\
-    \ 'expected-windows_attribution_id'\n      }\n    }\n  ],\n  partner_agent: 'stape-gtmss-2.1.1'\n\
-    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
-    \  const parsedBody = JSON.parse(requestBody);\n  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n\
-    \  return {\n    then: (callback) => { \n      callback({ statusCode: 200 });\n\
-    \      return {\n        then: () => {},\n        catch: () => {}\n      };\n\
-    \    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);\n\
-    \n// Workaround because assertApi('gtmOn*').wasCalled() doesn't work for some\
-    \ reason.\n// Workaround because assertApi('gtmOn*').wasCalled() doesn't work\
-    \ for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\nmock('gtmOnFailure',\
-    \ () => fail('gtmOnFailure should not have been called'));"
+    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
+    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
+    \     app_data: {\n        advertiser_tracking_enabled: 1,\n        application_tracking_enabled:\
+    \ 0,\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
+    \          'Version app_version',\n          'os_version',\n          'device_model',\n\
+    \          'language',\n          '',\n          '',\n          '',\n        \
+    \  '',\n          '',\n          '',\n          '',\n          '',\n         \
+    \ ''\n        ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
+    \ 'expected-install_referrer',\n        installer_package: 'expected-installer_package',\n\
+    \        url_schemes: ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n\
+    \        windows_attribution_id: 'expected-windows_attribution_id'\n      }\n\
+    \    }\n  ],\n  partner_agent: expectedPartnerAgent\n};\n\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n  const parsedBody = JSON.parse(requestBody);\n\
+    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return Promise.create((resolve,\
+    \ reject) => {\n    resolve({ statusCode: 200 });\n  });    \n});\n\nrunCode(mockData);\n\
+    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
+    });"
 - name: '[Action Source = App] Request is sent successfully when using UI data as
     source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
@@ -2291,57 +2405,210 @@ scenarios:
     \ 'abcdef'] },\n  { name: 'vendor_id', value: 'expected-vendor_id' },\n  { name:\
     \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\n\n\
     mock('getAllEventData', {});\n\nconst expectedRequestBody = {\n  data: [\n   \
-    \ {\n      action_source: 'app',\n      event_time: 1747945830,\n      custom_data:\
-    \ {},\n      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
-    \ '1',\n        application_tracking_enabled: '0',\n        extinfo: [\n     \
-    \     'a2',\n          'app_id',\n          'app_version',\n          'Version\
-    \ app_version',\n          'os_version',\n          'device_model',\n        \
-    \  'language',\n          '',\n          '',\n          '',\n          '',\n \
-    \         '',\n          '',\n          '',\n          '',\n          ''\n   \
-    \     ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
+    \ {\n      event_name: 'test',\n      action_source: 'app',\n      event_time:\
+    \ 1747945830,\n      custom_data: {},\n      user_data: {},\n      app_data: {\n\
+    \        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
+    \ '0',\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
+    \          'Version app_version',\n          'os_version',\n          'device_model',\n\
+    \          'language',\n          '',\n          '',\n          '',\n        \
+    \  '',\n          '',\n          '',\n          '',\n          '',\n         \
+    \ ''\n        ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
     \ 'expected-install_referrer',\n        installer_package: 'expected-installer_package',\n\
     \        url_schemes: ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n\
     \        windows_attribution_id: 'expected-windows_attribution_id'\n      }\n\
-    \    }\n  ],\n  partner_agent: 'stape-gtmss-2.1.1'\n};\n\nmock('sendHttpRequest',\
+    \    }\n  ],\n  partner_agent: expectedPartnerAgent\n};\n\nmock('sendHttpRequest',\
     \ (requestUrl, requestOptions, requestBody) => {\n  const parsedBody = JSON.parse(requestBody);\n\
-    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return {\n    then:\
-    \ (callback) => { \n      callback({ statusCode: 200 });\n      return {\n   \
-    \     then: () => {},\n        catch: () => {}\n      };\n    },\n    catch: (callback)\
-    \ => callback()\n  };\n});\n\nrunCode(mockData);\n\n// Workaround because assertApi('gtmOn*').wasCalled()\
-    \ doesn't work for some reason.\nmock('gtmOnSuccess', () => assertThat(true).isTrue());\n\
-    mock('gtmOnFailure', () => fail('gtmOnFailure should not have been called'));"
-setup: |-
-  const JSON = require('JSON');
-  const Promise = require('Promise');
+    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return Promise.create((resolve,\
+    \ reject) => {\n    resolve({ statusCode: 200 });\n  });    \n});\n\nrunCode(mockData);\n\
+    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
+    });"
+- name: '[Event = AppendValue] Request is sent successfully'
+  code: "mockData.inheritEventName = 'override';\nmockData.eventNameCustom = 'AppendValue';\n\
+    mockData.generateFbp = false;\nmockData.actionSource = 'website';\nmockData.userDataList\
+    \ = [\n  { name: 'em', value: 'test' },\n  { name: 'ph', value: 'test' }\n];\n\
+    mockData.customDataList = [\n  { name: 'currency', value: 'BRL' },\n  { name:\
+    \ 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList = [\n  { name:\
+    \ 'event_name', value: 'Purchase' },\n  { name: 'event_time', value: 17555555\
+    \ },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id', value:\
+    \ '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
+    \ = {\n  data: [\n    {\n      event_name: 'AppendValue',\n      event_time: 1747945830,\n\
+    \      custom_data: { currency: 'BRL', net_revenue: 123 },\n      user_data: {\n\
+    \        em: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',\n\
+    \        ph: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'\n\
+    \      },\n      original_event_data: {\n        event_name: 'Purchase',\n   \
+    \     event_time: 17555555,\n        order_id: 'foobar123',\n        event_id:\
+    \ '1747945830'\n      }\n    }\n  ],\n  partner_agent: expectedPartnerAgent\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  const parsedBody = JSON.parse(requestBody);\n  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n\
+    \  return Promise.create((resolve, reject) => {\n    resolve({ statusCode: 200\
+    \ });\n  });    \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
+- name: '[Parameters from Object or List] Parameters are read and sent succesfullly'
+  code: "mockData.actionSource = 'app'; // Using 'app' just to have access to the\
+    \ App Data section.\n\n[\n  // Object empty, list empty\n  {\n    mockDataObj:\
+    \ {\n      appDataObject: undefined,\n      appDataList: undefined,\n      userDataObject:\
+    \ undefined,\n      userDataList: undefined,\n      customDataObject: undefined,\n\
+    \      customDataList: undefined\n    },\n    expectedRequestBody: {\n      appData:\
+    \ {\n        advertiser_tracking_enabled: 0,\n        application_tracking_enabled:\
+    \ 0,\n        extinfo: ['', '', '', '', '', '', '', '', '', '', '', '', '', '',\
+    \ '', '']\n      },\n      userData: {},\n      customData: {}\n    }\n  },\n\
+    \  \n  // Object empty, list not-empty\n  {\n    mockDataObj: {\n      appDataObject:\
+    \ undefined,\n      appDataList: [\n        { name: 'vendor_id', value: 'vendor_id'\
+    \ },\n        { name: 'campaign_ids', value: 'campaign_ids' }\n      ],\n    \
+    \  userDataObject: undefined,\n      userDataList: [{ name: 'fn', value: 'test'\
+    \ }],\n      customDataObject: undefined,\n      customDataList: [\n        {\
+    \ name: 'currency', value: 'BRL' },\n        { name: 'net_revenue', value: 123\
+    \ },\n        { name: 'test', value: 'test' }\n      ]\n    },\n    expectedRequestBody:\
+    \ {\n      appData: {\n        advertiser_tracking_enabled: 0,\n        application_tracking_enabled:\
+    \ 0,\n        extinfo: ['', '', '', '', '', '', '', '', '', '', '', '', '', '',\
+    \ '', ''],\n        vendor_id: 'vendor_id',\n        campaign_ids: 'campaign_ids'\n\
+    \      },\n      userData: { fn: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'\
+    \ },\n      customData: { currency: 'BRL', net_revenue: 123, test: 'test' }\n\
+    \    }\n  },\n  \n  // Object not-empty, list empty\n  {\n    mockDataObj: {\n\
+    \      appDataObject: { vendor_id: 'vendor_id_obj' },\n      appDataList: undefined,\n\
+    \      userDataObject: { em: 'test@example.com_obj' },\n      userDataList: undefined,\n\
+    \      customDataObject: { test: 'test_obj' },\n      customDataList: undefined\n\
+    \    },\n    expectedRequestBody: {\n      appData: {\n        advertiser_tracking_enabled:\
+    \ 0,\n        application_tracking_enabled: 0,\n        extinfo: ['', '', '',\
+    \ '', '', '', '', '', '', '', '', '', '', '', '', ''],\n        vendor_id: 'vendor_id_obj'\n\
+    \      },\n      userData: { em: '0217a86a7b92e2511273b0081bfc67f939b7f9a897d960849690056732795b3d'\
+    \ },\n      customData: { test: 'test_obj' }\n    }\n  },\n  \n  // Object not-empty\
+    \ and list not-empty, with different values each.\n  {\n    mockDataObj: {\n \
+    \     appDataObject: { vendor_id: 'vendor_id_obj' },\n      appDataList: [\n \
+    \       { name: 'campaign_ids', value: 'campaign_ids' }\n      ],\n      userDataObject:\
+    \ { em: 'test@example.com_obj' },\n      userDataList: [{ name: 'fn', value: 'test'\
+    \ }],\n      customDataObject: { test: 'test_obj' },\n      customDataList: [\n\
+    \        { name: 'currency', value: 'BRL' },\n        { name: 'net_revenue', value:\
+    \ 123 }\n      ],\n    },\n    expectedRequestBody: {\n      appData: {\n    \
+    \    advertiser_tracking_enabled: 0,\n        application_tracking_enabled: 0,\n\
+    \        extinfo: ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '',\
+    \ ''],\n        vendor_id: 'vendor_id_obj',\n        campaign_ids: 'campaign_ids'\n\
+    \      },\n      userData: { em: '0217a86a7b92e2511273b0081bfc67f939b7f9a897d960849690056732795b3d',\
+    \ fn: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08' },\n\
+    \      customData: { test: 'test_obj', currency: 'BRL', net_revenue: 123 }\n \
+    \   }\n  },\n  \n  // Object not-empty and list not-empty, with overlapping values.\
+    \ Should favor list.\n  {\n    mockDataObj: {\n      appDataObject: { vendor_id:\
+    \ 'vendor_id_obj' },\n      appDataList: [\n        { name: 'vendor_id', value:\
+    \ 'vendor_id' },\n        { name: 'campaign_ids', value: 'campaign_ids' }\n  \
+    \    ],\n      userDataObject: { em: 'test@example.com_obj' },\n      userDataList:\
+    \ [{ name: 'fn', value: 'test' }, { name: 'em', value: 'test' }],\n      customDataObject:\
+    \ { test: 'test_obj' },\n      customDataList: [\n        { name: 'currency',\
+    \ value: 'BRL' },\n        { name: 'net_revenue', value: 123 },\n        { name:\
+    \ 'test', value: 'test' }\n      ],\n    },\n    expectedRequestBody: {\n    \
+    \  appData: {\n        advertiser_tracking_enabled: 0,\n        application_tracking_enabled:\
+    \ 0,\n        extinfo: ['', '', '', '', '', '', '', '', '', '', '', '', '', '',\
+    \ '', ''],\n        vendor_id: 'vendor_id',\n        campaign_ids: 'campaign_ids'\n\
+    \      },\n      userData: { em: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',\
+    \ fn: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08' },\n\
+    \      customData: { test: 'test', currency: 'BRL', net_revenue: 123 }\n    }\n\
+    \  }\n].forEach((scenario, index) => {\n  const copyMockData = JSON.parse(JSON.stringify(mockData));\n\
+    \  mergeObj(copyMockData, scenario.mockDataObj);\n  \n  mock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => {\n    const parsedBody = JSON.parse(requestBody);\n\
+    \    assertThat(parsedBody.data[0].app_data).isEqualTo(scenario.expectedRequestBody.appData);\n\
+    \    assertThat(parsedBody.data[0].user_data).isEqualTo(scenario.expectedRequestBody.userData);\n\
+    \    assertThat(parsedBody.data[0].custom_data).isEqualTo(scenario.expectedRequestBody.customData);\n\
+    \    return Promise.create((resolve, reject) => {\n      resolve({ statusCode:\
+    \ 200 });\n    });\n  });\n  \n  runCode(copyMockData);\n  \n  callLater(() =>\
+    \ {\n    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
+    \  });\n});"
+- name: Should log to console, if the 'Always log to console' option is selected
+  code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
+    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
+    \ (logData) => {\n  const parsedLogData = JSON.parse(logData);\n  requiredConsoleKeys.forEach(p\
+    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nrunCode(mockData);\n\n\
+    callLater(() => {\n  assertApi('logToConsole').wasCalled();\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
+- name: Should log to console, if the 'Log during debug and preview' option is selected
+    AND is on preview mode
+  code: |-
+    mockData.logType = 'debug';
 
-  const expectedBigQuerySettings = {
-    logBigQueryProjectId: 'logBigQueryProjectId',
-    logBigQueryDatasetId: 'logBigQueryDatasetId',
-    logBigQueryTableId: 'logBigQueryTableId'
-  };
+    const expectedDebugMode = true;
+    mock('getContainerVersion', () => {
+      return {
+        debugMode: expectedDebugMode
+      };
+    });
 
-  const requiredConsoleKeys = ['Type', 'TraceId', 'Name'];
-  const requiredBqKeys = ['timestamp', 'type', 'trace_id', 'tag_name'];
-  const expectedBqOptions = { ignoreUnknownValues: true };
+    mock('logToConsole', (logData) => {
+      const parsedLogData = JSON.parse(logData);
+      requiredConsoleKeys.forEach(p => assertThat(parsedLogData[p]).isDefined());
+    });
 
-  const expectedValue = 'test';
-  const expectedPixelId = '1111111111111';
+    runCode(mockData);
 
-  const mockData = {
-    pixelId: expectedPixelId,
-    accessToken: expectedValue,
-    eventType: 'custom',
-    eventName: expectedValue,
-    logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,
-    logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,
-    logBigQueryTableId: expectedBigQuerySettings.logBigQueryTableId,
-  };
+    callLater(() => {
+      assertApi('logToConsole').wasCalled();
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
+- name: Should NOT log to console, if the 'Log during debug and preview' option is
+    selected AND is NOT on preview mode
+  code: |-
+    mockData.logType = 'debug';
 
-  mock('getRequestHeader', (header) => {
-    if (header === 'trace-id') return 'expectedTraceId';
-  });
+    const expectedDebugMode = false;
+    mock('getContainerVersion', () => {
+      return {
+        debugMode: expectedDebugMode
+      };
+    });
 
-  mock('getTimestampMillis', 1747945830456);
+    runCode(mockData);
+
+    callLater(() => {
+      assertApi('logToConsole').wasNotCalled();
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
+- name: Should NOT log to console, if the 'Do not log' option is selected
+  code: |-
+    mockData.logType = 'no';
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertApi('logToConsole').wasNotCalled();
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
+- name: Should log to BQ, if the 'Log to BigQuery' option is selected
+  code: "mockData.bigQueryLogType = 'always';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
+    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
+    \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
+    \ assertThat(connectionInfo).isDefined();\n      assertThat(rows).isArray();\n\
+    \      assertThat(rows).hasLength(1);\n      requiredBqKeys.forEach(p => assertThat(rows[0][p]).isDefined());\n\
+    \      assertThat(options).isEqualTo(expectedBqOptions);\n      return Promise.create((resolve,\
+    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nrunCode(mockData);\n\
+    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
+    });"
+- name: Should NOT log to BQ, if the 'Do not log to BigQuery' option is selected
+  code: "mockData.bigQueryLogType = 'no';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
+    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
+    \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
+    \ fail('BigQuery.insert should not have been called.');\n      return Promise.create((resolve,\
+    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nrunCode(mockData);\n\
+    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
+    });"
+setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\nconst\
+  \ callLater = require('callLater');\n\nconst mergeObj = (target, source) => {\n\
+  \  for (const key in source) {\n    if (source.hasOwnProperty(key)) target[key]\
+  \ = source[key];\n  }\n  return target;\n};\n\nconst expectedBigQuerySettings =\
+  \ {\n  logBigQueryProjectId: 'logBigQueryProjectId',\n  logBigQueryDatasetId: 'logBigQueryDatasetId',\n\
+  \  logBigQueryTableId: 'logBigQueryTableId'\n};\n\nconst requiredConsoleKeys = ['Type',\
+  \ 'TraceId', 'Name'];\nconst requiredBqKeys = ['timestamp', 'type', 'trace_id',\
+  \ 'tag_name'];\nconst expectedBqOptions = { ignoreUnknownValues: true };\n\nconst\
+  \ expectedValue = 'test';\nconst expectedPixelId = '1111111111111';\nconst expectedPartnerAgent\
+  \ = 'stape-gtmss-2.1.2';\n\nconst mockData = {\n  pixelId: expectedPixelId,\n  accessToken:\
+  \ expectedValue,\n  inheritEventName: 'override',\n  eventNameCustom: expectedValue,\n\
+  \  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n  logBigQueryDatasetId:\
+  \ expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId: expectedBigQuerySettings.logBigQueryTableId,\n\
+  };\n\nmock('sendHttpRequest', (requestUrl, callback, requestOptions, requestBody)\
+  \ => {\n  if (typeof callback === 'function') {\n    callback(200);\n  } else {\n\
+  \    requestBody = requestOptions;\n    requestOptions = callback;\n    return Promise.create((resolve,\
+  \ reject) => {\n      resolve({ statusCode: 200 });\n    });  \n  }\n});\n\nmock('getRequestHeader',\
+  \ (header) => {\n  if (header === 'trace-id') return 'expectedTraceId';\n});\n\n\
+  mock('getTimestampMillis', 1747945830456);"
 
 
 ___NOTES___
