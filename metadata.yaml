@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: 989debed2cd1816a512f8c36b174a0afd67fbbd8
+    changeNotes: Added hints to UI parameters sections.
   - sha: bfb2894d2cd3b38f468b761909025bbda9e2d6c7
     changeNotes: Added ROAS support. Added support for reading parameters from object. Updated to API v23.
   - sha: ef6fa47484f4521a3ba0745d3159e8c694354979
