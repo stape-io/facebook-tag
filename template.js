@@ -117,25 +117,30 @@ if (eventData.test_event_code || data.testId) {
     : data.testId;
 }
 
-let pixelIdsAndAccessTokens = [
-  { pixelId: data.pixelId, accessToken: data.accessToken }
+let pixelsConfig = [
+  {
+    pixelId: data.pixelId,
+    accessToken: data.accessToken,
+    appSecretProof: data.appSecretProof
+  }
 ];
 if (data.enableMultipixelSetup) {
-  pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(
-    data.pixelIdAndAccessTokenTable
-  );
+  pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
 }
+
 const apiVersion = '23.0';
-const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
-  const pixelId = pixelIdAndAccessTokenObj.pixelId;
-  const accessToken = pixelIdAndAccessTokenObj.accessToken;
+const requests = pixelsConfig.map((pixelConfig) => {
+  const pixelId = pixelConfig.pixelId;
+  const accessToken = pixelConfig.accessToken;
+  const appSecretProof = pixelConfig.appSecretProof;
   const postUrl =
     'https://graph.facebook.com/v' +
     apiVersion +
     '/' +
     enc(pixelId) +
     '/events?access_token=' +
-    enc(accessToken);
+    enc(accessToken) +
+    (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
 
   log({
     Name: 'Facebook',
@@ -154,33 +159,43 @@ const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   );
 });
 
-Promise.all(requests).then((results) => {
-  let someRequestFailed = false;
+Promise.all(requests)
+  .then((results) => {
+    let someRequestFailed = false;
 
-  results.forEach((result) => {
+    results.forEach((result) => {
+      log({
+        Name: 'Facebook',
+        Type: 'Response',
+        TraceId: traceId,
+        EventName: mappedEventData.event_name,
+        ResponseStatusCode: result.statusCode,
+        ResponseHeaders: result.headers,
+        ResponseBody: result.body
+      });
+
+      if (result.statusCode < 200 || result.statusCode >= 300) {
+        someRequestFailed = true;
+      }
+    });
+
+    if (!data.useOptimisticScenario) {
+      if (someRequestFailed) data.gtmOnFailure();
+      else data.gtmOnSuccess();
+    }
+  })
+  .catch((result) => {
     log({
       Name: 'Facebook',
       Type: 'Response',
       TraceId: traceId,
       EventName: mappedEventData.event_name,
-      ResponseStatusCode: result.statusCode,
-      ResponseHeaders: result.headers,
-      ResponseBody: result.body
+      Message: 'Some request failed or timed out.',
+      Reason: JSON.stringify(result)
     });
 
-    if (result.statusCode < 200 || result.statusCode >= 300) {
-      someRequestFailed = true;
-    }
+    if (!data.useOptimisticScenario) data.gtmOnFailure();
   });
-
-  if (!data.useOptimisticScenario) {
-    if (someRequestFailed) {
-      data.gtmOnFailure();
-    } else {
-      data.gtmOnSuccess();
-    }
-  }
-});
 
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
@@ -869,11 +884,7 @@ function logToBigQuery(dataToLog) {
     dataToLog[p] = JSON.stringify(dataToLog[p]);
   });
 
-  const bigquery =
-    getType(BigQuery) === 'function'
-      ? BigQuery() /* Only during Unit Tests */
-      : BigQuery;
-  bigquery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
+  BigQuery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
 }
 
 function determinateIsLoggingEnabled() {

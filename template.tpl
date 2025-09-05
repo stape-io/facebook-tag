@@ -265,6 +265,13 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "TEXT",
+    "name": "appSecretProof",
+    "displayName": "App Secret Proof",
+    "simpleValueType": true,
+    "help": "Optional.\n\u003cbr/\u003e\u003cbr/\u003e\nUse this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e. Otherwise, leave it blank.  \n\u003cbr/\u003e\u003cbr/\u003e\nYou’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e.\n\u003cbr/\u003e\u003cbr/\u003e\n\u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value."
+  },
+  {
+    "type": "TEXT",
     "name": "pixelId",
     "displayName": "Facebook Pixel ID",
     "simpleValueType": true,
@@ -280,7 +287,7 @@ ___TEMPLATE_PARAMETERS___
     "name": "enableMultipixelSetup",
     "checkboxText": "Add Multiple Facebook Pixel IDs",
     "simpleValueType": true,
-    "help": "Add one Facebook Pixel ID and one Access Token per line.",
+    "help": "Add one \u003ci\u003eFacebook Pixel ID\u003c/i\u003e, one \u003ci\u003eAccess Token\u003c/i\u003e and, optionally, one \u003ci\u003eApp Secret Proof\u003c/i\u003e per line.",
     "subParams": [
       {
         "type": "SIMPLE_TABLE",
@@ -307,6 +314,12 @@ ___TEMPLATE_PARAMETERS___
                 "type": "NON_EMPTY"
               }
             ]
+          },
+          {
+            "defaultValue": "",
+            "displayName": "App Secret Proof",
+            "name": "appSecretProof",
+            "type": "TEXT"
           }
         ],
         "enablingConditions": [
@@ -1086,25 +1099,30 @@ if (eventData.test_event_code || data.testId) {
     : data.testId;
 }
 
-let pixelIdsAndAccessTokens = [
-  { pixelId: data.pixelId, accessToken: data.accessToken }
+let pixelsConfig = [
+  {
+    pixelId: data.pixelId,
+    accessToken: data.accessToken,
+    appSecretProof: data.appSecretProof
+  }
 ];
 if (data.enableMultipixelSetup) {
-  pixelIdsAndAccessTokens = pixelIdsAndAccessTokens.concat(
-    data.pixelIdAndAccessTokenTable
-  );
+  pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
 }
+
 const apiVersion = '23.0';
-const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
-  const pixelId = pixelIdAndAccessTokenObj.pixelId;
-  const accessToken = pixelIdAndAccessTokenObj.accessToken;
+const requests = pixelsConfig.map((pixelConfig) => {
+  const pixelId = pixelConfig.pixelId;
+  const accessToken = pixelConfig.accessToken;
+  const appSecretProof = pixelConfig.appSecretProof;
   const postUrl =
     'https://graph.facebook.com/v' +
     apiVersion +
     '/' +
     enc(pixelId) +
     '/events?access_token=' +
-    enc(accessToken);
+    enc(accessToken) +
+    (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
 
   log({
     Name: 'Facebook',
@@ -1123,33 +1141,43 @@ const requests = pixelIdsAndAccessTokens.map((pixelIdAndAccessTokenObj) => {
   );
 });
 
-Promise.all(requests).then((results) => {
-  let someRequestFailed = false;
+Promise.all(requests)
+  .then((results) => {
+    let someRequestFailed = false;
 
-  results.forEach((result) => {
+    results.forEach((result) => {
+      log({
+        Name: 'Facebook',
+        Type: 'Response',
+        TraceId: traceId,
+        EventName: mappedEventData.event_name,
+        ResponseStatusCode: result.statusCode,
+        ResponseHeaders: result.headers,
+        ResponseBody: result.body
+      });
+
+      if (result.statusCode < 200 || result.statusCode >= 300) {
+        someRequestFailed = true;
+      }
+    });
+
+    if (!data.useOptimisticScenario) {
+      if (someRequestFailed) data.gtmOnFailure();
+      else data.gtmOnSuccess();
+    }
+  })
+  .catch((result) => {
     log({
       Name: 'Facebook',
       Type: 'Response',
       TraceId: traceId,
       EventName: mappedEventData.event_name,
-      ResponseStatusCode: result.statusCode,
-      ResponseHeaders: result.headers,
-      ResponseBody: result.body
+      Message: 'Some request failed or timed out.',
+      Reason: JSON.stringify(result)
     });
 
-    if (result.statusCode < 200 || result.statusCode >= 300) {
-      someRequestFailed = true;
-    }
+    if (!data.useOptimisticScenario) data.gtmOnFailure();
   });
-
-  if (!data.useOptimisticScenario) {
-    if (someRequestFailed) {
-      data.gtmOnFailure();
-    } else {
-      data.gtmOnSuccess();
-    }
-  }
-});
 
 if (data.useOptimisticScenario) {
   data.gtmOnSuccess();
@@ -1838,11 +1866,7 @@ function logToBigQuery(dataToLog) {
     dataToLog[p] = JSON.stringify(dataToLog[p]);
   });
 
-  const bigquery =
-    getType(BigQuery) === 'function'
-      ? BigQuery() /* Only during Unit Tests */
-      : BigQuery;
-  bigquery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
+  BigQuery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
 }
 
 function determinateIsLoggingEnabled() {
@@ -2317,7 +2341,7 @@ scenarios:
     \  return {\n    then: (callback) => { \n      callback({ statusCode: 200 });\n\
     \      return {\n        then: () => {},\n        catch: () => {}\n      };\n\
     \    },\n    catch: (callback) => callback()\n  };\n});\n\nrunCode(mockData);"
-- name: Cookie domain is NOT overriden when option is NOT selected
+- name: '[Cookie] Cookie domain is NOT overriden when option is NOT selected'
   code: |-
     mockData.overrideCookieDomain = false;
     mockData.enableEventEnhancement = true;
@@ -2345,7 +2369,7 @@ scenarios:
       assertApi('gtmOnSuccess').wasCalled();
       assertApi('gtmOnFailure').wasNotCalled();
     });
-- name: Cookie domain is overriden when option is selected
+- name: '[Cookie] Cookie domain is overriden when option is selected'
   code: |-
     mockData.overrideCookieDomain = true;
     mockData.overridenCookieDomain = 'example.com';
@@ -2523,84 +2547,86 @@ scenarios:
     \ 200 });\n    });\n  });\n  \n  runCode(copyMockData);\n  \n  callLater(() =>\
     \ {\n    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
     \  });\n});"
-- name: Should log to console, if the 'Always log to console' option is selected
-  code: "mockData.logType = 'always';\n\nconst expectedDebugMode = true;\nmock('getContainerVersion',\
-    \ () => {\n  return {\n    debugMode: expectedDebugMode\n  };\n}); \n\nmock('logToConsole',\
-    \ (logData) => {\n  const parsedLogData = JSON.parse(logData);\n  requiredConsoleKeys.forEach(p\
-    \ => assertThat(parsedLogData[p]).isDefined());\n});\n\nrunCode(mockData);\n\n\
-    callLater(() => {\n  assertApi('logToConsole').wasCalled();\n  assertApi('gtmOnSuccess').wasCalled();\n\
-    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
-- name: Should log to console, if the 'Log during debug and preview' option is selected
-    AND is on preview mode
-  code: |-
-    mockData.logType = 'debug';
-
-    const expectedDebugMode = true;
-    mock('getContainerVersion', () => {
-      return {
-        debugMode: expectedDebugMode
-      };
-    });
-
-    mock('logToConsole', (logData) => {
-      const parsedLogData = JSON.parse(logData);
-      requiredConsoleKeys.forEach(p => assertThat(parsedLogData[p]).isDefined());
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertApi('logToConsole').wasCalled();
-      assertApi('gtmOnSuccess').wasCalled();
-      assertApi('gtmOnFailure').wasNotCalled();
-    });
-- name: Should NOT log to console, if the 'Log during debug and preview' option is
-    selected AND is NOT on preview mode
-  code: |-
-    mockData.logType = 'debug';
-
-    const expectedDebugMode = false;
-    mock('getContainerVersion', () => {
-      return {
-        debugMode: expectedDebugMode
-      };
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertApi('logToConsole').wasNotCalled();
-      assertApi('gtmOnSuccess').wasCalled();
-      assertApi('gtmOnFailure').wasNotCalled();
-    });
-- name: Should NOT log to console, if the 'Do not log' option is selected
-  code: |-
-    mockData.logType = 'no';
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertApi('logToConsole').wasNotCalled();
-      assertApi('gtmOnSuccess').wasCalled();
-      assertApi('gtmOnFailure').wasNotCalled();
-    });
-- name: Should log to BQ, if the 'Log to BigQuery' option is selected
-  code: "mockData.bigQueryLogType = 'always';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
-    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
-    \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
-    \ assertThat(connectionInfo).isDefined();\n      assertThat(rows).isArray();\n\
-    \      assertThat(rows).hasLength(1);\n      requiredBqKeys.forEach(p => assertThat(rows[0][p]).isDefined());\n\
-    \      assertThat(options).isEqualTo(expectedBqOptions);\n      return Promise.create((resolve,\
-    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nrunCode(mockData);\n\
+- name: '[App Secret Proof] App Secret Proof is handled and sent succesfully'
+  code: "mockData.appSecretProof = 'appSecretProof1';\nmockData.enableMultipixelSetup\
+    \ = true;\nmockData.pixelIdAndAccessTokenTable = [\n  {\n    pixelId: 'pixelId2',\n\
+    \    accessToken: 'accessToken2',\n    appSecretProof: 'appSecretProof2'\n  },\n\
+    \  {\n    pixelId: 'pixelId3',\n    accessToken: 'accessToken3',\n    appSecretProof:\
+    \ undefined\n  }\n];\n\nlet requestCount = 0;\nmock('sendHttpRequest', (requestUrl,\
+    \ requestOptions, requestBody) => {\n  requestCount++;\n  \n  const pixelId =\
+    \ requestCount > 1 ? mockData.pixelIdAndAccessTokenTable[requestCount - 2].pixelId\
+    \ : mockData.pixelId;\n  const accessToken = requestCount > 1 ? mockData.pixelIdAndAccessTokenTable[requestCount\
+    \ - 2].accessToken : mockData.accessToken;\n  const appSecretProof = requestCount\
+    \ > 1 ? mockData.pixelIdAndAccessTokenTable[requestCount - 2].appSecretProof :\
+    \ mockData.appSecretProof;\n  \n  assertThat(requestUrl).isEqualTo(\n    'https://graph.facebook.com/v23.0/'\
+    \ + pixelId + \n    '/events?access_token=' + accessToken +\n    (appSecretProof\
+    \ ? '&appsecret_proof=' + appSecretProof : '')\n  );\n\n  return Promise.create((resolve,\
+    \ reject) => {\n    resolve({ statusCode: 200 });\n  });  \n});\n\nrunCode(mockData);\n\
     \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
     });"
-- name: Should NOT log to BQ, if the 'Do not log to BigQuery' option is selected
+- name: gtmOnFailure handler is called if some response fails with status code
+  code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
+    \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
+    \ 'appSecretProof2'\n  }\n];\n\nconst lastRequestIndex = mockData.pixelIdAndAccessTokenTable.length\
+    \ + 1;\n\nlet requestCount = 0;\nmock('sendHttpRequest', (requestUrl, requestOptions,\
+    \ requestBody) => {\n  requestCount++;\n  return Promise.create((resolve, reject)\
+    \ => {\n    resolve({ statusCode: (requestCount === lastRequestIndex) ? 500 :\
+    \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n\
+    \  assertApi('gtmOnFailure').wasCalled();\n});"
+- name: gtmOnFailure handler is called if some response rejects
+  code: |-
+    mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => { });
+
+    mockObject('Promise', {
+      all: () => Promise.create((resolve, reject) => reject({ reason: 'failed' }))
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertApi('gtmOnSuccess').wasNotCalled();
+      assertApi('gtmOnFailure').wasCalled();
+    });
+- name: '[Logs] Should log to console'
+  code: "const originalMockData = mockData;\n\n[\n  // if the 'Always log to console'\
+    \ option is selected\n  { mockData: { logType: 'always' }, expectedDebugMode:\
+    \ true },\n  // if the 'Log during debug and preview' option is selected AND is\
+    \ on preview mode\n  { mockData: { logType: 'debug' }, expectedDebugMode: true\
+    \ },\n].forEach(scenario => {\n  const copyMockData = JSON.parse(JSON.stringify(originalMockData));\n\
+    \  mergeObj(copyMockData, scenario.mockData);\n  \n  mock('getContainerVersion',\
+    \ () => {\n    return {\n      debugMode: scenario.expectedDebugMode\n    };\n\
+    \  }); \n  \n  mock('logToConsole', (logData) => {\n    const parsedLogData =\
+    \ JSON.parse(logData);\n    requiredConsoleKeys.forEach(p => assertThat(parsedLogData[p]).isDefined());\n\
+    \  });\n  \n  runCode(copyMockData);\n  \n  callLater(() => {\n    assertApi('logToConsole').wasCalled();\n\
+    \    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
+    \  });\n});"
+- name: '[Logs] Should NOT log to console'
+  code: "const originalMockData = mockData;\n\n[\n  // if the 'Log during debug and\
+    \ preview' option is selected AND is NOT on preview mode\n  { mockData: { logType:\
+    \ 'debug' }, expectedDebugMode: false },\n  // if the 'Do not log' option is selected\n\
+    \  { mockData: { logType: 'no' }, expectedDebugMode: undefined },\n].forEach(scenario\
+    \ => {\n  const copyMockData = JSON.parse(JSON.stringify(originalMockData));\n\
+    \  mergeObj(copyMockData, scenario.mockData);\n  \n  mock('getContainerVersion',\
+    \ () => {\n    return {\n      debugMode: scenario.expectedDebugMode\n    };\n\
+    \  });\n  \n  runCode(copyMockData);\n\n  callLater(() => {\n    assertApi('logToConsole').wasNotCalled();\n\
+    \    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
+    \  });\n});"
+- name: '[Logs] Should log to BQ, if the ''Log to BigQuery'' option is selected'
+  code: "mockData.bigQueryLogType = 'always';\n\nmockObject('BigQuery', {\n  insert:\
+    \ (connectionInfo, rows, options) => { \n    assertThat(connectionInfo).isDefined();\n\
+    \    assertThat(rows).isArray();\n    assertThat(rows).hasLength(1);\n    requiredBqKeys.forEach(p\
+    \ => assertThat(rows[0][p]).isDefined());\n    assertThat(options).isEqualTo(expectedBqOptions);\n\
+    \    return Promise.create((resolve, reject) => {\n      resolve();\n    });\n\
+    \  }\n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
+- name: '[Logs] Should NOT log to BQ, if the ''Do not log to BigQuery'' option is
+    selected'
   code: "mockData.bigQueryLogType = 'no';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
-    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmock('BigQuery', ()\
-    \ => {\n  return { \n    insert: (connectionInfo, rows, options) => { \n     \
-    \ fail('BigQuery.insert should not have been called.');\n      return Promise.create((resolve,\
-    \ reject) => {\n        resolve();\n      });\n    }\n  };\n});\n\nrunCode(mockData);\n\
-    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
+    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmockObject('BigQuery',\
+    \ {\n  insert: (connectionInfo, rows, options) => { \n    fail('BigQuery.insert\
+    \ should not have been called.');\n    return Promise.create((resolve, reject)\
+    \ => {\n      resolve();\n    });\n  }\n});\n\nrunCode(mockData);\n\ncallLater(()\
+    \ => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
     });"
 setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\nconst\
   \ callLater = require('callLater');\n\nconst mergeObj = (target, source) => {\n\
