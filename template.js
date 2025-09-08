@@ -121,7 +121,7 @@ let pixelsConfig = [
   {
     pixelId: data.pixelId,
     accessToken: data.accessToken,
-    appSecretProof: data.appSecretProof
+    appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
   }
 ];
 if (data.enableMultipixelSetup) {

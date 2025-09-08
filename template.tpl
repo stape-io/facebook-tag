@@ -265,13 +265,6 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "TEXT",
-    "name": "appSecretProof",
-    "displayName": "App Secret Proof",
-    "simpleValueType": true,
-    "help": "Optional.\n\u003cbr/\u003e\u003cbr/\u003e\nUse this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e. Otherwise, leave it blank.  \n\u003cbr/\u003e\u003cbr/\u003e\nYou’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e.\n\u003cbr/\u003e\u003cbr/\u003e\n\u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value."
-  },
-  {
-    "type": "TEXT",
     "name": "pixelId",
     "displayName": "Facebook Pixel ID",
     "simpleValueType": true,
@@ -287,7 +280,7 @@ ___TEMPLATE_PARAMETERS___
     "name": "enableMultipixelSetup",
     "checkboxText": "Add Multiple Facebook Pixel IDs",
     "simpleValueType": true,
-    "help": "Add one \u003ci\u003eFacebook Pixel ID\u003c/i\u003e, one \u003ci\u003eAccess Token\u003c/i\u003e and, optionally, one \u003ci\u003eApp Secret Proof\u003c/i\u003e per line.",
+    "help": "Add one \u003ci\u003eFacebook Pixel ID\u003c/i\u003e and one \u003ci\u003eAccess Token\u003c/i\u003e per line.",
     "subParams": [
       {
         "type": "SIMPLE_TABLE",
@@ -314,12 +307,6 @@ ___TEMPLATE_PARAMETERS___
                 "type": "NON_EMPTY"
               }
             ]
-          },
-          {
-            "defaultValue": "",
-            "displayName": "App Secret Proof",
-            "name": "appSecretProof",
-            "type": "TEXT"
           }
         ],
         "enablingConditions": [
@@ -329,6 +316,13 @@ ___TEMPLATE_PARAMETERS___
             "type": "EQUALS"
           }
         ]
+      }
+    ],
+    "enablingConditions": [
+      {
+        "paramName": "useAppSecretProof",
+        "paramValue": true,
+        "type": "NOT_EQUALS"
       }
     ]
   },
@@ -405,6 +399,33 @@ ___TEMPLATE_PARAMETERS___
     "simpleValueType": true,
     "help": "Enable Use of HTTP Only Secure Cookie (gtmeec) to Enhance Event Data.",
     "defaultValue": true
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "useAppSecretProof",
+    "checkboxText": "Use App Secret Proof",
+    "simpleValueType": true,
+    "help": "Optional. \u003cbr/\u003e\u003cbr/\u003e Use this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e.   \u003cbr/\u003e\u003cbr/\u003e You’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e. \u003cbr/\u003e\u003cbr/\u003e \u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value.",
+    "subParams": [
+      {
+        "type": "TEXT",
+        "name": "appSecretProof",
+        "displayName": "App Secret Proof",
+        "simpleValueType": true,
+        "enablingConditions": [
+          {
+            "paramName": "useAppSecretProof",
+            "paramValue": true,
+            "type": "EQUALS"
+          }
+        ],
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ]
+      }
+    ]
   },
   {
     "type": "CHECKBOX",
@@ -1103,7 +1124,7 @@ let pixelsConfig = [
   {
     pixelId: data.pixelId,
     accessToken: data.accessToken,
-    appSecretProof: data.appSecretProof
+    appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
   }
 ];
 if (data.enableMultipixelSetup) {
@@ -2548,22 +2569,15 @@ scenarios:
     \ {\n    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
     \  });\n});"
 - name: '[App Secret Proof] App Secret Proof is handled and sent succesfully'
-  code: "mockData.appSecretProof = 'appSecretProof1';\nmockData.enableMultipixelSetup\
-    \ = true;\nmockData.pixelIdAndAccessTokenTable = [\n  {\n    pixelId: 'pixelId2',\n\
-    \    accessToken: 'accessToken2',\n    appSecretProof: 'appSecretProof2'\n  },\n\
-    \  {\n    pixelId: 'pixelId3',\n    accessToken: 'accessToken3',\n    appSecretProof:\
-    \ undefined\n  }\n];\n\nlet requestCount = 0;\nmock('sendHttpRequest', (requestUrl,\
-    \ requestOptions, requestBody) => {\n  requestCount++;\n  \n  const pixelId =\
-    \ requestCount > 1 ? mockData.pixelIdAndAccessTokenTable[requestCount - 2].pixelId\
-    \ : mockData.pixelId;\n  const accessToken = requestCount > 1 ? mockData.pixelIdAndAccessTokenTable[requestCount\
-    \ - 2].accessToken : mockData.accessToken;\n  const appSecretProof = requestCount\
-    \ > 1 ? mockData.pixelIdAndAccessTokenTable[requestCount - 2].appSecretProof :\
-    \ mockData.appSecretProof;\n  \n  assertThat(requestUrl).isEqualTo(\n    'https://graph.facebook.com/v23.0/'\
-    \ + pixelId + \n    '/events?access_token=' + accessToken +\n    (appSecretProof\
-    \ ? '&appsecret_proof=' + appSecretProof : '')\n  );\n\n  return Promise.create((resolve,\
-    \ reject) => {\n    resolve({ statusCode: 200 });\n  });  \n});\n\nrunCode(mockData);\n\
-    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
-    });"
+  code: "mockData.useAppSecretProof = true;\nmockData.appSecretProof = 'appSecretProof1';\n\
+    \nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n  const\
+    \ pixelId = mockData.pixelId;\n  const accessToken = mockData.accessToken;\n \
+    \ const appSecretProof = mockData.appSecretProof;\n  \n  assertThat(requestUrl).isEqualTo(\n\
+    \    'https://graph.facebook.com/v23.0/' + pixelId + \n    '/events?access_token='\
+    \ + accessToken +\n    '&appsecret_proof=' + appSecretProof\n  );\n\n  return\
+    \ Promise.create((resolve, reject) => {\n    resolve({ statusCode: 200 });\n \
+    \ });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
 - name: gtmOnFailure handler is called if some response fails with status code
   code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
     \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
