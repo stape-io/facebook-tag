@@ -1577,6 +1577,8 @@ function addUserData(eventData, mappedData) {
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
   else if (user_data.phone_number)
     mappedData.user_data.ph = user_data.phone_number;
+  else if (user_data.phone)
+    mappedData.user_data.ph = user_data.phone;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
