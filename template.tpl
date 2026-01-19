@@ -878,14 +878,13 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "GROUP",
-    "name": "consentSettingsGroup",
-    "displayName": "Consent Settings",
+    "name": "tagExecutionConsentSettingsGroup",
+    "displayName": "Tag Execution Consent Settings",
     "groupStyle": "ZIPPY_CLOSED",
     "subParams": [
       {
         "type": "RADIO",
         "name": "adStorageConsent",
-        "displayName": "",
         "radioItems": [
           {
             "value": "optional",
@@ -893,7 +892,8 @@ ___TEMPLATE_PARAMETERS___
           },
           {
             "value": "required",
-            "displayValue": "Send data in case marketing consent given"
+            "displayValue": "Send data in case marketing consent given",
+            "help": "Aborts the tag execution if marketing consent (\u003ci\u003ead_storage\u003c/i\u003e Google Consent Mode or Stape\u0027s Data Tag parameter) is not given."
           }
         ],
         "simpleValueType": true,
@@ -1001,31 +1001,31 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_SERVER___
 
-const encodeUriComponent = require('encodeUriComponent');
-const getAllEventData = require('getAllEventData');
-const JSON = require('JSON');
-const Math = require('Math');
-const sendHttpRequest = require('sendHttpRequest');
-const getTimestampMillis = require('getTimestampMillis');
-const setCookie = require('setCookie');
-const getCookieValues = require('getCookieValues');
-const getContainerVersion = require('getContainerVersion');
-const logToConsole = require('logToConsole');
-const sha256Sync = require('sha256Sync');
-const decodeUriComponent = require('decodeUriComponent');
-const parseUrl = require('parseUrl');
-const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
-const generateRandom = require('generateRandom');
-const getRequestHeader = require('getRequestHeader');
-const getType = require('getType');
-const makeString = require('makeString');
-const makeNumber = require('makeNumber');
-const toBase64 = require('toBase64');
-const fromBase64 = require('fromBase64');
-const createRegex = require('createRegex');
-const testRegex = require('testRegex');
-const Promise = require('Promise');
 const BigQuery = require('BigQuery');
+const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
+const createRegex = require('createRegex');
+const decodeUriComponent = require('decodeUriComponent');
+const encodeUriComponent = require('encodeUriComponent');
+const fromBase64 = require('fromBase64');
+const generateRandom = require('generateRandom');
+const getAllEventData = require('getAllEventData');
+const getContainerVersion = require('getContainerVersion');
+const getCookieValues = require('getCookieValues');
+const getRequestHeader = require('getRequestHeader');
+const getTimestampMillis = require('getTimestampMillis');
+const getType = require('getType');
+const JSON = require('JSON');
+const logToConsole = require('logToConsole');
+const makeNumber = require('makeNumber');
+const makeString = require('makeString');
+const Math = require('Math');
+const parseUrl = require('parseUrl');
+const Promise = require('Promise');
+const sendHttpRequest = require('sendHttpRequest');
+const setCookie = require('setCookie');
+const sha256Sync = require('sha256Sync');
+const testRegex = require('testRegex');
+const toBase64 = require('toBase64');
 
 /*==============================================================================
 ==============================================================================*/
@@ -1048,9 +1048,7 @@ const commonCookie = eventData.common_cookie || {};
 let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc;
 let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp;
 
-const subDomainIndex = url
-  ? computeEffectiveTldPlusOne(url).split('.').length - 1
-  : 1;
+const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
 
 if (url) {
   const urlParsed = parseUrl(url);
@@ -1084,9 +1082,7 @@ if (!fbp && data.generateFbp) {
 }
 
 const cookieOptions = {
-  domain: isUIFieldTrue(data.overrideCookieDomain)
-    ? data.overridenCookieDomain || 'auto'
-    : 'auto',
+  domain: isUIFieldTrue(data.overrideCookieDomain) ? data.overridenCookieDomain || 'auto' : 'auto',
   path: '/',
   samesite: 'Lax',
   secure: true,
@@ -1105,8 +1101,7 @@ if (fbp) {
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
-  partner_agent:
-    'stape-gtmss-2.1.2' + (data.enableEventEnhancement ? '-ee' : '')
+  partner_agent: 'stape-gtmss-2.1.2' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
 if (data.enableEventEnhancement) {
@@ -1115,9 +1110,7 @@ if (data.enableEventEnhancement) {
 }
 
 if (eventData.test_event_code || data.testId) {
-  postBody.test_event_code = eventData.test_event_code
-    ? eventData.test_event_code
-    : data.testId;
+  postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
 }
 
 let pixelsConfig = [
@@ -1248,9 +1241,7 @@ function getEventName(data) {
     return gaToFacebookEventName[eventName];
   }
 
-  return data.eventName === 'standard'
-    ? data.eventNameStandard
-    : data.eventNameCustom;
+  return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
 }
 
 function mapEvent(eventData, data) {
@@ -1272,12 +1263,9 @@ function mapEvent(eventData, data) {
     mappedData.messaging_channel = data.messaging_channel;
   }
 
-  if (eventData.page_location)
-    mappedData.event_source_url = eventData.page_location;
-  if (eventData.page_referrer)
-    mappedData.referrer_url = eventData.page_referrer;
-  if (eventData.user_agent)
-    mappedData.user_data.client_user_agent = eventData.user_agent;
+  if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
+  if (eventData.page_referrer) mappedData.referrer_url = eventData.page_referrer;
+  if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
 
   if (eventData.ip_override) {
     mappedData.user_data.client_ip_address = eventData.ip_override
@@ -1413,8 +1401,7 @@ function cleanupData(mappedData) {
       }
     }
 
-    if (customData.value === 0 || customData.value === '0')
-      customData.value = '0.00';
+    if (customData.value === 0 || customData.value === '0') customData.value = '0.00';
 
     mappedData.custom_data = customData;
   }
@@ -1461,8 +1448,7 @@ function addEcommerceData(eventData, mappedData) {
       if (eventData.items[0].item_name)
         mappedData.custom_data.content_name = eventData.items[0].item_name;
       if (eventData.items[0].item_category)
-        mappedData.custom_data.content_category =
-          eventData.items[0].item_category;
+        mappedData.custom_data.content_category = eventData.items[0].item_category;
 
       if (eventData.items[0].price) {
         mappedData.custom_data.value = eventData.items[0].quantity
@@ -1482,34 +1468,26 @@ function addEcommerceData(eventData, mappedData) {
 
       if (d.price) {
         content.item_price = makeNumber(d.price);
-        valueFromItems += d.quantity
-          ? d.quantity * content.item_price
-          : content.item_price;
+        valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
       }
 
       mappedData.custom_data.contents.push(content);
     });
   }
 
-  if (eventData['x-ga-mp1-ev'])
-    mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
-  else if (eventData['x-ga-mp1-tr'])
-    mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
+  if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
+  else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
   else if (eventData.value) mappedData.custom_data.value = eventData.value;
 
   if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
-  else if (currencyFromItems)
-    mappedData.custom_data.currency = currencyFromItems;
+  else if (currencyFromItems) mappedData.custom_data.currency = currencyFromItems;
 
-  if (eventData.search_term)
-    mappedData.custom_data.search_string = eventData.search_term;
+  if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
 
-  if (eventData.transaction_id)
-    mappedData.custom_data.order_id = eventData.transaction_id;
+  if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
   if (mappedData.event_name === 'Purchase') {
-    if (!mappedData.custom_data.currency)
-      mappedData.custom_data.currency = 'USD';
+    if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
     if (!mappedData.custom_data.value)
       mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
   }
@@ -1527,22 +1505,17 @@ function addUserData(eventData, mappedData) {
       address = user_data.address[0] || user_data.address;
     }
   }
-  if (eventData.fb_login_id)
-    mappedData.user_data.fb_login_id = eventData.fb_login_id;
+  if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
 
   if (eventData.anon_id) mappedData.user_data.anon_id = eventData.anon_id;
 
   if (eventData.madid) mappedData.user_data.madid = eventData.madid;
 
-  if (eventData.external_id)
-    mappedData.user_data.external_id = eventData.external_id;
-  else if (eventData.user_id)
-    mappedData.user_data.external_id = eventData.user_id;
-  else if (eventData.userId)
-    mappedData.user_data.external_id = eventData.userId;
+  if (eventData.external_id) mappedData.user_data.external_id = eventData.external_id;
+  else if (eventData.user_id) mappedData.user_data.external_id = eventData.user_id;
+  else if (eventData.userId) mappedData.user_data.external_id = eventData.userId;
 
-  if (eventData.subscription_id)
-    mappedData.user_data.subscription_id = eventData.subscription_id;
+  if (eventData.subscription_id) mappedData.user_data.subscription_id = eventData.subscription_id;
   else if (eventData.subscriptionId)
     mappedData.user_data.subscription_id = eventData.subscriptionId;
 
@@ -1555,8 +1528,7 @@ function addUserData(eventData, mappedData) {
   else if (eventData.last_name) mappedData.user_data.ln = eventData.last_name;
   else if (user_data.last_name) mappedData.user_data.ln = user_data.last_name;
   else if (address.last_name) mappedData.user_data.ln = address.last_name;
-  else if (address.sha256_last_name)
-    mappedData.user_data.ln = address.sha256_last_name;
+  else if (address.sha256_last_name) mappedData.user_data.ln = address.sha256_last_name;
 
   if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
   else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
@@ -1564,19 +1536,15 @@ function addUserData(eventData, mappedData) {
   else if (eventData.first_name) mappedData.user_data.fn = eventData.first_name;
   else if (user_data.first_name) mappedData.user_data.fn = user_data.first_name;
   else if (address.first_name) mappedData.user_data.fn = address.first_name;
-  else if (address.sha256_first_name)
-    mappedData.user_data.fn = address.sha256_first_name;
+  else if (address.sha256_first_name) mappedData.user_data.fn = address.sha256_first_name;
 
   if (eventData.email) mappedData.user_data.em = eventData.email;
-  else if (user_data.email_address)
-    mappedData.user_data.em = user_data.email_address;
+  else if (user_data.email_address) mappedData.user_data.em = user_data.email_address;
   else if (user_data.email) mappedData.user_data.em = user_data.email;
-  else if (user_data.sha256_email_address)
-    mappedData.user_data.em = user_data.sha256_email_address;
+  else if (user_data.sha256_email_address) mappedData.user_data.em = user_data.sha256_email_address;
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-  else if (user_data.phone_number)
-    mappedData.user_data.ph = user_data.phone_number;
+  else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
@@ -1587,14 +1555,11 @@ function addUserData(eventData, mappedData) {
   else if (address.region) mappedData.user_data.st = address.region;
 
   if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-  else if (eventData.postal_code)
-    mappedData.user_data.zp = eventData.postal_code;
-  else if (user_data.postal_code)
-    mappedData.user_data.zp = user_data.postal_code;
+  else if (eventData.postal_code) mappedData.user_data.zp = eventData.postal_code;
+  else if (user_data.postal_code) mappedData.user_data.zp = user_data.postal_code;
   else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
 
-  if (eventData.countryCode)
-    mappedData.user_data.country = eventData.countryCode;
+  if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
   else if (eventData.country) mappedData.user_data.country = eventData.country;
   else if (user_data.country) mappedData.user_data.country = user_data.country;
   else if (address.country) mappedData.user_data.country = address.country;
@@ -1609,8 +1574,7 @@ function addServerEventData(eventData, mappedData) {
   const serverEventDataList = {};
 
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
-  else if (eventData.transaction_id)
-    mappedData.event_id = eventData.transaction_id;
+  else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
 
   if (data.serverEventDataList) {
     data.serverEventDataList.forEach((d) => {
@@ -1619,20 +1583,16 @@ function addServerEventData(eventData, mappedData) {
   }
 
   if (serverEventDataList) {
-    if (serverEventDataList.event_time)
-      mappedData.event_time = serverEventDataList.event_time;
+    if (serverEventDataList.event_time) mappedData.event_time = serverEventDataList.event_time;
     if (serverEventDataList.event_source_url)
       mappedData.event_source_url = serverEventDataList.event_source_url;
-    if (serverEventDataList.opt_out)
-      mappedData.opt_out = serverEventDataList.opt_out;
-    if (serverEventDataList.event_id)
-      mappedData.event_id = serverEventDataList.event_id;
+    if (serverEventDataList.opt_out) mappedData.opt_out = serverEventDataList.opt_out;
+    if (serverEventDataList.event_id) mappedData.event_id = serverEventDataList.event_id;
     if (serverEventDataList.referrer_url)
       mappedData.referrer_url = serverEventDataList.referrer_url;
 
     if (serverEventDataList.data_processing_options) {
-      mappedData.data_processing_options =
-        serverEventDataList.data_processing_options;
+      mappedData.data_processing_options = serverEventDataList.data_processing_options;
 
       if (serverEventDataList.data_processing_options_country)
         mappedData.data_processing_options_country =
@@ -1656,10 +1616,8 @@ function addAppData(eventData, mappedData) {
     return mappedData;
   }
 
-  mappedData.app_data.advertiser_tracking_enabled =
-    eventData.advertiser_tracking_enabled ? 1 : 0; // Required
-  mappedData.app_data.application_tracking_enabled =
-    eventData.application_tracking_enabled ? 1 : 0; // Required
+  mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled ? 1 : 0; // Required
+  mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled ? 1 : 0; // Required
   if (eventData.extinfo) {
     mappedData.app_data.extinfo = eventData.extinfo;
   } else {
@@ -1684,18 +1642,14 @@ function addAppData(eventData, mappedData) {
     ];
     mappedData.app_data.extinfo = extinfoArray;
   }
-  if (eventData.campaign_ids)
-    mappedData.app_data.campaign_ids = eventData.campaign_ids;
-  if (eventData.install_referrer)
-    mappedData.app_data.install_referrer = eventData.install_referrer;
+  if (eventData.campaign_ids) mappedData.app_data.campaign_ids = eventData.campaign_ids;
+  if (eventData.install_referrer) mappedData.app_data.install_referrer = eventData.install_referrer;
   if (eventData.installer_package)
     mappedData.app_data.installer_package = eventData.installer_package;
-  if (eventData.url_schemes)
-    mappedData.app_data.url_schemes = eventData.url_schemes;
+  if (eventData.url_schemes) mappedData.app_data.url_schemes = eventData.url_schemes;
   if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
   if (eventData.windows_attribution_id)
-    mappedData.app_data.windows_attribution_id =
-      eventData.windows_attribution_id;
+    mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
 
   return mappedData;
 }
@@ -1773,8 +1727,7 @@ function enhanceEventData(userData) {
     if (!userData.zp && gtmeecData.zp) userData.zp = gtmeecData.zp;
     if (!userData.ge && gtmeecData.ge) userData.ge = gtmeecData.ge;
     if (!userData.db && gtmeecData.db) userData.db = gtmeecData.db;
-    if (!userData.country && gtmeecData.country)
-      userData.country = gtmeecData.country;
+    if (!userData.country && gtmeecData.country) userData.country = gtmeecData.country;
     if (!userData.external_id && gtmeecData.external_id)
       userData.external_id = gtmeecData.external_id;
     if (!userData.fb_login_id && gtmeecData.fb_login_id)
@@ -1831,10 +1784,8 @@ function isConsentGivenOrNotRequired() {
 
 function log(rawDataToLog) {
   const logDestinationsHandlers = {};
-  if (determinateIsLoggingEnabled())
-    logDestinationsHandlers.console = logConsole;
-  if (determinateIsLoggingEnabledForBigQuery())
-    logDestinationsHandlers.bigQuery = logToBigQuery;
+  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
+  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
 
   const keyMappings = {
     // No transformation for Console is needed.
@@ -2666,4 +2617,5 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 ___NOTES___
 
 Created on 10/11/2020, 18:14:02
+
 
