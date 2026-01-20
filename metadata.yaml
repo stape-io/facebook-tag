@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: dfc4a023a8eb75a841ebfe05f3835d114425dc44
+    changeNotes: Updated consent section.
   - sha: 8093c373ed116395251221f85e50c5e71f830b16
     changeNotes: Added support for App Secret Proof to the API request.
   - sha: 989debed2cd1816a512f8c36b174a0afd67fbbd8
