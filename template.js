@@ -27,11 +27,9 @@ const toBase64 = require('toBase64');
 /*==============================================================================
 ==============================================================================*/
 
-const traceId = getRequestHeader('trace-id');
-
 const eventData = getAllEventData();
 
-if (!isConsentGivenOrNotRequired()) {
+if (!isConsentGivenOrNotRequired(data, eventData)) {
   return data.gtmOnSuccess();
 }
 
@@ -98,7 +96,7 @@ if (fbp) {
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.2' + (data.enableEventEnhancement ? '-ee' : '')
+  partner_agent: 'stape-gtmss-2.1.3' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
 if (data.enableEventEnhancement) {
@@ -121,7 +119,7 @@ if (data.enableMultipixelSetup) {
   pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
 }
 
-const apiVersion = '23.0';
+const apiVersion = '24.0';
 const requests = pixelsConfig.map((pixelConfig) => {
   const pixelId = pixelConfig.pixelId;
   const accessToken = pixelConfig.accessToken;
@@ -138,7 +136,6 @@ const requests = pixelsConfig.map((pixelConfig) => {
   log({
     Name: 'Facebook',
     Type: 'Request',
-    TraceId: traceId,
     EventName: mappedEventData.event_name,
     RequestMethod: 'POST',
     RequestUrl: postUrl,
@@ -149,49 +146,56 @@ const requests = pixelsConfig.map((pixelConfig) => {
     postUrl,
     { headers: { 'content-type': 'application/json' }, method: 'POST' },
     JSON.stringify(postBody)
-  );
+  )
+    .then((result) => {
+      log({
+        Name: 'Facebook',
+        Type: 'Response',
+        EventName: mappedEventData.event_name,
+        ResponseStatusCode: result.statusCode,
+        ResponseHeaders: result.headers,
+        ResponseBody: result.body,
+        Message: 'Pixel ID: ' + pixelId
+      });
+
+      if (result.statusCode < 200 || result.statusCode >= 300) return false;
+      return true;
+    })
+    .catch((result) => {
+      log({
+        Name: 'Facebook',
+        Type: 'Response',
+        EventName: mappedEventData.event_name,
+        Message: 'Request failed or timed out. Pixel ID: ' + pixelId,
+        Reason: JSON.stringify(result)
+      });
+
+      return false;
+    });
 });
 
 Promise.all(requests)
   .then((results) => {
-    let someRequestFailed = false;
-
-    results.forEach((result) => {
-      log({
-        Name: 'Facebook',
-        Type: 'Response',
-        TraceId: traceId,
-        EventName: mappedEventData.event_name,
-        ResponseStatusCode: result.statusCode,
-        ResponseHeaders: result.headers,
-        ResponseBody: result.body
-      });
-
-      if (result.statusCode < 200 || result.statusCode >= 300) {
-        someRequestFailed = true;
-      }
-    });
-
     if (!data.useOptimisticScenario) {
-      if (someRequestFailed) data.gtmOnFailure();
-      else data.gtmOnSuccess();
+      const someRequestFailed = results.some((success) => !success);
+      if (someRequestFailed) return data.gtmOnFailure();
+      return data.gtmOnSuccess();
     }
   })
   .catch((result) => {
     log({
       Name: 'Facebook',
-      Type: 'Response',
-      TraceId: traceId,
+      Type: 'Message',
       EventName: mappedEventData.event_name,
-      Message: 'Some request failed or timed out.',
+      Message: 'Something went wrong.',
       Reason: JSON.stringify(result)
     });
 
-    if (!data.useOptimisticScenario) data.gtmOnFailure();
+    if (!data.useOptimisticScenario) return data.gtmOnFailure();
   });
 
 if (data.useOptimisticScenario) {
-  data.gtmOnSuccess();
+  return data.gtmOnSuccess();
 }
 
 /*==============================================================================
@@ -377,6 +381,13 @@ function overrideDataIfNeeded(mappedData) {
 }
 
 function cleanupData(mappedData) {
+  if (mappedData.action_source === 'business_messaging') {
+    mappedData.event_source_url = undefined;
+    ['client_ip_address', 'client_user_agent', 'fbc', 'fbp'].forEach(
+      (key) => (mappedData.user_data[key] = undefined)
+    );
+  }
+
   if (mappedData.user_data) {
     const userData = {};
 
@@ -542,6 +553,7 @@ function addUserData(eventData, mappedData) {
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
   else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
+  else if (user_data.phone) mappedData.user_data.ph = user_data.phone;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
@@ -568,35 +580,20 @@ function addUserData(eventData, mappedData) {
 }
 
 function addServerEventData(eventData, mappedData) {
-  const serverEventDataList = {};
-
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
   else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
 
   if (data.serverEventDataList) {
     data.serverEventDataList.forEach((d) => {
-      serverEventDataList[d.name] = d.value;
+      mappedData[d.name] = d.value;
     });
-  }
 
-  if (serverEventDataList) {
-    if (serverEventDataList.event_time) mappedData.event_time = serverEventDataList.event_time;
-    if (serverEventDataList.event_source_url)
-      mappedData.event_source_url = serverEventDataList.event_source_url;
-    if (serverEventDataList.opt_out) mappedData.opt_out = serverEventDataList.opt_out;
-    if (serverEventDataList.event_id) mappedData.event_id = serverEventDataList.event_id;
-    if (serverEventDataList.referrer_url)
-      mappedData.referrer_url = serverEventDataList.referrer_url;
-
-    if (serverEventDataList.data_processing_options) {
-      mappedData.data_processing_options = serverEventDataList.data_processing_options;
-
-      if (serverEventDataList.data_processing_options_country)
-        mappedData.data_processing_options_country =
-          serverEventDataList.data_processing_options_country;
-      if (serverEventDataList.data_processing_options_state)
-        mappedData.data_processing_options_state =
-          serverEventDataList.data_processing_options_state;
+    if (
+      !mappedData.data_processing_options &&
+      (mappedData.data_processing_options_country || mappedData.data_processing_options_state)
+    ) {
+      mappedData.data_processing_options_country = undefined;
+      mappedData.data_processing_options_state = undefined;
     }
   }
 
@@ -772,7 +769,7 @@ function mergeObj(target, source) {
   return target;
 }
 
-function isConsentGivenOrNotRequired() {
+function isConsentGivenOrNotRequired(data, eventData) {
   if (data.adStorageConsent !== 'required') return true;
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
@@ -783,6 +780,8 @@ function log(rawDataToLog) {
   const logDestinationsHandlers = {};
   if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
   if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
+
+  rawDataToLog.TraceId = getRequestHeader('trace-id');
 
   const keyMappings = {
     // No transformation for Console is needed.
