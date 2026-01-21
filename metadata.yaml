@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: d65277b143a1f90af9744e5c3e72ac9647b07cb5
+    changeNotes: Updated API to v24. Improved response handling when multiple Pixel IDs are being used. Added 'Instagram' as a Messaging Channel.
   - sha: dfc4a023a8eb75a841ebfe05f3835d114425dc44
     changeNotes: Updated consent section.
   - sha: 8093c373ed116395251221f85e50c5e71f830b16
