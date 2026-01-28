@@ -37,385 +37,220 @@ ___TEMPLATE_PARAMETERS___
 
 [
   {
-    "type": "SELECT",
-    "name": "inheritEventName",
-    "displayName": "Event Name Setup Method",
-    "selectItems": [
-      {
-        "value": "inherit",
-        "displayValue": "Inherit from client"
-      },
-      {
-        "value": "override",
-        "displayValue": "Override"
-      }
-    ],
-    "simpleValueType": true,
+    "type": "GROUP",
+    "name": "configGroup",
     "subParams": [
       {
-        "type": "RADIO",
-        "name": "eventName",
-        "radioItems": [
+        "type": "SELECT",
+        "name": "inheritEventName",
+        "displayName": "Event Name Setup Method",
+        "selectItems": [
           {
-            "value": "standard",
-            "displayValue": "Standard",
-            "subParams": [
-              {
-                "type": "SELECT",
-                "name": "eventNameStandard",
-                "macrosInSelect": false,
-                "selectItems": [
-                  {
-                    "value": "PageView",
-                    "displayValue": "PageView"
-                  },
-                  {
-                    "value": "AddPaymentInfo",
-                    "displayValue": "AddPaymentInfo"
-                  },
-                  {
-                    "value": "AddToCart",
-                    "displayValue": "AddToCart"
-                  },
-                  {
-                    "value": "AddToWishlist",
-                    "displayValue": "AddToWishlist"
-                  },
-                  {
-                    "value": "AppendValue",
-                    "displayValue": "AppendValue"
-                  },
-                  {
-                    "value": "CompleteRegistration",
-                    "displayValue": "CompleteRegistration"
-                  },
-                  {
-                    "value": "Contact",
-                    "displayValue": "Contact"
-                  },
-                  {
-                    "value": "CustomizeProduct",
-                    "displayValue": "CustomizeProduct"
-                  },
-                  {
-                    "value": "Donate",
-                    "displayValue": "Donate"
-                  },
-                  {
-                    "value": "FindLocation",
-                    "displayValue": "FindLocation"
-                  },
-                  {
-                    "value": "InitiateCheckout",
-                    "displayValue": "InitiateCheckout"
-                  },
-                  {
-                    "value": "Lead",
-                    "displayValue": "Lead"
-                  },
-                  {
-                    "value": "Purchase",
-                    "displayValue": "Purchase"
-                  },
-                  {
-                    "value": "Schedule",
-                    "displayValue": "Schedule"
-                  },
-                  {
-                    "value": "Search",
-                    "displayValue": "Search"
-                  },
-                  {
-                    "value": "StartTrial",
-                    "displayValue": "StartTrial"
-                  },
-                  {
-                    "value": "SubmitApplication",
-                    "displayValue": "SubmitApplication"
-                  },
-                  {
-                    "value": "Subscribe",
-                    "displayValue": "Subscribe"
-                  },
-                  {
-                    "value": "ViewContent",
-                    "displayValue": "ViewContent"
-                  }
-                ],
-                "simpleValueType": true
-              }
-            ]
+            "value": "inherit",
+            "displayValue": "Inherit from client"
           },
           {
-            "value": "custom",
-            "displayValue": "Custom",
-            "subParams": [
-              {
-                "type": "TEXT",
-                "name": "eventNameCustom",
-                "simpleValueType": true
-              }
-            ]
+            "value": "override",
+            "displayValue": "Override"
           }
         ],
         "simpleValueType": true,
-        "enablingConditions": [
+        "subParams": [
           {
-            "paramName": "inheritEventName",
-            "paramValue": "override",
-            "type": "EQUALS"
-          }
-        ],
-        "displayName": "Event Type"
-      }
-    ]
-  },
-  {
-    "type": "SELECT",
-    "name": "actionSource",
-    "displayName": "Action Source",
-    "selectItems": [
-      {
-        "value": "website",
-        "displayValue": "Website"
-      },
-      {
-        "value": "email",
-        "displayValue": "Email"
-      },
-      {
-        "value": "app",
-        "displayValue": "App"
-      },
-      {
-        "value": "phone_call",
-        "displayValue": "Phone Call"
-      },
-      {
-        "value": "chat",
-        "displayValue": "Chat"
-      },
-      {
-        "value": "physical_store",
-        "displayValue": "Physical Store"
-      },
-      {
-        "value": "system_generated",
-        "displayValue": "System Generated"
-      },
-      {
-        "value": "business_messaging",
-        "displayValue": "Business Messaging"
-      },
-      {
-        "value": "other",
-        "displayValue": "Other"
-      }
-    ],
-    "simpleValueType": true,
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ],
-    "defaultValue": "website",
-    "help": "\u003cb\u003eEmail\u003c/b\u003e — Conversion happened over email.\n\u003cbr/\u003e\n\u003cb\u003eWebsite\u003c/b\u003e — Conversion was made on your website.\n\u003cbr/\u003e\n\u003cb\u003eApp\u003c/b\u003e — Conversion was made on your mobile app.\n\u003cbr/\u003e\n\u003cb\u003ePhone Call\u003c/b\u003e — Conversion was made over the phone.\n\u003cbr/\u003e\n\u003cb\u003eChat\u003c/b\u003e — Conversion was made via a messaging app, SMS, or online messaging feature.\n\u003cbr/\u003e\n\u003cb\u003ePhysical Store\u003c/b\u003e — Conversion was made in person at your physical store, helping to optimize your omni-channel marketing strategy.\n\u003cbr/\u003e\n\u003cb\u003eSystem Generated\u003c/b\u003e — Conversion happened automatically, such as a subscription renewal set to auto-pay, often linked with CRM CAPI for Meta Lead Ads.\n\u003cbr/\u003e\n\u003cb\u003eBusiness Messaging\u003c/b\u003e — Conversion was made from ads that click to Messenger, Instagram or WhatsApp.\n\u003cbr/\u003e \n\u003cb\u003eOther\u003c/b\u003e — Conversion happened in a way that is not listed."
-  },
-  {
-    "type": "SELECT",
-    "name": "messaging_channel",
-    "displayName": "Messaging Channel",
-    "macrosInSelect": false,
-    "selectItems": [
-      {
-        "value": "messenger",
-        "displayValue": "Messenger"
-      },
-      {
-        "value": "whatsapp",
-        "displayValue": "WhatsApp"
-      }
-    ],
-    "simpleValueType": true,
-    "defaultValue": "messenger",
-    "enablingConditions": [
-      {
-        "paramName": "actionSource",
-        "paramValue": "business_messaging",
-        "type": "EQUALS"
-      }
-    ],
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ]
-  },
-  {
-    "type": "TEXT",
-    "name": "accessToken",
-    "displayName": "API Access Token",
-    "simpleValueType": true,
-    "help": "Set to your Facebook API Access Token. See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/get-started#access-token\" target\u003d\"_blank\"\u003ehere\u003c/a\u003e for more information.",
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ]
-  },
-  {
-    "type": "TEXT",
-    "name": "pixelId",
-    "displayName": "Facebook Pixel ID",
-    "simpleValueType": true,
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ],
-    "help": "Set to a valid Facebook Pixel ID."
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "enableMultipixelSetup",
-    "checkboxText": "Add Multiple Facebook Pixel IDs",
-    "simpleValueType": true,
-    "help": "Add one \u003ci\u003eFacebook Pixel ID\u003c/i\u003e and one \u003ci\u003eAccess Token\u003c/i\u003e per line.",
-    "subParams": [
-      {
-        "type": "SIMPLE_TABLE",
-        "name": "pixelIdAndAccessTokenTable",
-        "simpleTableColumns": [
-          {
-            "defaultValue": "",
-            "displayName": "Facebook Pixel ID",
-            "name": "pixelId",
-            "type": "TEXT",
-            "valueValidators": [
+            "type": "RADIO",
+            "name": "eventName",
+            "radioItems": [
               {
-                "type": "NON_EMPTY"
-              }
-            ]
-          },
-          {
-            "defaultValue": "",
-            "displayName": "API Access Token",
-            "name": "accessToken",
-            "type": "TEXT",
-            "valueValidators": [
+                "value": "standard",
+                "displayValue": "Standard",
+                "subParams": [
+                  {
+                    "type": "SELECT",
+                    "name": "eventNameStandard",
+                    "macrosInSelect": false,
+                    "selectItems": [
+                      {
+                        "value": "PageView",
+                        "displayValue": "PageView"
+                      },
+                      {
+                        "value": "AddPaymentInfo",
+                        "displayValue": "AddPaymentInfo"
+                      },
+                      {
+                        "value": "AddToCart",
+                        "displayValue": "AddToCart"
+                      },
+                      {
+                        "value": "AddToWishlist",
+                        "displayValue": "AddToWishlist"
+                      },
+                      {
+                        "value": "AppendValue",
+                        "displayValue": "AppendValue"
+                      },
+                      {
+                        "value": "CompleteRegistration",
+                        "displayValue": "CompleteRegistration"
+                      },
+                      {
+                        "value": "Contact",
+                        "displayValue": "Contact"
+                      },
+                      {
+                        "value": "CustomizeProduct",
+                        "displayValue": "CustomizeProduct"
+                      },
+                      {
+                        "value": "Donate",
+                        "displayValue": "Donate"
+                      },
+                      {
+                        "value": "FindLocation",
+                        "displayValue": "FindLocation"
+                      },
+                      {
+                        "value": "InitiateCheckout",
+                        "displayValue": "InitiateCheckout"
+                      },
+                      {
+                        "value": "Lead",
+                        "displayValue": "Lead"
+                      },
+                      {
+                        "value": "Purchase",
+                        "displayValue": "Purchase"
+                      },
+                      {
+                        "value": "Schedule",
+                        "displayValue": "Schedule"
+                      },
+                      {
+                        "value": "Search",
+                        "displayValue": "Search"
+                      },
+                      {
+                        "value": "StartTrial",
+                        "displayValue": "StartTrial"
+                      },
+                      {
+                        "value": "SubmitApplication",
+                        "displayValue": "SubmitApplication"
+                      },
+                      {
+                        "value": "Subscribe",
+                        "displayValue": "Subscribe"
+                      },
+                      {
+                        "value": "ViewContent",
+                        "displayValue": "ViewContent"
+                      }
+                    ],
+                    "simpleValueType": true
+                  }
+                ]
+              },
               {
-                "type": "NON_EMPTY"
+                "value": "custom",
+                "displayValue": "Custom",
+                "subParams": [
+                  {
+                    "type": "TEXT",
+                    "name": "eventNameCustom",
+                    "simpleValueType": true
+                  }
+                ]
               }
-            ]
-          }
-        ],
-        "enablingConditions": [
-          {
-            "paramName": "enableMultipixelSetup",
-            "paramValue": true,
-            "type": "EQUALS"
+            ],
+            "simpleValueType": true,
+            "enablingConditions": [
+              {
+                "paramName": "inheritEventName",
+                "paramValue": "override",
+                "type": "EQUALS"
+              }
+            ],
+            "displayName": "Event Type"
           }
         ]
-      }
-    ],
-    "enablingConditions": [
-      {
-        "paramName": "useAppSecretProof",
-        "paramValue": true,
-        "type": "NOT_EQUALS"
-      }
-    ]
-  },
-  {
-    "type": "TEXT",
-    "name": "testId",
-    "displayName": "Test ID",
-    "simpleValueType": true,
-    "help": "Provide a Test ID if you want to test server-side events in the Test Events feature of Events Manager.",
-    "valueHint": "TEST123"
-  },
-  {
-    "type": "TEXT",
-    "name": "itemIdKey",
-    "displayName": "Custom Item Id Key",
-    "simpleValueType": true,
-    "help": "You can specify a custom key, which will be used to set the content item id, by default item_id will be used. This may be useful if you are using WooCommerce extensions.",
-    "canBeEmptyString": true
-  },
-  {
-    "type": "SELECT",
-    "name": "overrideCookieDomain",
-    "displayName": "Override the cookie domain",
-    "macrosInSelect": true,
-    "selectItems": [
-      {
-        "value": false,
-        "displayValue": "False"
       },
       {
-        "value": true,
-        "displayValue": "True"
-      }
-    ],
-    "simpleValueType": true,
-    "subParams": [
-      {
-        "type": "TEXT",
-        "name": "overridenCookieDomain",
-        "displayName": "Cookie Domain",
-        "simpleValueType": true,
-        "enablingConditions": [
+        "type": "SELECT",
+        "name": "actionSource",
+        "displayName": "Action Source",
+        "selectItems": [
           {
-            "paramName": "overrideCookieDomain",
-            "paramValue": false,
-            "type": "NOT_EQUALS"
+            "value": "website",
+            "displayValue": "Website"
+          },
+          {
+            "value": "email",
+            "displayValue": "Email"
+          },
+          {
+            "value": "app",
+            "displayValue": "App"
+          },
+          {
+            "value": "phone_call",
+            "displayValue": "Phone Call"
+          },
+          {
+            "value": "chat",
+            "displayValue": "Chat"
+          },
+          {
+            "value": "physical_store",
+            "displayValue": "Physical Store"
+          },
+          {
+            "value": "system_generated",
+            "displayValue": "System Generated"
+          },
+          {
+            "value": "business_messaging",
+            "displayValue": "Business Messaging"
+          },
+          {
+            "value": "other",
+            "displayValue": "Other"
           }
         ],
-        "help": "Enable this option to override the cookie domain.\u003cbr\u003eEnter your website\u0027s top-level domain as a fixed value (e.g., example.com). \u003cbr\u003e If left as \"auto\", the top-level domain will be automatically determined using the following priority: \u003cul\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eForwarded\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eX-Forwarded-Host\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eHost\u003c/i\u003e header.\u003c/li\u003e \u003c/ul\u003e",
-        "defaultValue": "auto",
-        "valueHint": "example.com"
-      }
-    ],
-    "defaultValue": false
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "generateFbp",
-    "checkboxText": "Generate _fbp cookie if it not exist",
-    "simpleValueType": true,
-    "defaultValue": true
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "useHttpOnlyCookie",
-    "checkboxText": "Use HttpOnly cookies",
-    "simpleValueType": true,
-    "help": "Forbids JavaScript from accessing the cookie if enabled."
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "enableEventEnhancement",
-    "checkboxText": "Enable Event Enhancement",
-    "simpleValueType": true,
-    "help": "Enable Use of HTTP Only Secure Cookie (gtmeec) to Enhance Event Data.",
-    "defaultValue": true
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "useAppSecretProof",
-    "checkboxText": "Use App Secret Proof",
-    "simpleValueType": true,
-    "help": "Optional. \u003cbr/\u003e\u003cbr/\u003e Use this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e.   \u003cbr/\u003e\u003cbr/\u003e You’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e. \u003cbr/\u003e\u003cbr/\u003e \u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value.",
-    "subParams": [
-      {
-        "type": "TEXT",
-        "name": "appSecretProof",
-        "displayName": "App Secret Proof",
         "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "defaultValue": "website",
+        "help": "\u003cb\u003eEmail\u003c/b\u003e — Conversion happened over email.\n\u003cbr/\u003e\n\u003cb\u003eWebsite\u003c/b\u003e — Conversion was made on your website.\n\u003cbr/\u003e\n\u003cb\u003eApp\u003c/b\u003e — Conversion was made on your mobile app.\n\u003cbr/\u003e\n\u003cb\u003ePhone Call\u003c/b\u003e — Conversion was made over the phone.\n\u003cbr/\u003e\n\u003cb\u003eChat\u003c/b\u003e — Conversion was made via a messaging app, SMS, or online messaging feature.\n\u003cbr/\u003e\n\u003cb\u003ePhysical Store\u003c/b\u003e — Conversion was made in person at your physical store, helping to optimize your omni-channel marketing strategy.\n\u003cbr/\u003e\n\u003cb\u003eSystem Generated\u003c/b\u003e — Conversion happened automatically, such as a subscription renewal set to auto-pay, often linked with CRM CAPI for Meta Lead Ads.\n\u003cbr/\u003e\n\u003cb\u003eBusiness Messaging\u003c/b\u003e — Conversion was made from ads that click to Messenger, Instagram or WhatsApp.\n\u003cbr/\u003e \n\u003cb\u003eOther\u003c/b\u003e — Conversion happened in a way that is not listed.",
+        "alwaysInSummary": true
+      },
+      {
+        "type": "SELECT",
+        "name": "messaging_channel",
+        "displayName": "Messaging Channel",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "messenger",
+            "displayValue": "Messenger"
+          },
+          {
+            "value": "whatsapp",
+            "displayValue": "WhatsApp"
+          },
+          {
+            "value": "instagram",
+            "displayValue": "Instagram"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "messenger",
         "enablingConditions": [
           {
-            "paramName": "useAppSecretProof",
-            "paramValue": true,
+            "paramName": "actionSource",
+            "paramValue": "business_messaging",
             "type": "EQUALS"
           }
         ],
@@ -423,16 +258,196 @@ ___TEMPLATE_PARAMETERS___
           {
             "type": "NON_EMPTY"
           }
+        ],
+        "alwaysInSummary": true
+      },
+      {
+        "type": "TEXT",
+        "name": "accessToken",
+        "displayName": "API Access Token",
+        "simpleValueType": true,
+        "help": "Set to your Facebook API Access Token. See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/get-started#access-token\" target\u003d\"_blank\"\u003ehere\u003c/a\u003e for more information.",
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
         ]
+      },
+      {
+        "type": "TEXT",
+        "name": "pixelId",
+        "displayName": "Facebook Pixel ID",
+        "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "help": "Set to a valid Facebook Pixel ID."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "enableMultipixelSetup",
+        "checkboxText": "Add Multiple Facebook Pixel IDs",
+        "simpleValueType": true,
+        "help": "Add one \u003ci\u003eFacebook Pixel ID\u003c/i\u003e and one \u003ci\u003eAccess Token\u003c/i\u003e per line.",
+        "subParams": [
+          {
+            "type": "SIMPLE_TABLE",
+            "name": "pixelIdAndAccessTokenTable",
+            "simpleTableColumns": [
+              {
+                "defaultValue": "",
+                "displayName": "Facebook Pixel ID",
+                "name": "pixelId",
+                "type": "TEXT",
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              },
+              {
+                "defaultValue": "",
+                "displayName": "API Access Token",
+                "name": "accessToken",
+                "type": "TEXT",
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              }
+            ],
+            "enablingConditions": [
+              {
+                "paramName": "enableMultipixelSetup",
+                "paramValue": true,
+                "type": "EQUALS"
+              }
+            ]
+          }
+        ],
+        "enablingConditions": [
+          {
+            "paramName": "useAppSecretProof",
+            "paramValue": true,
+            "type": "NOT_EQUALS"
+          }
+        ]
+      },
+      {
+        "type": "TEXT",
+        "name": "testId",
+        "displayName": "Test ID",
+        "simpleValueType": true,
+        "help": "Provide a Test ID if you want to test server-side events in the Test Events feature of Events Manager.",
+        "valueHint": "TEST123"
+      },
+      {
+        "type": "TEXT",
+        "name": "itemIdKey",
+        "displayName": "Custom Item Id Key",
+        "simpleValueType": true,
+        "help": "You can specify a custom key, which will be used to set the content item id, by default item_id will be used. This may be useful if you are using WooCommerce extensions.",
+        "canBeEmptyString": true
+      },
+      {
+        "type": "SELECT",
+        "name": "overrideCookieDomain",
+        "displayName": "Override the cookie domain",
+        "macrosInSelect": true,
+        "selectItems": [
+          {
+            "value": false,
+            "displayValue": "False"
+          },
+          {
+            "value": true,
+            "displayValue": "True"
+          }
+        ],
+        "simpleValueType": true,
+        "subParams": [
+          {
+            "type": "TEXT",
+            "name": "overridenCookieDomain",
+            "displayName": "Cookie Domain",
+            "simpleValueType": true,
+            "enablingConditions": [
+              {
+                "paramName": "overrideCookieDomain",
+                "paramValue": false,
+                "type": "NOT_EQUALS"
+              }
+            ],
+            "help": "Enable this option to override the cookie domain.\u003cbr\u003eEnter your website\u0027s top-level domain as a fixed value (e.g., example.com). \u003cbr\u003e If left as \"auto\", the top-level domain will be automatically determined using the following priority: \u003cul\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eForwarded\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eX-Forwarded-Host\u003c/i\u003e header (if present).\u003c/li\u003e \u003cli\u003eTop-level domain of the \u003ci\u003eHost\u003c/i\u003e header.\u003c/li\u003e \u003c/ul\u003e",
+            "defaultValue": "auto",
+            "valueHint": "example.com",
+            "alwaysInSummary": true
+          }
+        ],
+        "defaultValue": false
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "generateFbp",
+        "checkboxText": "Generate _fbp cookie if it not exist",
+        "simpleValueType": true,
+        "defaultValue": true,
+        "alwaysInSummary": true
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "useHttpOnlyCookie",
+        "checkboxText": "Use HttpOnly cookies",
+        "simpleValueType": true,
+        "help": "Forbids JavaScript from accessing the cookie if enabled."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "enableEventEnhancement",
+        "checkboxText": "Enable Event Enhancement",
+        "simpleValueType": true,
+        "help": "Enable Use of HTTP Only Secure Cookie (gtmeec) to Enhance Event Data.",
+        "defaultValue": true,
+        "alwaysInSummary": true
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "useAppSecretProof",
+        "checkboxText": "Use App Secret Proof",
+        "simpleValueType": true,
+        "help": "Optional. \u003cbr/\u003e\u003cbr/\u003e Use this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e.   \u003cbr/\u003e\u003cbr/\u003e You’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e. \u003cbr/\u003e\u003cbr/\u003e \u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value.",
+        "subParams": [
+          {
+            "type": "TEXT",
+            "name": "appSecretProof",
+            "displayName": "App Secret Proof",
+            "simpleValueType": true,
+            "enablingConditions": [
+              {
+                "paramName": "useAppSecretProof",
+                "paramValue": true,
+                "type": "EQUALS"
+              }
+            ],
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "useOptimisticScenario",
+        "checkboxText": "Use Optimistic Scenario",
+        "simpleValueType": true,
+        "help": "The tag will call gtmOnSuccess() without waiting for a response from the API. This will speed up sGTM response time however your tag will always return the status fired successfully even in case it is not."
       }
     ]
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "useOptimisticScenario",
-    "checkboxText": "Use Optimistic Scenario",
-    "simpleValueType": true,
-    "help": "The tag will call gtmOnSuccess() without waiting for a response from the API. This will speed up sGTM response time however your tag will always return the status fired successfully even in case it is not."
   },
   {
     "displayName": "Server Event Data Override",
@@ -1030,11 +1045,9 @@ const toBase64 = require('toBase64');
 /*==============================================================================
 ==============================================================================*/
 
-const traceId = getRequestHeader('trace-id');
-
 const eventData = getAllEventData();
 
-if (!isConsentGivenOrNotRequired()) {
+if (!isConsentGivenOrNotRequired(data, eventData)) {
   return data.gtmOnSuccess();
 }
 
@@ -1101,7 +1114,7 @@ if (fbp) {
 const mappedEventData = mapEvent(eventData, data);
 const postBody = {
   data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.2' + (data.enableEventEnhancement ? '-ee' : '')
+  partner_agent: 'stape-gtmss-2.1.3' + (data.enableEventEnhancement ? '-ee' : '')
 };
 
 if (data.enableEventEnhancement) {
@@ -1124,7 +1137,7 @@ if (data.enableMultipixelSetup) {
   pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
 }
 
-const apiVersion = '23.0';
+const apiVersion = '24.0';
 const requests = pixelsConfig.map((pixelConfig) => {
   const pixelId = pixelConfig.pixelId;
   const accessToken = pixelConfig.accessToken;
@@ -1141,7 +1154,6 @@ const requests = pixelsConfig.map((pixelConfig) => {
   log({
     Name: 'Facebook',
     Type: 'Request',
-    TraceId: traceId,
     EventName: mappedEventData.event_name,
     RequestMethod: 'POST',
     RequestUrl: postUrl,
@@ -1152,49 +1164,56 @@ const requests = pixelsConfig.map((pixelConfig) => {
     postUrl,
     { headers: { 'content-type': 'application/json' }, method: 'POST' },
     JSON.stringify(postBody)
-  );
+  )
+    .then((result) => {
+      log({
+        Name: 'Facebook',
+        Type: 'Response',
+        EventName: mappedEventData.event_name,
+        ResponseStatusCode: result.statusCode,
+        ResponseHeaders: result.headers,
+        ResponseBody: result.body,
+        Message: 'Pixel ID: ' + pixelId
+      });
+
+      if (result.statusCode < 200 || result.statusCode >= 300) return false;
+      return true;
+    })
+    .catch((result) => {
+      log({
+        Name: 'Facebook',
+        Type: 'Response',
+        EventName: mappedEventData.event_name,
+        Message: 'Request failed or timed out. Pixel ID: ' + pixelId,
+        Reason: JSON.stringify(result)
+      });
+
+      return false;
+    });
 });
 
 Promise.all(requests)
   .then((results) => {
-    let someRequestFailed = false;
-
-    results.forEach((result) => {
-      log({
-        Name: 'Facebook',
-        Type: 'Response',
-        TraceId: traceId,
-        EventName: mappedEventData.event_name,
-        ResponseStatusCode: result.statusCode,
-        ResponseHeaders: result.headers,
-        ResponseBody: result.body
-      });
-
-      if (result.statusCode < 200 || result.statusCode >= 300) {
-        someRequestFailed = true;
-      }
-    });
-
     if (!data.useOptimisticScenario) {
-      if (someRequestFailed) data.gtmOnFailure();
-      else data.gtmOnSuccess();
+      const someRequestFailed = results.some((success) => !success);
+      if (someRequestFailed) return data.gtmOnFailure();
+      return data.gtmOnSuccess();
     }
   })
   .catch((result) => {
     log({
       Name: 'Facebook',
-      Type: 'Response',
-      TraceId: traceId,
+      Type: 'Message',
       EventName: mappedEventData.event_name,
-      Message: 'Some request failed or timed out.',
+      Message: 'Something went wrong.',
       Reason: JSON.stringify(result)
     });
 
-    if (!data.useOptimisticScenario) data.gtmOnFailure();
+    if (!data.useOptimisticScenario) return data.gtmOnFailure();
   });
 
 if (data.useOptimisticScenario) {
-  data.gtmOnSuccess();
+  return data.gtmOnSuccess();
 }
 
 /*==============================================================================
@@ -1380,6 +1399,13 @@ function overrideDataIfNeeded(mappedData) {
 }
 
 function cleanupData(mappedData) {
+  if (mappedData.action_source === 'business_messaging') {
+    mappedData.event_source_url = undefined;
+    ['client_ip_address', 'client_user_agent', 'fbc', 'fbp'].forEach(
+      (key) => (mappedData.user_data[key] = undefined)
+    );
+  }
+
   if (mappedData.user_data) {
     const userData = {};
 
@@ -1545,6 +1571,7 @@ function addUserData(eventData, mappedData) {
 
   if (eventData.phone) mappedData.user_data.ph = eventData.phone;
   else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
+  else if (user_data.phone) mappedData.user_data.ph = user_data.phone;
 
   if (eventData.city) mappedData.user_data.ct = eventData.city;
   else if (address.city) mappedData.user_data.ct = address.city;
@@ -1571,35 +1598,20 @@ function addUserData(eventData, mappedData) {
 }
 
 function addServerEventData(eventData, mappedData) {
-  const serverEventDataList = {};
-
   if (eventData.event_id) mappedData.event_id = eventData.event_id;
   else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
 
   if (data.serverEventDataList) {
     data.serverEventDataList.forEach((d) => {
-      serverEventDataList[d.name] = d.value;
+      mappedData[d.name] = d.value;
     });
-  }
 
-  if (serverEventDataList) {
-    if (serverEventDataList.event_time) mappedData.event_time = serverEventDataList.event_time;
-    if (serverEventDataList.event_source_url)
-      mappedData.event_source_url = serverEventDataList.event_source_url;
-    if (serverEventDataList.opt_out) mappedData.opt_out = serverEventDataList.opt_out;
-    if (serverEventDataList.event_id) mappedData.event_id = serverEventDataList.event_id;
-    if (serverEventDataList.referrer_url)
-      mappedData.referrer_url = serverEventDataList.referrer_url;
-
-    if (serverEventDataList.data_processing_options) {
-      mappedData.data_processing_options = serverEventDataList.data_processing_options;
-
-      if (serverEventDataList.data_processing_options_country)
-        mappedData.data_processing_options_country =
-          serverEventDataList.data_processing_options_country;
-      if (serverEventDataList.data_processing_options_state)
-        mappedData.data_processing_options_state =
-          serverEventDataList.data_processing_options_state;
+    if (
+      !mappedData.data_processing_options &&
+      (mappedData.data_processing_options_country || mappedData.data_processing_options_state)
+    ) {
+      mappedData.data_processing_options_country = undefined;
+      mappedData.data_processing_options_state = undefined;
     }
   }
 
@@ -1775,7 +1787,7 @@ function mergeObj(target, source) {
   return target;
 }
 
-function isConsentGivenOrNotRequired() {
+function isConsentGivenOrNotRequired(data, eventData) {
   if (data.adStorageConsent !== 'required') return true;
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
@@ -1786,6 +1798,8 @@ function log(rawDataToLog) {
   const logDestinationsHandlers = {};
   if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
   if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
+
+  rawDataToLog.TraceId = getRequestHeader('trace-id');
 
   const keyMappings = {
     // No transformation for Console is needed.
@@ -2524,26 +2538,31 @@ scenarios:
     \nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n  const\
     \ pixelId = mockData.pixelId;\n  const accessToken = mockData.accessToken;\n \
     \ const appSecretProof = mockData.appSecretProof;\n  \n  assertThat(requestUrl).isEqualTo(\n\
-    \    'https://graph.facebook.com/v23.0/' + pixelId + \n    '/events?access_token='\
-    \ + accessToken +\n    '&appsecret_proof=' + appSecretProof\n  );\n\n  return\
-    \ Promise.create((resolve, reject) => {\n    resolve({ statusCode: 200 });\n \
-    \ });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \    'https://graph.facebook.com/v' + expectedApiVersion + '/' + pixelId + \n\
+    \    '/events?access_token=' + accessToken +\n    '&appsecret_proof=' + appSecretProof\n\
+    \  );\n\n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
+    \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
     \  assertApi('gtmOnFailure').wasNotCalled();\n});"
-- name: gtmOnFailure handler is called if some response fails with status code
-  code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
-    \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
-    \ 'appSecretProof2'\n  }\n];\n\nconst lastRequestIndex = mockData.pixelIdAndAccessTokenTable.length\
-    \ + 1;\n\nlet requestCount = 0;\nmock('sendHttpRequest', (requestUrl, requestOptions,\
-    \ requestBody) => {\n  requestCount++;\n  return Promise.create((resolve, reject)\
-    \ => {\n    resolve({ statusCode: (requestCount === lastRequestIndex) ? 500 :\
-    \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n\
-    \  assertApi('gtmOnFailure').wasCalled();\n});"
-- name: gtmOnFailure handler is called if some response rejects
+- name: gtmOnFailure handler is called if some request fails with status code
   code: |-
-    mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => { });
+    mockData.enableMultipixelSetup = true;
+    mockData.pixelIdAndAccessTokenTable = [
+      {
+        pixelId: 'pixelId2',
+        accessToken: 'accessToken2',
+        appSecretProof: 'appSecretProof2'
+      }
+    ];
 
-    mockObject('Promise', {
-      all: () => Promise.create((resolve, reject) => reject({ reason: 'failed' }))
+    const lastRequestIndex = mockData.pixelIdAndAccessTokenTable.length + 1;
+
+    let requestCount = 0;
+    mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {
+      requestCount++;
+      const statusCode = (requestCount === 1) ? 500 : 200;
+      return Promise.create((resolve, reject) => {
+        resolve({ statusCode: statusCode });
+      });
     });
 
     runCode(mockData);
@@ -2552,46 +2571,23 @@ scenarios:
       assertApi('gtmOnSuccess').wasNotCalled();
       assertApi('gtmOnFailure').wasCalled();
     });
-- name: '[Logs] Should log to console'
-  code: "const originalMockData = mockData;\n\n[\n  // if the 'Always log to console'\
-    \ option is selected\n  { mockData: { logType: 'always' }, expectedDebugMode:\
-    \ true },\n  // if the 'Log during debug and preview' option is selected AND is\
-    \ on preview mode\n  { mockData: { logType: 'debug' }, expectedDebugMode: true\
-    \ },\n].forEach(scenario => {\n  const copyMockData = JSON.parse(JSON.stringify(originalMockData));\n\
-    \  mergeObj(copyMockData, scenario.mockData);\n  \n  mock('getContainerVersion',\
-    \ () => {\n    return {\n      debugMode: scenario.expectedDebugMode\n    };\n\
-    \  }); \n  \n  mock('logToConsole', (logData) => {\n    const parsedLogData =\
-    \ JSON.parse(logData);\n    requiredConsoleKeys.forEach(p => assertThat(parsedLogData[p]).isDefined());\n\
-    \  });\n  \n  runCode(copyMockData);\n  \n  callLater(() => {\n    assertApi('logToConsole').wasCalled();\n\
-    \    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
-    \  });\n});"
-- name: '[Logs] Should NOT log to console'
-  code: "const originalMockData = mockData;\n\n[\n  // if the 'Log during debug and\
-    \ preview' option is selected AND is NOT on preview mode\n  { mockData: { logType:\
-    \ 'debug' }, expectedDebugMode: false },\n  // if the 'Do not log' option is selected\n\
-    \  { mockData: { logType: 'no' }, expectedDebugMode: undefined },\n].forEach(scenario\
-    \ => {\n  const copyMockData = JSON.parse(JSON.stringify(originalMockData));\n\
-    \  mergeObj(copyMockData, scenario.mockData);\n  \n  mock('getContainerVersion',\
-    \ () => {\n    return {\n      debugMode: scenario.expectedDebugMode\n    };\n\
-    \  });\n  \n  runCode(copyMockData);\n\n  callLater(() => {\n    assertApi('logToConsole').wasNotCalled();\n\
-    \    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
-    \  });\n});"
-- name: '[Logs] Should log to BQ, if the ''Log to BigQuery'' option is selected'
-  code: "mockData.bigQueryLogType = 'always';\n\nmockObject('BigQuery', {\n  insert:\
-    \ (connectionInfo, rows, options) => { \n    assertThat(connectionInfo).isDefined();\n\
-    \    assertThat(rows).isArray();\n    assertThat(rows).hasLength(1);\n    requiredBqKeys.forEach(p\
-    \ => assertThat(rows[0][p]).isDefined());\n    assertThat(options).isEqualTo(expectedBqOptions);\n\
-    \    return Promise.create((resolve, reject) => {\n      resolve();\n    });\n\
-    \  }\n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
-    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
-- name: '[Logs] Should NOT log to BQ, if the ''Do not log to BigQuery'' option is
-    selected'
-  code: "mockData.bigQueryLogType = 'no';\n\n// assertApi doesn't work for 'BigQuery.insert()'.\n\
-    // Ref: https://gtm-gear.com/posts/gtm-templates-testing/\nmockObject('BigQuery',\
-    \ {\n  insert: (connectionInfo, rows, options) => { \n    fail('BigQuery.insert\
-    \ should not have been called.');\n    return Promise.create((resolve, reject)\
-    \ => {\n      resolve();\n    });\n  }\n});\n\nrunCode(mockData);\n\ncallLater(()\
-    \ => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
+- name: gtmOnFailure handler is called if some request rejects
+  code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
+    \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
+    \ 'appSecretProof2'\n  }\n];\n\nlet requestCount = 0;\nmock('sendHttpRequest',\
+    \ (requestUrl, requestOptions, requestBody) => { \n  requestCount++;\n  return\
+    \ Promise.create((resolve, reject) => {\n    if (requestCount === 1) reject({\
+    \ reason: 'failed' });\n    else resolve({ statusCode: 200 });\n  });\n});\n\n\
+    runCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n\
+    \  assertApi('gtmOnFailure').wasCalled();\n});"
+- name: gtmOnFailure handler is called if Promise dot all rejects
+  code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
+    \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
+    \ 'appSecretProof2'\n  }\n];\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
+    \ requestBody) => { \n  return Promise.create((resolve, reject) => {\n    resolve({\
+    \ statusCode: 200 });\n  });\n});\n\nmockObject('Promise', {\n  all: () => Promise.create((resolve,\
+    \ reject) => reject({ reason: 'failed' }))\n});\n\nrunCode(mockData);\n\ncallLater(()\
+    \ => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n  assertApi('gtmOnFailure').wasCalled();\n\
     });"
 setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\nconst\
   \ callLater = require('callLater');\n\nconst mergeObj = (target, source) => {\n\
@@ -2602,16 +2598,17 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
   \ 'TraceId', 'Name'];\nconst requiredBqKeys = ['timestamp', 'type', 'trace_id',\
   \ 'tag_name'];\nconst expectedBqOptions = { ignoreUnknownValues: true };\n\nconst\
   \ expectedValue = 'test';\nconst expectedPixelId = '1111111111111';\nconst expectedPartnerAgent\
-  \ = 'stape-gtmss-2.1.2';\n\nconst mockData = {\n  pixelId: expectedPixelId,\n  accessToken:\
-  \ expectedValue,\n  inheritEventName: 'override',\n  eventNameCustom: expectedValue,\n\
-  \  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n  logBigQueryDatasetId:\
-  \ expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId: expectedBigQuerySettings.logBigQueryTableId,\n\
-  };\n\nmock('sendHttpRequest', (requestUrl, callback, requestOptions, requestBody)\
-  \ => {\n  if (typeof callback === 'function') {\n    callback(200);\n  } else {\n\
-  \    requestBody = requestOptions;\n    requestOptions = callback;\n    return Promise.create((resolve,\
-  \ reject) => {\n      resolve({ statusCode: 200 });\n    });  \n  }\n});\n\nmock('getRequestHeader',\
-  \ (header) => {\n  if (header === 'trace-id') return 'expectedTraceId';\n});\n\n\
-  mock('getTimestampMillis', 1747945830456);"
+  \ = 'stape-gtmss-2.1.3';\nconst expectedApiVersion = '24.0';\n\n\nconst mockData\
+  \ = {\n  pixelId: expectedPixelId,\n  accessToken: expectedValue,\n  inheritEventName:\
+  \ 'override',\n  eventNameCustom: expectedValue,\n  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n\
+  \  logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId:\
+  \ expectedBigQuerySettings.logBigQueryTableId,\n};\n\nmock('sendHttpRequest', (requestUrl,\
+  \ callback, requestOptions, requestBody) => {\n  if (typeof callback === 'function')\
+  \ {\n    callback(200);\n  } else {\n    requestBody = requestOptions;\n    requestOptions\
+  \ = callback;\n    return Promise.create((resolve, reject) => {\n      resolve({\
+  \ statusCode: 200 });\n    });  \n  }\n});\n\nmock('getRequestHeader', (header)\
+  \ => {\n  if (header === 'trace-id') return 'expectedTraceId';\n});\n\nmock('getTimestampMillis',\
+  \ 1747945830456);"
 
 
 ___NOTES___
