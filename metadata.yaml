@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: d47449bd784fd94517c69344eafda86755036008
+    changeNotes: Added support for auto-mapping from eventData.ecommerce.items for webhooks. Added support for auto-parsing eventData.fbc and eventData.fbp. Fixed a typo when parsing Event Enhancement cookie data.
   - sha: d65277b143a1f90af9744e5c3e72ac9647b07cb5
     changeNotes: Updated API to v24. Improved response handling when multiple Pixel IDs are being used. Added 'Instagram' as a Messaging Channel.
   - sha: dfc4a023a8eb75a841ebfe05f3835d114425dc44

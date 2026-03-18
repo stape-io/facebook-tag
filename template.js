@@ -40,8 +40,8 @@ if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
 
 const commonCookie = eventData.common_cookie || {};
 
-let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc;
-let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp;
+let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc || eventData.fbc;
+let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp || eventData.fbp;
 
 const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
 
@@ -446,27 +446,35 @@ function addEcommerceData(eventData, mappedData) {
   let currencyFromItems = '';
   let valueFromItems = 0;
 
-  if (eventData.items && eventData.items[0]) {
+  let items;
+  if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
+  else if (
+    getType(eventData.ecommerce) === 'object' &&
+    getType(eventData.ecommerce.items) === 'array' &&
+    eventData.ecommerce.items.length
+  ) {
+    items = eventData.ecommerce.items;
+  }
+
+  if (items) {
     mappedData.custom_data.contents = [];
     mappedData.custom_data.content_type =
       eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
-    currencyFromItems = eventData.items[0].currency;
+    currencyFromItems = items[0].currency;
 
-    if (!eventData.items[1]) {
-      if (eventData.items[0].item_name)
-        mappedData.custom_data.content_name = eventData.items[0].item_name;
-      if (eventData.items[0].item_category)
-        mappedData.custom_data.content_category = eventData.items[0].item_category;
+    if (!items[1]) {
+      if (items[0].item_name) mappedData.custom_data.content_name = items[0].item_name;
+      if (items[0].item_category) mappedData.custom_data.content_category = items[0].item_category;
 
-      if (eventData.items[0].price) {
-        mappedData.custom_data.value = eventData.items[0].quantity
-          ? eventData.items[0].quantity * eventData.items[0].price
-          : eventData.items[0].price;
+      if (items[0].price) {
+        mappedData.custom_data.value = items[0].quantity
+          ? items[0].quantity * items[0].price
+          : items[0].price;
       }
     }
 
     const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
-    eventData.items.forEach((d, i) => {
+    items.forEach((d) => {
       const content = {};
       if (d[itemIdKey]) content.id = d[itemIdKey];
       if (d.item_name) content.title = d.item_name;
@@ -714,7 +722,7 @@ function enhanceEventData(userData) {
   if (gtmeecData) {
     if (!userData.em && gtmeecData.em) userData.em = gtmeecData.em;
     if (!userData.ph && gtmeecData.ph) userData.ph = gtmeecData.ph;
-    if (!userData.ln && gtmeecData.ph) userData.ln = gtmeecData.ln;
+    if (!userData.ln && gtmeecData.ln) userData.ln = gtmeecData.ln;
     if (!userData.fn && gtmeecData.fn) userData.fn = gtmeecData.fn;
     if (!userData.ct && gtmeecData.ct) userData.ct = gtmeecData.ct;
     if (!userData.st && gtmeecData.st) userData.st = gtmeecData.st;
