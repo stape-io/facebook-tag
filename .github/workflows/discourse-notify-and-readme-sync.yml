@@ -1,0 +1,43 @@
+name: Notify Discourse and sync README
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  bootstrap:
+    uses: stape-io/template-changes-shared-workflows/.github/workflows/discourse-bootstrap.yml@main
+    permissions:
+      contents: write
+    secrets: inherit
+
+  check-changes:
+    uses: stape-io/template-changes-shared-workflows/.github/workflows/check-changes.yml@main
+    permissions:
+      contents: write
+
+  notify-template-change:
+    needs: [bootstrap, check-changes]
+    if: needs.check-changes.outputs.template_changed == 'true'
+    uses: stape-io/template-changes-shared-workflows/.github/workflows/discourse-notify.yml@main
+    permissions:
+      contents: read
+      models: read
+    with:
+      before_sha: ${{ github.event.before }}
+      head_sha: ${{ github.sha }}
+      commit_url: ${{ needs.check-changes.outputs.commit_url }}
+      topic_id: ${{ needs.bootstrap.outputs.topic_id }}
+    secrets: inherit
+
+  sync-readme:
+    needs: [bootstrap, check-changes]
+    if: needs.check-changes.outputs.readme_changed == 'true'
+    uses: stape-io/template-changes-shared-workflows/.github/workflows/discourse-readme-sync.yml@main
+    permissions:
+      contents: read
+    with:
+      post_id: ${{ needs.bootstrap.outputs.post_id }}
+    secrets: inherit
