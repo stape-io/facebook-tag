@@ -172,7 +172,8 @@ ___TEMPLATE_PARAMETERS___
             ],
             "displayName": "Event Type"
           }
-        ]
+        ],
+        "help": "\u003cb\u003eInherit from client\u003c/b\u003e\n\u003cbr/\u003e\nIf the incoming request follows the \u003cb\u003eGoogle Analytics 4 (GA4)\u003c/b\u003e schema, the following mappings will be applied to convert GA4 \u003ci\u003eEvent Names\u003c/i\u003e into the Conversion API \u003ci\u003eEvent Name\u003c/i\u003e equivalent:\n\u003cbr/\u003e\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003epage_view\u003c/i\u003e → \u003ci\u003ePageView\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egtm.dom\u003c/i\u003e → \u003ci\u003ePageView\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eadd_payment_info\u003c/i\u003e → \u003ci\u003eAddPaymentInfo\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eadd_to_cart\u003c/i\u003e → \u003ci\u003eAddToCart\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eadd_to_wishlist\u003c/i\u003e → \u003ci\u003eAddToWishlist\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003esign_up\u003c/i\u003e → \u003ci\u003eCompleteRegistration\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003ebegin_checkout\u003c/i\u003e → \u003ci\u003eInitiateCheckout\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egenerate_lead\u003c/i\u003e → \u003ci\u003eLead\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003epurchase\u003c/i\u003e → \u003ci\u003ePurchase\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003esearch\u003c/i\u003e → \u003ci\u003eSearch\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eview_item\u003c/i\u003e → \u003ci\u003eViewContent\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eview_item_list\u003c/i\u003e → \u003ci\u003eViewContent\u003c/i\u003e (conditional)\u003c/li\u003e\n\u003cli\u003e\u003ci\u003econtact\u003c/i\u003e → \u003ci\u003eContact\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003ecustomize_product\u003c/i\u003e → \u003ci\u003eCustomizeProduct\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003edonate\u003c/i\u003e → \u003ci\u003eDonate\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003efind_location\u003c/i\u003e → \u003ci\u003eFindLocation\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eschedule\u003c/i\u003e → \u003ci\u003eSchedule\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003estart_trial\u003c/i\u003e → \u003ci\u003eStartTrial\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003esubmit_application\u003c/i\u003e → \u003ci\u003eSubmitApplication\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003esubscribe\u003c/i\u003e → \u003ci\u003eSubscribe\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egtm4wp.addProductToCartEEC\u003c/i\u003e → \u003ci\u003eAddToCart\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egtm4wp.productClickEEC\u003c/i\u003e → \u003ci\u003eViewContent\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egtm4wp.checkoutOptionEEC\u003c/i\u003e → \u003ci\u003eInitiateCheckout\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egtm4wp.checkoutStepEEC\u003c/i\u003e → \u003ci\u003eAddPaymentInfo\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003egtm4wp.orderCompletedEEC\u003c/i\u003e → \u003ci\u003ePurchase\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003cbr/\u003e\nPlease note that it provides partial event mapping. Not all GA4 events can be mapped to Conversion API Event Name."
       },
       {
         "type": "SELECT",
@@ -263,18 +264,6 @@ ___TEMPLATE_PARAMETERS___
       },
       {
         "type": "TEXT",
-        "name": "accessToken",
-        "displayName": "API Access Token",
-        "simpleValueType": true,
-        "help": "Set to your Facebook API Access Token. See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/get-started#access-token\" target\u003d\"_blank\"\u003ehere\u003c/a\u003e for more information.",
-        "valueValidators": [
-          {
-            "type": "NON_EMPTY"
-          }
-        ]
-      },
-      {
-        "type": "TEXT",
         "name": "pixelId",
         "displayName": "Facebook Pixel ID",
         "simpleValueType": true,
@@ -284,6 +273,18 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "help": "Set to a valid Facebook Pixel ID."
+      },
+      {
+        "type": "TEXT",
+        "name": "accessToken",
+        "displayName": "API Access Token",
+        "simpleValueType": true,
+        "help": "Set to your Facebook API Access Token. See \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/get-started#access-token\" target\u003d\"_blank\"\u003ehere\u003c/a\u003e for more information.",
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ]
       },
       {
         "type": "CHECKBOX",
@@ -325,7 +326,8 @@ ___TEMPLATE_PARAMETERS___
                 "paramValue": true,
                 "type": "EQUALS"
               }
-            ]
+            ],
+            "newRowButtonText": "Add Pixel ID"
           }
         ],
         "enablingConditions": [
@@ -341,16 +343,8 @@ ___TEMPLATE_PARAMETERS___
         "name": "testId",
         "displayName": "Test ID",
         "simpleValueType": true,
-        "help": "Provide a Test ID if you want to test server-side events in the Test Events feature of Events Manager.",
+        "help": "Provide a Test ID if you want to test server-side events in the Test Events feature of Events Manager.\n\u003cbr/\u003e\nIt automatically uses the value in \u003ci\u003eeventData.test_event_code\u003c/i\u003e, if present.",
         "valueHint": "TEST123"
-      },
-      {
-        "type": "TEXT",
-        "name": "itemIdKey",
-        "displayName": "Custom Item Id Key",
-        "simpleValueType": true,
-        "help": "You can specify a custom key, which will be used to set the content item id, by default item_id will be used. This may be useful if you are using WooCommerce extensions.",
-        "canBeEmptyString": true
       },
       {
         "type": "SELECT",
@@ -400,9 +394,9 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "CHECKBOX",
         "name": "useHttpOnlyCookie",
-        "checkboxText": "Use HttpOnly cookies",
+        "checkboxText": "Use HttpOnly cookies for _fbc and _fbp",
         "simpleValueType": true,
-        "help": "Forbids JavaScript from accessing the cookie if enabled."
+        "help": "If enabled, Forbids JavaScript from accessing the \u003ci\u003e_fbc\u003c/i\u003e and \u003ci\u003e_fbp\u003c/i\u003e cookies."
       },
       {
         "type": "CHECKBOX",
@@ -412,33 +406,6 @@ ___TEMPLATE_PARAMETERS___
         "help": "Enable Use of HTTP Only Secure Cookie (gtmeec) to Enhance Event Data.",
         "defaultValue": true,
         "alwaysInSummary": true
-      },
-      {
-        "type": "CHECKBOX",
-        "name": "useAppSecretProof",
-        "checkboxText": "Use App Secret Proof",
-        "simpleValueType": true,
-        "help": "Optional. \u003cbr/\u003e\u003cbr/\u003e Use this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e.   \u003cbr/\u003e\u003cbr/\u003e You’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e. \u003cbr/\u003e\u003cbr/\u003e \u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value.",
-        "subParams": [
-          {
-            "type": "TEXT",
-            "name": "appSecretProof",
-            "displayName": "App Secret Proof",
-            "simpleValueType": true,
-            "enablingConditions": [
-              {
-                "paramName": "useAppSecretProof",
-                "paramValue": true,
-                "type": "EQUALS"
-              }
-            ],
-            "valueValidators": [
-              {
-                "type": "NON_EMPTY"
-              }
-            ]
-          }
-        ]
       },
       {
         "type": "CHECKBOX",
@@ -459,6 +426,14 @@ ___TEMPLATE_PARAMETERS___
         "type": "LABEL",
         "name": "serverEventDataLabel",
         "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event\"\u003ethis documentation\u003c/a\u003e for more details on which parameters you can override.\u003cbr/\u003e\u003cbr/\u003e"
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "autoMapServerEventData",
+        "checkboxText": "Automap Server Event Data",
+        "simpleValueType": true,
+        "help": "If enabled, the tag will attempt to automatically map parameters from your event data.\n\u003cbr/\u003e\u003cbr/\u003e\nAny value you manually enter in a field below will always override the auto-mapped value.\n\u003cbr/\u003e\u003cbr/\u003e\nDefault mappings:\n\u003cul\u003e\n\u003cli\u003eSource URL:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.page_location\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eReferrer URL:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.page_referrer\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eEvent ID:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.event_id\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.transaction_id\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003c/ul\u003e",
+        "defaultValue": true
       },
       {
         "name": "serverEventDataList",
@@ -612,6 +587,14 @@ ___TEMPLATE_PARAMETERS___
         "displayName": "User Data is your main \u003ca href\u003d\"https://www.facebook.com/business/help/765081237991954?id\u003d818859032317965\"\u003eEvent Match Quality (EMQ) contributor\u003c/a\u003e. Matched events improve ad targeting by connecting actions to Meta accounts. Events with better match quality can lead to lower costs per action.\n\u003cbr/\u003e\nCheck \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/user-data\"\u003ethis documentation\u003c/a\u003e for more details on accepted User Data parameters.\n\u003cbr/\u003e\nThe tag will automatically hash parameters that need it, pre-hashed data is also accepted.\n\u003cbr/\u003e\u003cbr/\u003e"
       },
       {
+        "type": "CHECKBOX",
+        "name": "autoMapUserData",
+        "checkboxText": "Automap User Data",
+        "simpleValueType": true,
+        "help": "If enabled, the tag will attempt to automatically map parameters from your event data.\n\u003cbr/\u003e\u003cbr/\u003e\nAny value you manually enter in a field below will always override the auto-mapped value.\n\u003cbr/\u003e\u003cbr/\u003e\nDefault mappings:\n\u003cul\u003e\n\u003cli\u003e\u003cb\u003eClick ID:\u003c/b\u003e \u003ci\u003efbclid URL parameter\u003c/i\u003e, \u003ci\u003e_fbc cookie\u003c/i\u003e, \u003ci\u003eeventData.common_cookie._fbc\u003c/i\u003e, \u003ci\u003eeventData._fbc\u003c/i\u003e, \u003ci\u003eeventData.fbc\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eBrowser ID:\u003c/b\u003e \u003ci\u003e_fbp cookie\u003c/i\u003e, \u003ci\u003eeventData.common_cookie._fbp\u003c/i\u003e, \u003ci\u003eeventData._fbp\u003c/i\u003e, \u003ci\u003eeventData.fbp\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eEmail:\u003c/b\u003e \u003ci\u003eeventData.email\u003c/i\u003e, \u003ci\u003eeventData.user_data.email_address\u003c/i\u003e, \u003ci\u003eeventData.user_data.email\u003c/i\u003e, \u003ci\u003eeventData.user_data.sha256_email_address\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003ePhone:\u003c/b\u003e \u003ci\u003eeventData.phone\u003c/i\u003e, \u003ci\u003eeventData.user_data.phone_number\u003c/i\u003e, \u003ci\u003eeventData.user_data.phone\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eFirst Name:\u003c/b\u003e \u003ci\u003eeventData.firstName\u003c/i\u003e, \u003ci\u003eeventData.FirstName\u003c/i\u003e, \u003ci\u003eeventData.nameFirst\u003c/i\u003e, \u003ci\u003eeventData.first_name\u003c/i\u003e, \u003ci\u003eeventData.user_data.first_name\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].first_name\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].sha256_first_name\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eLast Name:\u003c/b\u003e \u003ci\u003eeventData.lastName\u003c/i\u003e, \u003ci\u003eeventData.LastName\u003c/i\u003e, \u003ci\u003eeventData.nameLast\u003c/i\u003e, \u003ci\u003eeventData.last_name\u003c/i\u003e, \u003ci\u003eeventData.user_data.last_name\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].last_name\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].sha256_last_name\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eCity:\u003c/b\u003e \u003ci\u003eeventData.city\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].city\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eState:\u003c/b\u003e \u003ci\u003eeventData.state\u003c/i\u003e, \u003ci\u003eeventData.region\u003c/i\u003e, \u003ci\u003eeventData.user_data.region\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].region\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eZip:\u003c/b\u003e \u003ci\u003eeventData.zip\u003c/i\u003e, \u003ci\u003eeventData.postal_code\u003c/i\u003e, \u003ci\u003eeventData.user_data.postal_code\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].postal_code\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eCountry:\u003c/b\u003e \u003ci\u003eeventData.countryCode\u003c/i\u003e, \u003ci\u003eeventData.country\u003c/i\u003e, \u003ci\u003eeventData.user_data.country\u003c/i\u003e, \u003ci\u003eeventData.user_data.address[].country\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eGender:\u003c/b\u003e \u003ci\u003eeventData.gender\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eDate of Birth:\u003c/b\u003e \u003ci\u003eeventData.db\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eExternal ID:\u003c/b\u003e \u003ci\u003eeventData.external_id\u003c/i\u003e, \u003ci\u003eeventData.user_id\u003c/i\u003e, \u003ci\u003eeventData.userId\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eFB Login ID:\u003c/b\u003e \u003ci\u003eeventData.fb_login_id\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eInstall ID:\u003c/b\u003e \u003ci\u003eeventData.anon_id\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eMobile Advertising ID:\u003c/b\u003e \u003ci\u003eeventData.madid\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eLead ID:\u003c/b\u003e \u003ci\u003eeventData.lead_id\u003c/i\u003e, \u003ci\u003eeventData.leadId\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eSubscription ID:\u003c/b\u003e \u003ci\u003eeventData.subscription_id\u003c/i\u003e, \u003ci\u003eeventData.subscriptionId\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003ePlaintext IP Address:\u003c/b\u003e \u003ci\u003eeventData.ip_override\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003cb\u003eClient User Agent:\u003c/b\u003e \u003ci\u003eeventData.user_agent\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e",
+        "defaultValue": true
+      },
+      {
         "type": "SELECT",
         "name": "userDataObject",
         "displayName": "User Data Properties Object",
@@ -761,6 +744,14 @@ ___TEMPLATE_PARAMETERS___
         "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/app-data\"\u003ethis documentation\u003c/a\u003e for more details on which parameters you can override.\n\u003cbr/\u003e\u003cbr/\u003e"
       },
       {
+        "type": "CHECKBOX",
+        "name": "autoMapAppData",
+        "checkboxText": "Automap App Data",
+        "simpleValueType": true,
+        "help": "If enabled, the tag will attempt to automatically map parameters from your event data.\n\u003cbr/\u003e\u003cbr/\u003e\nAny value you manually enter in a field below will always override the auto-mapped value.\n\u003cbr/\u003e\u003cbr/\u003e\nDefault mappings:\n\u003cul\u003e\n\u003cli\u003eIf \u003ci\u003eeventData.app_data\u003c/i\u003e is an object, it is used directly.\u003c/li\u003e\n\u003cli\u003eOtherwise:\n\u003cul\u003e\n\u003cli\u003eAdvertiser Tracking Enabled: \u003ci\u003eeventData.advertiser_tracking_enabled\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eApplication Tracking Enabled: \u003ci\u003eeventData.application_tracking_enabled\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eExt Info: \u003ci\u003eeventData.extinfo\u003c/i\u003e, or built from \u003ci\u003eeventData[x-ga-platform]\u003c/i\u003e, \u003ci\u003eeventData.app_id\u003c/i\u003e, \u003ci\u003eeventData.app_version\u003c/i\u003e, \u003ci\u003eeventData[x-ga-os_version]\u003c/i\u003e, \u003ci\u003eeventData[x-ga-device_model]\u003c/i\u003e, \u003ci\u003eeventData.language\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eCampaign IDs: \u003ci\u003eeventData.campaign_ids\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eInstall Referrer: \u003ci\u003eeventData.install_referrer\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eInstaller Package: \u003ci\u003eeventData.installer_package\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eURL Schemes: \u003ci\u003eeventData.url_schemes\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eVendor ID: \u003ci\u003eeventData.vendor_id\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eWindows Attribution ID: \u003ci\u003eeventData.windows_attribution_id\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003c/ul\u003e",
+        "defaultValue": true
+      },
+      {
         "type": "SELECT",
         "name": "appDataObject",
         "displayName": "App Data Properties Object",
@@ -853,6 +844,29 @@ ___TEMPLATE_PARAMETERS___
         "type": "LABEL",
         "name": "customDataLabel",
         "displayName": "Check \u003ca href\u003d\"https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/custom-data\"\u003ethis documentation\u003c/a\u003e for more details on which parameters you can override.\n\u003cbr/\u003e\u003cbr/\u003e"
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "autoMapCustomData",
+        "checkboxText": "Automap Custom Data",
+        "simpleValueType": true,
+        "help": "If enabled, the tag will attempt to automatically map parameters from your event data.\n\u003cbr/\u003e\u003cbr/\u003e\nAny value you manually enter in a field below will always override the auto-mapped value.\n\u003cbr/\u003e\u003cbr/\u003e\nDefault mappings:\n\u003cul\u003e\n\u003cli\u003eValue:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData[\u0027x-ga-mp1-ev\u0027]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData[\u0027x-ga-mp1-tr\u0027]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.value\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eSum of Price * Quantity from eventData.items[] or eventData.ecommerce.items[]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003e0\u003c/i\u003e, if event is \"Purchase\" and no value is defined\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eCurrency:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.currency\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eCurrency from eventData.items[] or eventData.ecommerce.items[]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eUSD\u003c/i\u003e, if event is \"Purchase\" and no currency is defined\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eContents:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.items[]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.ecommerce.items[]\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eContent Type:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData[x-fb-cd-content_type]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.content_type\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eDefault: \u003ci\u003eproduct\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eOrder ID:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.transaction_id\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eSearch String:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.search_term\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003c/ul\u003e",
+        "defaultValue": true
+      },
+      {
+        "type": "TEXT",
+        "name": "itemIdKey",
+        "displayName": "Custom Item ID Key",
+        "simpleValueType": true,
+        "help": "Optional.\n\u003cbr/\u003e\u003cbr/\u003e\nYou can specify a custom key, which will be used to set the content Item ID, by default \u003ci\u003eitem_id\u003c/i\u003e will be used. This may be useful if you are using WooCommerce extensions.",
+        "canBeEmptyString": true,
+        "enablingConditions": [
+          {
+            "paramName": "autoMapCustomData",
+            "paramValue": false,
+            "type": "NOT_EQUALS"
+          }
+        ]
       },
       {
         "type": "SELECT",
@@ -1010,6 +1024,56 @@ ___TEMPLATE_PARAMETERS___
         ]
       }
     ]
+  },
+  {
+    "type": "GROUP",
+    "name": "moreSettingsGroup",
+    "displayName": "More Settings",
+    "groupStyle": "ZIPPY_OPEN_ON_PARAM",
+    "subParams": [
+      {
+        "type": "CHECKBOX",
+        "name": "useAppSecretProof",
+        "checkboxText": "Use App Secret Proof",
+        "simpleValueType": true,
+        "help": "Optional. \u003cbr/\u003e\u003cbr/\u003e Use this field only if your Business Manager’s Conversions API Application requires API calls to include the \u003ci\u003eapp secret proof\u003c/i\u003e.   \u003cbr/\u003e\u003cbr/\u003e You’ll encounter this requirement if event requests fail with the error:  \u003ci\u003e\"API calls from the server require an appsecret_proof argument\"\u003c/i\u003e. \u003cbr/\u003e\u003cbr/\u003e \u003ca href\u003d\"https://developers.facebook.com/docs/graph-api/guides/secure-requests#appsecret_proof\"\u003eLearn more\u003c/a\u003e about how to generate this value.",
+        "subParams": [
+          {
+            "type": "TEXT",
+            "name": "appSecretProof",
+            "displayName": "App Secret Proof",
+            "simpleValueType": true,
+            "enablingConditions": [
+              {
+                "paramName": "useAppSecretProof",
+                "paramValue": true,
+                "type": "EQUALS"
+              }
+            ],
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "mapViewItemListToViewContent",
+        "checkboxText": "Automap GA4 \"view_item_list\" event to \"ViewContent\"",
+        "simpleValueType": true,
+        "defaultValue": false,
+        "help": "When enabled with \"Inherit from client\" \u003ci\u003eEvent Name Setup Method\u003c/i\u003e:\n\u003cul\u003e\n\u003cli\u003eMaps the GA4 \"view_item_list\" event to \"ViewContent\".\u003c/li\u003e\n\u003cli\u003eSets \"content_type\" to \"product_group\" if an items array is present.\u003c/li\u003e\n\u003c/ul\u003e",
+        "enablingConditions": [
+          {
+            "paramName": "inheritEventName",
+            "paramValue": "inherit",
+            "type": "EQUALS"
+          }
+        ]
+      }
+    ]
   }
 ]
 
@@ -1046,85 +1110,19 @@ const toBase64 = require('toBase64');
 ==============================================================================*/
 
 const eventData = getAllEventData();
+const API_VERSION = '25.0';
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.4' + (data.enableEventEnhancement ? '-ee' : '');
 
-if (!isConsentGivenOrNotRequired(data, eventData)) {
+if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();
 }
 
-const url = eventData.page_location || getRequestHeader('referer');
-if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
-  return data.gtmOnSuccess();
-}
+const ids = getClickAndBrowserId(data, eventData);
+const fbc = ids.fbc;
+const fbp = ids.fbp;
+setCookies(data, fbc, fbp);
 
-const commonCookie = eventData.common_cookie || {};
-
-let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc || eventData.fbc;
-let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp || eventData.fbp;
-
-const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
-
-if (url) {
-  const urlParsed = parseUrl(url);
-
-  if (urlParsed && urlParsed.searchParams.fbclid) {
-    if (
-      !fbc ||
-      (fbc &&
-        fbc.split('.')[fbc.split('.').length - 1] !==
-          decodeUriComponent(urlParsed.searchParams.fbclid))
-    ) {
-      fbc =
-        'fb.' +
-        subDomainIndex +
-        '.' +
-        getTimestampMillis() +
-        '.' +
-        decodeUriComponent(urlParsed.searchParams.fbclid);
-    }
-  }
-}
-
-if (!fbp && data.generateFbp) {
-  fbp =
-    'fb.' +
-    subDomainIndex +
-    '.' +
-    getTimestampMillis() +
-    '.' +
-    generateRandom(1000000000, 2147483647);
-}
-
-const cookieOptions = {
-  domain: isUIFieldTrue(data.overrideCookieDomain) ? data.overridenCookieDomain || 'auto' : 'auto',
-  path: '/',
-  samesite: 'Lax',
-  secure: true,
-  'max-age': 7776000, // 90 days
-  HttpOnly: !!data.useHttpOnlyCookie
-};
-
-if (fbc) {
-  setCookie('_fbc', fbc, cookieOptions);
-}
-
-if (fbp) {
-  setCookie('_fbp', fbp, cookieOptions);
-}
-
-const mappedEventData = mapEvent(eventData, data);
-const postBody = {
-  data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.3' + (data.enableEventEnhancement ? '-ee' : '')
-};
-
-if (data.enableEventEnhancement) {
-  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
-  setGtmEecCookie(mappedEventData.user_data);
-}
-
-if (eventData.test_event_code || data.testId) {
-  postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
-}
+const mappedPostBody = mapEvent(data, eventData, fbc, fbp);
 
 let pixelsConfig = [
   {
@@ -1137,14 +1135,13 @@ if (data.enableMultipixelSetup) {
   pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
 }
 
-const apiVersion = '24.0';
 const requests = pixelsConfig.map((pixelConfig) => {
   const pixelId = pixelConfig.pixelId;
   const accessToken = pixelConfig.accessToken;
   const appSecretProof = pixelConfig.appSecretProof;
   const postUrl =
     'https://graph.facebook.com/v' +
-    apiVersion +
+    API_VERSION +
     '/' +
     enc(pixelId) +
     '/events?access_token=' +
@@ -1154,22 +1151,22 @@ const requests = pixelsConfig.map((pixelConfig) => {
   log({
     Name: 'Facebook',
     Type: 'Request',
-    EventName: mappedEventData.event_name,
+    EventName: mappedPostBody.data[0].event_name,
     RequestMethod: 'POST',
     RequestUrl: postUrl,
-    RequestBody: postBody
+    RequestBody: mappedPostBody
   });
 
   return sendHttpRequest(
     postUrl,
     { headers: { 'content-type': 'application/json' }, method: 'POST' },
-    JSON.stringify(postBody)
+    JSON.stringify(mappedPostBody)
   )
     .then((result) => {
       log({
         Name: 'Facebook',
         Type: 'Response',
-        EventName: mappedEventData.event_name,
+        EventName: mappedPostBody.data[0].event_name,
         ResponseStatusCode: result.statusCode,
         ResponseHeaders: result.headers,
         ResponseBody: result.body,
@@ -1183,7 +1180,7 @@ const requests = pixelsConfig.map((pixelConfig) => {
       log({
         Name: 'Facebook',
         Type: 'Response',
-        EventName: mappedEventData.event_name,
+        EventName: mappedPostBody.data[0].event_name,
         Message: 'Request failed or timed out. Pixel ID: ' + pixelId,
         Reason: JSON.stringify(result)
       });
@@ -1204,7 +1201,7 @@ Promise.all(requests)
     log({
       Name: 'Facebook',
       Type: 'Message',
-      EventName: mappedEventData.event_name,
+      EventName: mappedPostBody.data[0].event_name,
       Message: 'Something went wrong.',
       Reason: JSON.stringify(result)
     });
@@ -1219,6 +1216,77 @@ if (data.useOptimisticScenario) {
 /*==============================================================================
   Vendor related functions
 ==============================================================================*/
+
+function setCookies(data, fbc, fbp) {
+  const cookieOptions = {
+    domain: isUIFieldTrue(data.overrideCookieDomain)
+      ? data.overridenCookieDomain || 'auto'
+      : 'auto',
+    path: '/',
+    samesite: 'Lax',
+    secure: true,
+    'max-age': 7776000, // 90 days
+    HttpOnly: !!data.useHttpOnlyCookie
+  };
+
+  if (fbc) {
+    setCookie('_fbc', fbc, cookieOptions);
+  }
+
+  if (fbp) {
+    setCookie('_fbp', fbp, cookieOptions);
+  }
+}
+
+function getClickAndBrowserId(data, eventData) {
+  const ids = {
+    fbc:
+      getCookieValues('_fbc')[0] ||
+      (eventData.common_cookie || {})._fbc ||
+      eventData._fbc ||
+      eventData.fbc,
+    fbp:
+      getCookieValues('_fbp')[0] ||
+      (eventData.common_cookie || {})._fbp ||
+      eventData._fbp ||
+      eventData.fbp
+  };
+
+  const url = getUrl(eventData);
+  const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
+
+  if (url) {
+    const urlParsed = parseUrl(url);
+    if (urlParsed && urlParsed.searchParams.fbclid) {
+      if (
+        !ids.fbc ||
+        (ids.fbc &&
+          ids.fbc.split('.')[ids.fbc.split('.').length - 1] !==
+            decodeUriComponent(urlParsed.searchParams.fbclid))
+      ) {
+        ids.fbc =
+          'fb.' +
+          subDomainIndex +
+          '.' +
+          getTimestampMillis() +
+          '.' +
+          decodeUriComponent(urlParsed.searchParams.fbclid);
+      }
+    }
+  }
+
+  if (!ids.fbp && data.generateFbp) {
+    ids.fbp =
+      'fb.' +
+      subDomainIndex +
+      '.' +
+      getTimestampMillis() +
+      '.' +
+      generateRandom(1000000000, 2147483647);
+  }
+
+  return ids;
+}
 
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
@@ -1253,26 +1321,34 @@ function getEventName(data) {
       'gtm4wp.orderCompletedEEC': 'Purchase'
     };
 
-    if (!gaToFacebookEventName[eventName]) {
-      return eventName;
+    if (data.mapViewItemListToViewContent) {
+      gaToFacebookEventName.view_item_list = 'ViewContent';
     }
 
-    return gaToFacebookEventName[eventName];
+    return gaToFacebookEventName[eventName] || eventName;
   }
 
   return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
 }
 
-function mapEvent(eventData, data) {
-  const eventName = getEventName(data);
-
+function mapEvent(data, eventData, fbc, fbp) {
   let mappedData = {
-    event_name: eventName,
+    event_name: getEventName(data),
     action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
     custom_data: {},
     user_data: {}
   };
+  const mappedPostBody = {
+    data: [mappedData],
+    partner_agent: PARTNER_AGENT_STRING
+  };
+
+  if (eventData.test_event_code || data.testId) {
+    mappedPostBody.test_event_code = eventData.test_event_code
+      ? eventData.test_event_code
+      : data.testId;
+  }
 
   if (mappedData.action_source === 'app') {
     mappedData.app_data = {};
@@ -1282,30 +1358,21 @@ function mapEvent(eventData, data) {
     mappedData.messaging_channel = data.messaging_channel;
   }
 
-  if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
-  if (eventData.page_referrer) mappedData.referrer_url = eventData.page_referrer;
-  if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
-
-  if (eventData.ip_override) {
-    mappedData.user_data.client_ip_address = eventData.ip_override
-      .split(' ')
-      .join('')
-      .split(',')[0];
-  }
-
-  if (fbc) mappedData.user_data.fbc = fbc;
-  if (fbp) mappedData.user_data.fbp = fbp;
-
-  mappedData = addServerEventData(eventData, mappedData);
-  mappedData = addUserData(eventData, mappedData);
-  mappedData = addAppData(eventData, mappedData);
-  mappedData = addEcommerceData(eventData, mappedData);
+  mappedData = addServerEventData(data, eventData, mappedData);
+  mappedData = addUserData(data, eventData, mappedData, fbc, fbp);
+  mappedData = addAppData(data, eventData, mappedData);
+  mappedData = addEcommerceData(data, eventData, mappedData);
   mappedData = addOriginalEventData(mappedData);
   mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
 
-  return mappedData;
+  if (data.enableEventEnhancement) {
+    mappedData.user_data = enhanceEventData(eventData, mappedData.user_data);
+    setGtmEecCookie(mappedData.user_data);
+  }
+
+  return mappedPostBody;
 }
 
 function hashData(key, value) {
@@ -1460,154 +1527,188 @@ function cleanupData(mappedData) {
   return mappedData;
 }
 
-function addEcommerceData(eventData, mappedData) {
-  let currencyFromItems = '';
-  let valueFromItems = 0;
+function addEcommerceData(data, eventData, mappedData) {
+  const autoMapEnabled = data.hasOwnProperty('autoMapCustomData') ? data.autoMapCustomData : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    let currencyFromItems = '';
+    let valueFromItems = 0;
 
-  let items;
-  if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
-  else if (
-    getType(eventData.ecommerce) === 'object' &&
-    getType(eventData.ecommerce.items) === 'array' &&
-    eventData.ecommerce.items.length
-  ) {
-    items = eventData.ecommerce.items;
-  }
-
-  if (items) {
-    mappedData.custom_data.contents = [];
-    mappedData.custom_data.content_type =
-      eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
-    currencyFromItems = items[0].currency;
-
-    if (!items[1]) {
-      if (items[0].item_name) mappedData.custom_data.content_name = items[0].item_name;
-      if (items[0].item_category) mappedData.custom_data.content_category = items[0].item_category;
-
-      if (items[0].price) {
-        mappedData.custom_data.value = items[0].quantity
-          ? items[0].quantity * items[0].price
-          : items[0].price;
-      }
+    let items;
+    if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
+    else if (
+      getType(eventData.ecommerce) === 'object' &&
+      getType(eventData.ecommerce.items) === 'array' &&
+      eventData.ecommerce.items.length
+    ) {
+      items = eventData.ecommerce.items;
     }
 
-    const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
-    items.forEach((d) => {
-      const content = {};
-      if (d[itemIdKey]) content.id = d[itemIdKey];
-      if (d.item_name) content.title = d.item_name;
-      if (d.item_brand) content.brand = d.item_brand;
-      if (d.quantity) content.quantity = d.quantity;
-      if (d.item_category) content.category = d.item_category;
+    if (items) {
+      currencyFromItems = items[0].currency;
 
-      if (d.price) {
-        content.item_price = makeNumber(d.price);
-        valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
+      mappedData.custom_data.contents = [];
+      mappedData.custom_data.content_type =
+        eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
+
+      if (
+        data.mapViewItemListToViewContent &&
+        data.inheritEventName === 'inherit' &&
+        eventData.event_name === 'view_item_list'
+      ) {
+        mappedData.custom_data.content_type = 'product_group';
       }
 
-      mappedData.custom_data.contents.push(content);
-    });
-  }
+      if (!items[1]) {
+        if (items[0].item_name) mappedData.custom_data.content_name = items[0].item_name;
+        if (items[0].item_category)
+          mappedData.custom_data.content_category = items[0].item_category;
 
-  if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
-  else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
-  else if (eventData.value) mappedData.custom_data.value = eventData.value;
+        if (items[0].price) {
+          mappedData.custom_data.value = items[0].quantity
+            ? items[0].quantity * items[0].price
+            : items[0].price;
+        }
+      }
 
-  if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
-  else if (currencyFromItems) mappedData.custom_data.currency = currencyFromItems;
+      const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
+      items.forEach((d) => {
+        const content = {};
+        if (d[itemIdKey]) content.id = d[itemIdKey];
+        if (d.item_name) content.title = d.item_name;
+        if (d.item_brand) content.brand = d.item_brand;
+        if (d.quantity) content.quantity = d.quantity;
+        if (d.item_category) content.category = d.item_category;
 
-  if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
+        if (d.price) {
+          content.item_price = makeNumber(d.price);
+          valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
+        }
 
-  if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
+        mappedData.custom_data.contents.push(content);
+      });
+    }
 
-  if (mappedData.event_name === 'Purchase') {
-    if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
-    if (!mappedData.custom_data.value)
-      mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
+    const value = eventData['x-ga-mp1-ev'] || eventData['x-ga-mp1-tr'] || eventData.value;
+    if (value) mappedData.custom_data.value = value;
+
+    const currency = eventData.currency || currencyFromItems;
+    if (currency) mappedData.custom_data.currency = currency;
+
+    if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
+
+    if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
+
+    if (mappedData.event_name === 'Purchase') {
+      if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
+      if (!mappedData.custom_data.value)
+        mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
+    }
   }
 
   return mappedData;
 }
 
-function addUserData(eventData, mappedData) {
-  let address = {};
-  let user_data = {};
-  if (getType(eventData.user_data) === 'object') {
-    user_data = eventData.user_data;
-    const addressType = getType(user_data.address);
-    if (addressType === 'object' || addressType === 'array') {
-      address = user_data.address[0] || user_data.address;
+function addUserData(data, eventData, mappedData, fbc, fbp) {
+  const autoMapEnabled = data.hasOwnProperty('autoMapUserData') ? data.autoMapUserData : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    let address = {};
+    let user_data = {};
+    if (getType(eventData.user_data) === 'object') {
+      user_data = eventData.user_data;
+      const addressType = getType(user_data.address);
+      if (addressType === 'object' || addressType === 'array') {
+        address = user_data.address[0] || user_data.address;
+      }
     }
+
+    if (fbc) mappedData.user_data.fbc = fbc;
+    if (fbp) mappedData.user_data.fbp = fbp;
+
+    if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
+
+    if (eventData.ip_override) {
+      mappedData.user_data.client_ip_address = eventData.ip_override
+        .split(' ')
+        .join('')
+        .split(',')[0];
+    }
+
+    if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
+
+    if (eventData.anon_id) mappedData.user_data.anon_id = eventData.anon_id;
+
+    if (eventData.madid) mappedData.user_data.madid = eventData.madid;
+
+    const externalId = eventData.external_id || eventData.user_id || eventData.userId;
+    if (externalId) mappedData.user_data.external_id = externalId;
+
+    const subscriptionId = eventData.subscription_id || eventData.subscriptionId;
+    if (subscriptionId) mappedData.user_data.subscription_id = subscriptionId;
+
+    const leadId = eventData.lead_id || eventData.leadId;
+    if (leadId) mappedData.user_data.lead_id = leadId;
+
+    const ln =
+      eventData.lastName ||
+      eventData.LastName ||
+      eventData.nameLast ||
+      eventData.last_name ||
+      user_data.last_name ||
+      address.last_name ||
+      address.sha256_last_name;
+    if (ln) mappedData.user_data.ln = ln;
+
+    const fn =
+      eventData.firstName ||
+      eventData.FirstName ||
+      eventData.nameFirst ||
+      eventData.first_name ||
+      user_data.first_name ||
+      address.first_name ||
+      address.sha256_first_name;
+    if (fn) mappedData.user_data.fn = fn;
+
+    const em =
+      eventData.email ||
+      user_data.email_address ||
+      user_data.email ||
+      user_data.sha256_email_address;
+    if (em) mappedData.user_data.em = em;
+
+    const ph = eventData.phone || user_data.phone_number || user_data.phone;
+    if (ph) mappedData.user_data.ph = ph;
+
+    const ct = eventData.city || address.city;
+    if (ct) mappedData.user_data.ct = ct;
+
+    const st = eventData.state || eventData.region || user_data.region || address.region;
+    if (st) mappedData.user_data.st = st;
+
+    const zp =
+      eventData.zip || eventData.postal_code || user_data.postal_code || address.postal_code;
+    if (zp) mappedData.user_data.zp = zp;
+
+    const country =
+      eventData.countryCode || eventData.country || user_data.country || address.country;
+    if (country) mappedData.user_data.country = country;
+
+    if (eventData.gender) mappedData.user_data.ge = eventData.gender;
+    if (eventData.db) mappedData.user_data.db = eventData.db;
   }
-  if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
-
-  if (eventData.anon_id) mappedData.user_data.anon_id = eventData.anon_id;
-
-  if (eventData.madid) mappedData.user_data.madid = eventData.madid;
-
-  if (eventData.external_id) mappedData.user_data.external_id = eventData.external_id;
-  else if (eventData.user_id) mappedData.user_data.external_id = eventData.user_id;
-  else if (eventData.userId) mappedData.user_data.external_id = eventData.userId;
-
-  if (eventData.subscription_id) mappedData.user_data.subscription_id = eventData.subscription_id;
-  else if (eventData.subscriptionId)
-    mappedData.user_data.subscription_id = eventData.subscriptionId;
-
-  if (eventData.lead_id) mappedData.user_data.lead_id = eventData.lead_id;
-  else if (eventData.leadId) mappedData.user_data.lead_id = eventData.leadId;
-
-  if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
-  else if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
-  else if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
-  else if (eventData.last_name) mappedData.user_data.ln = eventData.last_name;
-  else if (user_data.last_name) mappedData.user_data.ln = user_data.last_name;
-  else if (address.last_name) mappedData.user_data.ln = address.last_name;
-  else if (address.sha256_last_name) mappedData.user_data.ln = address.sha256_last_name;
-
-  if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
-  else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
-  else if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
-  else if (eventData.first_name) mappedData.user_data.fn = eventData.first_name;
-  else if (user_data.first_name) mappedData.user_data.fn = user_data.first_name;
-  else if (address.first_name) mappedData.user_data.fn = address.first_name;
-  else if (address.sha256_first_name) mappedData.user_data.fn = address.sha256_first_name;
-
-  if (eventData.email) mappedData.user_data.em = eventData.email;
-  else if (user_data.email_address) mappedData.user_data.em = user_data.email_address;
-  else if (user_data.email) mappedData.user_data.em = user_data.email;
-  else if (user_data.sha256_email_address) mappedData.user_data.em = user_data.sha256_email_address;
-
-  if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-  else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
-  else if (user_data.phone) mappedData.user_data.ph = user_data.phone;
-
-  if (eventData.city) mappedData.user_data.ct = eventData.city;
-  else if (address.city) mappedData.user_data.ct = address.city;
-
-  if (eventData.state) mappedData.user_data.st = eventData.state;
-  else if (eventData.region) mappedData.user_data.st = eventData.region;
-  else if (user_data.region) mappedData.user_data.st = user_data.region;
-  else if (address.region) mappedData.user_data.st = address.region;
-
-  if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-  else if (eventData.postal_code) mappedData.user_data.zp = eventData.postal_code;
-  else if (user_data.postal_code) mappedData.user_data.zp = user_data.postal_code;
-  else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
-
-  if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
-  else if (eventData.country) mappedData.user_data.country = eventData.country;
-  else if (user_data.country) mappedData.user_data.country = user_data.country;
-  else if (address.country) mappedData.user_data.country = address.country;
-
-  if (eventData.gender) mappedData.user_data.ge = eventData.gender;
-  if (eventData.db) mappedData.user_data.db = eventData.db;
-
   return mappedData;
 }
 
-function addServerEventData(eventData, mappedData) {
-  if (eventData.event_id) mappedData.event_id = eventData.event_id;
-  else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
+function addServerEventData(data, eventData, mappedData) {
+  const autoMapEnabled = data.hasOwnProperty('autoMapServerEventData')
+    ? data.autoMapServerEventData
+    : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
+    if (eventData.page_referrer) mappedData.referrer_url = eventData.page_referrer;
+
+    const eventId = eventData.event_id || eventData.transaction_id;
+    if (eventId) mappedData.event_id = eventId;
+  }
 
   if (data.serverEventDataList) {
     data.serverEventDataList.forEach((d) => {
@@ -1626,50 +1727,56 @@ function addServerEventData(eventData, mappedData) {
   return mappedData;
 }
 
-function addAppData(eventData, mappedData) {
+function addAppData(data, eventData, mappedData) {
   if (mappedData.action_source !== 'app') {
     return mappedData;
   }
 
-  if (getType(eventData.app_data) === 'object') {
-    mappedData.app_data = eventData.app_data;
-    return mappedData;
-  }
+  const autoMapEnabled = data.hasOwnProperty('autoMapAppData') ? data.autoMapAppData : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    if (getType(eventData.app_data) === 'object') {
+      mappedData.app_data = eventData.app_data;
+      return mappedData;
+    }
 
-  mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled ? 1 : 0; // Required
-  mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled ? 1 : 0; // Required
-  if (eventData.extinfo) {
-    mappedData.app_data.extinfo = eventData.extinfo;
-  } else {
-    const platform = makeString(eventData['x-ga-platform'] || '').toLowerCase();
-    const extinfoArray = [
-      platform === 'android' ? 'a2' : platform === 'ios' ? 'i2' : '', // Required
-      eventData.app_id || '',
-      eventData.app_version || '',
-      eventData.app_version ? 'Version ' + eventData.app_version : '',
-      makeString(eventData['x-ga-os_version'] || ''), // Required
-      eventData['x-ga-device_model'] || '',
-      eventData.language || '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ''
-    ];
-    mappedData.app_data.extinfo = extinfoArray;
+    mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled ? 1 : 0; // Required
+    mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled
+      ? 1
+      : 0; // Required
+    if (eventData.extinfo) {
+      mappedData.app_data.extinfo = eventData.extinfo;
+    } else {
+      const platform = makeString(eventData['x-ga-platform'] || '').toLowerCase();
+      const extinfoArray = [
+        platform === 'android' ? 'a2' : platform === 'ios' ? 'i2' : '', // Required
+        eventData.app_id || '',
+        eventData.app_version || '',
+        eventData.app_version ? 'Version ' + eventData.app_version : '',
+        makeString(eventData['x-ga-os_version'] || ''), // Required
+        eventData['x-ga-device_model'] || '',
+        eventData.language || '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
+      ];
+      mappedData.app_data.extinfo = extinfoArray;
+    }
+    if (eventData.campaign_ids) mappedData.app_data.campaign_ids = eventData.campaign_ids;
+    if (eventData.install_referrer)
+      mappedData.app_data.install_referrer = eventData.install_referrer;
+    if (eventData.installer_package)
+      mappedData.app_data.installer_package = eventData.installer_package;
+    if (eventData.url_schemes) mappedData.app_data.url_schemes = eventData.url_schemes;
+    if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
+    if (eventData.windows_attribution_id)
+      mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
   }
-  if (eventData.campaign_ids) mappedData.app_data.campaign_ids = eventData.campaign_ids;
-  if (eventData.install_referrer) mappedData.app_data.install_referrer = eventData.install_referrer;
-  if (eventData.installer_package)
-    mappedData.app_data.installer_package = eventData.installer_package;
-  if (eventData.url_schemes) mappedData.app_data.url_schemes = eventData.url_schemes;
-  if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
-  if (eventData.windows_attribution_id)
-    mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
 
   return mappedData;
 }
@@ -1719,7 +1826,9 @@ function setGtmEecCookie(userData) {
   });
 }
 
-function enhanceEventData(userData) {
+function enhanceEventData(eventData, userData) {
+  const commonCookie = eventData.common_cookie || {};
+
   const cookieValues = getCookieValues('_gtmeec');
   if ((!cookieValues || cookieValues.length === 0) && !commonCookie._gtmeec) {
     return userData;
@@ -1761,8 +1870,22 @@ function enhanceEventData(userData) {
   Helpers
 ==============================================================================*/
 
+function getUrl(eventData) {
+  return eventData.page_location || getRequestHeader('referer') || eventData.page_referrer;
+}
+
+function shouldExitEarly(data, eventData) {
+  if (!isConsentGivenOrNotRequired(data, eventData)) return true;
+
+  const url = getUrl(eventData);
+  if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) return true;
+
+  return false;
+}
+
 function enc(data) {
-  return encodeUriComponent(data || '');
+  if (['null', 'undefined'].indexOf(getType(data)) !== -1) data = '';
+  return encodeUriComponent(makeString(data));
 }
 
 function isHashed(value) {
@@ -2606,7 +2729,7 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
   \ 'TraceId', 'Name'];\nconst requiredBqKeys = ['timestamp', 'type', 'trace_id',\
   \ 'tag_name'];\nconst expectedBqOptions = { ignoreUnknownValues: true };\n\nconst\
   \ expectedValue = 'test';\nconst expectedPixelId = '1111111111111';\nconst expectedPartnerAgent\
-  \ = 'stape-gtmss-2.1.3';\nconst expectedApiVersion = '24.0';\n\n\nconst mockData\
+  \ = 'stape-gtmss-2.1.4';\nconst expectedApiVersion = '25.0';\n\n\nconst mockData\
   \ = {\n  pixelId: expectedPixelId,\n  accessToken: expectedValue,\n  inheritEventName:\
   \ 'override',\n  eventNameCustom: expectedValue,\n  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n\
   \  logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId:\
@@ -2621,6 +2744,11 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 ___NOTES___
 
+2026-05-20 - Change Notes:
+  - Add four automap toggle checkboxes (Server Event Data, User Data, App Data, Custom Data), each defaulting to true, allowing individual auto-mapping groups to be disabled without affecting manual overrides; existing configurations are unaffected via a hasOwnProperty fallback
+  - Add optional GA4 "view_item_list" → "ViewContent" mapping (sets content_type to "product_group") and move "Use App Secret Proof" into a new "More Settings" group
+  - Move "Custom Item ID Key" into the Custom Data section gated on automap being enabled; improve help texts for "Inherit from client" event name, HttpOnly cookies, and Test ID fields
+  - Refactor fbc/fbp resolution, cookie writing, and exit checks into dedicated functions; add page_referrer as a third URL fallback for subdomain index calculation
+  - Bump API version to 25.0 and partner agent to stape-gtmss-2.1.4
+
 Created on 10/11/2020, 18:14:02
-
-

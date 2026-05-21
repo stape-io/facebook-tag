@@ -28,85 +28,19 @@ const toBase64 = require('toBase64');
 ==============================================================================*/
 
 const eventData = getAllEventData();
+const API_VERSION = '25.0';
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.4' + (data.enableEventEnhancement ? '-ee' : '');
 
-if (!isConsentGivenOrNotRequired(data, eventData)) {
+if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();
 }
 
-const url = eventData.page_location || getRequestHeader('referer');
-if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) {
-  return data.gtmOnSuccess();
-}
+const ids = getClickAndBrowserId(data, eventData);
+const fbc = ids.fbc;
+const fbp = ids.fbp;
+setCookies(data, fbc, fbp);
 
-const commonCookie = eventData.common_cookie || {};
-
-let fbc = getCookieValues('_fbc')[0] || commonCookie._fbc || eventData._fbc || eventData.fbc;
-let fbp = getCookieValues('_fbp')[0] || commonCookie._fbp || eventData._fbp || eventData.fbp;
-
-const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
-
-if (url) {
-  const urlParsed = parseUrl(url);
-
-  if (urlParsed && urlParsed.searchParams.fbclid) {
-    if (
-      !fbc ||
-      (fbc &&
-        fbc.split('.')[fbc.split('.').length - 1] !==
-          decodeUriComponent(urlParsed.searchParams.fbclid))
-    ) {
-      fbc =
-        'fb.' +
-        subDomainIndex +
-        '.' +
-        getTimestampMillis() +
-        '.' +
-        decodeUriComponent(urlParsed.searchParams.fbclid);
-    }
-  }
-}
-
-if (!fbp && data.generateFbp) {
-  fbp =
-    'fb.' +
-    subDomainIndex +
-    '.' +
-    getTimestampMillis() +
-    '.' +
-    generateRandom(1000000000, 2147483647);
-}
-
-const cookieOptions = {
-  domain: isUIFieldTrue(data.overrideCookieDomain) ? data.overridenCookieDomain || 'auto' : 'auto',
-  path: '/',
-  samesite: 'Lax',
-  secure: true,
-  'max-age': 7776000, // 90 days
-  HttpOnly: !!data.useHttpOnlyCookie
-};
-
-if (fbc) {
-  setCookie('_fbc', fbc, cookieOptions);
-}
-
-if (fbp) {
-  setCookie('_fbp', fbp, cookieOptions);
-}
-
-const mappedEventData = mapEvent(eventData, data);
-const postBody = {
-  data: [mappedEventData],
-  partner_agent: 'stape-gtmss-2.1.3' + (data.enableEventEnhancement ? '-ee' : '')
-};
-
-if (data.enableEventEnhancement) {
-  mappedEventData.user_data = enhanceEventData(mappedEventData.user_data);
-  setGtmEecCookie(mappedEventData.user_data);
-}
-
-if (eventData.test_event_code || data.testId) {
-  postBody.test_event_code = eventData.test_event_code ? eventData.test_event_code : data.testId;
-}
+const mappedPostBody = mapEvent(data, eventData, fbc, fbp);
 
 let pixelsConfig = [
   {
@@ -119,14 +53,13 @@ if (data.enableMultipixelSetup) {
   pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
 }
 
-const apiVersion = '24.0';
 const requests = pixelsConfig.map((pixelConfig) => {
   const pixelId = pixelConfig.pixelId;
   const accessToken = pixelConfig.accessToken;
   const appSecretProof = pixelConfig.appSecretProof;
   const postUrl =
     'https://graph.facebook.com/v' +
-    apiVersion +
+    API_VERSION +
     '/' +
     enc(pixelId) +
     '/events?access_token=' +
@@ -136,22 +69,22 @@ const requests = pixelsConfig.map((pixelConfig) => {
   log({
     Name: 'Facebook',
     Type: 'Request',
-    EventName: mappedEventData.event_name,
+    EventName: mappedPostBody.data[0].event_name,
     RequestMethod: 'POST',
     RequestUrl: postUrl,
-    RequestBody: postBody
+    RequestBody: mappedPostBody
   });
 
   return sendHttpRequest(
     postUrl,
     { headers: { 'content-type': 'application/json' }, method: 'POST' },
-    JSON.stringify(postBody)
+    JSON.stringify(mappedPostBody)
   )
     .then((result) => {
       log({
         Name: 'Facebook',
         Type: 'Response',
-        EventName: mappedEventData.event_name,
+        EventName: mappedPostBody.data[0].event_name,
         ResponseStatusCode: result.statusCode,
         ResponseHeaders: result.headers,
         ResponseBody: result.body,
@@ -165,7 +98,7 @@ const requests = pixelsConfig.map((pixelConfig) => {
       log({
         Name: 'Facebook',
         Type: 'Response',
-        EventName: mappedEventData.event_name,
+        EventName: mappedPostBody.data[0].event_name,
         Message: 'Request failed or timed out. Pixel ID: ' + pixelId,
         Reason: JSON.stringify(result)
       });
@@ -186,7 +119,7 @@ Promise.all(requests)
     log({
       Name: 'Facebook',
       Type: 'Message',
-      EventName: mappedEventData.event_name,
+      EventName: mappedPostBody.data[0].event_name,
       Message: 'Something went wrong.',
       Reason: JSON.stringify(result)
     });
@@ -201,6 +134,77 @@ if (data.useOptimisticScenario) {
 /*==============================================================================
   Vendor related functions
 ==============================================================================*/
+
+function setCookies(data, fbc, fbp) {
+  const cookieOptions = {
+    domain: isUIFieldTrue(data.overrideCookieDomain)
+      ? data.overridenCookieDomain || 'auto'
+      : 'auto',
+    path: '/',
+    samesite: 'Lax',
+    secure: true,
+    'max-age': 7776000, // 90 days
+    HttpOnly: !!data.useHttpOnlyCookie
+  };
+
+  if (fbc) {
+    setCookie('_fbc', fbc, cookieOptions);
+  }
+
+  if (fbp) {
+    setCookie('_fbp', fbp, cookieOptions);
+  }
+}
+
+function getClickAndBrowserId(data, eventData) {
+  const ids = {
+    fbc:
+      getCookieValues('_fbc')[0] ||
+      (eventData.common_cookie || {})._fbc ||
+      eventData._fbc ||
+      eventData.fbc,
+    fbp:
+      getCookieValues('_fbp')[0] ||
+      (eventData.common_cookie || {})._fbp ||
+      eventData._fbp ||
+      eventData.fbp
+  };
+
+  const url = getUrl(eventData);
+  const subDomainIndex = url ? computeEffectiveTldPlusOne(url).split('.').length - 1 : 1;
+
+  if (url) {
+    const urlParsed = parseUrl(url);
+    if (urlParsed && urlParsed.searchParams.fbclid) {
+      if (
+        !ids.fbc ||
+        (ids.fbc &&
+          ids.fbc.split('.')[ids.fbc.split('.').length - 1] !==
+            decodeUriComponent(urlParsed.searchParams.fbclid))
+      ) {
+        ids.fbc =
+          'fb.' +
+          subDomainIndex +
+          '.' +
+          getTimestampMillis() +
+          '.' +
+          decodeUriComponent(urlParsed.searchParams.fbclid);
+      }
+    }
+  }
+
+  if (!ids.fbp && data.generateFbp) {
+    ids.fbp =
+      'fb.' +
+      subDomainIndex +
+      '.' +
+      getTimestampMillis() +
+      '.' +
+      generateRandom(1000000000, 2147483647);
+  }
+
+  return ids;
+}
 
 function getEventName(data) {
   if (data.inheritEventName === 'inherit') {
@@ -235,26 +239,34 @@ function getEventName(data) {
       'gtm4wp.orderCompletedEEC': 'Purchase'
     };
 
-    if (!gaToFacebookEventName[eventName]) {
-      return eventName;
+    if (data.mapViewItemListToViewContent) {
+      gaToFacebookEventName.view_item_list = 'ViewContent';
     }
 
-    return gaToFacebookEventName[eventName];
+    return gaToFacebookEventName[eventName] || eventName;
   }
 
   return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
 }
 
-function mapEvent(eventData, data) {
-  const eventName = getEventName(data);
-
+function mapEvent(data, eventData, fbc, fbp) {
   let mappedData = {
-    event_name: eventName,
+    event_name: getEventName(data),
     action_source: data.actionSource || 'website',
     event_time: Math.round(getTimestampMillis() / 1000),
     custom_data: {},
     user_data: {}
   };
+  const mappedPostBody = {
+    data: [mappedData],
+    partner_agent: PARTNER_AGENT_STRING
+  };
+
+  if (eventData.test_event_code || data.testId) {
+    mappedPostBody.test_event_code = eventData.test_event_code
+      ? eventData.test_event_code
+      : data.testId;
+  }
 
   if (mappedData.action_source === 'app') {
     mappedData.app_data = {};
@@ -264,30 +276,21 @@ function mapEvent(eventData, data) {
     mappedData.messaging_channel = data.messaging_channel;
   }
 
-  if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
-  if (eventData.page_referrer) mappedData.referrer_url = eventData.page_referrer;
-  if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
-
-  if (eventData.ip_override) {
-    mappedData.user_data.client_ip_address = eventData.ip_override
-      .split(' ')
-      .join('')
-      .split(',')[0];
-  }
-
-  if (fbc) mappedData.user_data.fbc = fbc;
-  if (fbp) mappedData.user_data.fbp = fbp;
-
-  mappedData = addServerEventData(eventData, mappedData);
-  mappedData = addUserData(eventData, mappedData);
-  mappedData = addAppData(eventData, mappedData);
-  mappedData = addEcommerceData(eventData, mappedData);
+  mappedData = addServerEventData(data, eventData, mappedData);
+  mappedData = addUserData(data, eventData, mappedData, fbc, fbp);
+  mappedData = addAppData(data, eventData, mappedData);
+  mappedData = addEcommerceData(data, eventData, mappedData);
   mappedData = addOriginalEventData(mappedData);
   mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
 
-  return mappedData;
+  if (data.enableEventEnhancement) {
+    mappedData.user_data = enhanceEventData(eventData, mappedData.user_data);
+    setGtmEecCookie(mappedData.user_data);
+  }
+
+  return mappedPostBody;
 }
 
 function hashData(key, value) {
@@ -442,154 +445,188 @@ function cleanupData(mappedData) {
   return mappedData;
 }
 
-function addEcommerceData(eventData, mappedData) {
-  let currencyFromItems = '';
-  let valueFromItems = 0;
+function addEcommerceData(data, eventData, mappedData) {
+  const autoMapEnabled = data.hasOwnProperty('autoMapCustomData') ? data.autoMapCustomData : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    let currencyFromItems = '';
+    let valueFromItems = 0;
 
-  let items;
-  if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
-  else if (
-    getType(eventData.ecommerce) === 'object' &&
-    getType(eventData.ecommerce.items) === 'array' &&
-    eventData.ecommerce.items.length
-  ) {
-    items = eventData.ecommerce.items;
-  }
-
-  if (items) {
-    mappedData.custom_data.contents = [];
-    mappedData.custom_data.content_type =
-      eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
-    currencyFromItems = items[0].currency;
-
-    if (!items[1]) {
-      if (items[0].item_name) mappedData.custom_data.content_name = items[0].item_name;
-      if (items[0].item_category) mappedData.custom_data.content_category = items[0].item_category;
-
-      if (items[0].price) {
-        mappedData.custom_data.value = items[0].quantity
-          ? items[0].quantity * items[0].price
-          : items[0].price;
-      }
+    let items;
+    if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
+    else if (
+      getType(eventData.ecommerce) === 'object' &&
+      getType(eventData.ecommerce.items) === 'array' &&
+      eventData.ecommerce.items.length
+    ) {
+      items = eventData.ecommerce.items;
     }
 
-    const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
-    items.forEach((d) => {
-      const content = {};
-      if (d[itemIdKey]) content.id = d[itemIdKey];
-      if (d.item_name) content.title = d.item_name;
-      if (d.item_brand) content.brand = d.item_brand;
-      if (d.quantity) content.quantity = d.quantity;
-      if (d.item_category) content.category = d.item_category;
+    if (items) {
+      currencyFromItems = items[0].currency;
 
-      if (d.price) {
-        content.item_price = makeNumber(d.price);
-        valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
+      mappedData.custom_data.contents = [];
+      mappedData.custom_data.content_type =
+        eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
+
+      if (
+        data.mapViewItemListToViewContent &&
+        data.inheritEventName === 'inherit' &&
+        eventData.event_name === 'view_item_list'
+      ) {
+        mappedData.custom_data.content_type = 'product_group';
       }
 
-      mappedData.custom_data.contents.push(content);
-    });
-  }
+      if (!items[1]) {
+        if (items[0].item_name) mappedData.custom_data.content_name = items[0].item_name;
+        if (items[0].item_category)
+          mappedData.custom_data.content_category = items[0].item_category;
 
-  if (eventData['x-ga-mp1-ev']) mappedData.custom_data.value = eventData['x-ga-mp1-ev'];
-  else if (eventData['x-ga-mp1-tr']) mappedData.custom_data.value = eventData['x-ga-mp1-tr'];
-  else if (eventData.value) mappedData.custom_data.value = eventData.value;
+        if (items[0].price) {
+          mappedData.custom_data.value = items[0].quantity
+            ? items[0].quantity * items[0].price
+            : items[0].price;
+        }
+      }
 
-  if (eventData.currency) mappedData.custom_data.currency = eventData.currency;
-  else if (currencyFromItems) mappedData.custom_data.currency = currencyFromItems;
+      const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
+      items.forEach((d) => {
+        const content = {};
+        if (d[itemIdKey]) content.id = d[itemIdKey];
+        if (d.item_name) content.title = d.item_name;
+        if (d.item_brand) content.brand = d.item_brand;
+        if (d.quantity) content.quantity = d.quantity;
+        if (d.item_category) content.category = d.item_category;
 
-  if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
+        if (d.price) {
+          content.item_price = makeNumber(d.price);
+          valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
+        }
 
-  if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
+        mappedData.custom_data.contents.push(content);
+      });
+    }
 
-  if (mappedData.event_name === 'Purchase') {
-    if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
-    if (!mappedData.custom_data.value)
-      mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
+    const value = eventData['x-ga-mp1-ev'] || eventData['x-ga-mp1-tr'] || eventData.value;
+    if (value) mappedData.custom_data.value = value;
+
+    const currency = eventData.currency || currencyFromItems;
+    if (currency) mappedData.custom_data.currency = currency;
+
+    if (eventData.search_term) mappedData.custom_data.search_string = eventData.search_term;
+
+    if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
+
+    if (mappedData.event_name === 'Purchase') {
+      if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
+      if (!mappedData.custom_data.value)
+        mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
+    }
   }
 
   return mappedData;
 }
 
-function addUserData(eventData, mappedData) {
-  let address = {};
-  let user_data = {};
-  if (getType(eventData.user_data) === 'object') {
-    user_data = eventData.user_data;
-    const addressType = getType(user_data.address);
-    if (addressType === 'object' || addressType === 'array') {
-      address = user_data.address[0] || user_data.address;
+function addUserData(data, eventData, mappedData, fbc, fbp) {
+  const autoMapEnabled = data.hasOwnProperty('autoMapUserData') ? data.autoMapUserData : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    let address = {};
+    let user_data = {};
+    if (getType(eventData.user_data) === 'object') {
+      user_data = eventData.user_data;
+      const addressType = getType(user_data.address);
+      if (addressType === 'object' || addressType === 'array') {
+        address = user_data.address[0] || user_data.address;
+      }
     }
+
+    if (fbc) mappedData.user_data.fbc = fbc;
+    if (fbp) mappedData.user_data.fbp = fbp;
+
+    if (eventData.user_agent) mappedData.user_data.client_user_agent = eventData.user_agent;
+
+    if (eventData.ip_override) {
+      mappedData.user_data.client_ip_address = eventData.ip_override
+        .split(' ')
+        .join('')
+        .split(',')[0];
+    }
+
+    if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
+
+    if (eventData.anon_id) mappedData.user_data.anon_id = eventData.anon_id;
+
+    if (eventData.madid) mappedData.user_data.madid = eventData.madid;
+
+    const externalId = eventData.external_id || eventData.user_id || eventData.userId;
+    if (externalId) mappedData.user_data.external_id = externalId;
+
+    const subscriptionId = eventData.subscription_id || eventData.subscriptionId;
+    if (subscriptionId) mappedData.user_data.subscription_id = subscriptionId;
+
+    const leadId = eventData.lead_id || eventData.leadId;
+    if (leadId) mappedData.user_data.lead_id = leadId;
+
+    const ln =
+      eventData.lastName ||
+      eventData.LastName ||
+      eventData.nameLast ||
+      eventData.last_name ||
+      user_data.last_name ||
+      address.last_name ||
+      address.sha256_last_name;
+    if (ln) mappedData.user_data.ln = ln;
+
+    const fn =
+      eventData.firstName ||
+      eventData.FirstName ||
+      eventData.nameFirst ||
+      eventData.first_name ||
+      user_data.first_name ||
+      address.first_name ||
+      address.sha256_first_name;
+    if (fn) mappedData.user_data.fn = fn;
+
+    const em =
+      eventData.email ||
+      user_data.email_address ||
+      user_data.email ||
+      user_data.sha256_email_address;
+    if (em) mappedData.user_data.em = em;
+
+    const ph = eventData.phone || user_data.phone_number || user_data.phone;
+    if (ph) mappedData.user_data.ph = ph;
+
+    const ct = eventData.city || address.city;
+    if (ct) mappedData.user_data.ct = ct;
+
+    const st = eventData.state || eventData.region || user_data.region || address.region;
+    if (st) mappedData.user_data.st = st;
+
+    const zp =
+      eventData.zip || eventData.postal_code || user_data.postal_code || address.postal_code;
+    if (zp) mappedData.user_data.zp = zp;
+
+    const country =
+      eventData.countryCode || eventData.country || user_data.country || address.country;
+    if (country) mappedData.user_data.country = country;
+
+    if (eventData.gender) mappedData.user_data.ge = eventData.gender;
+    if (eventData.db) mappedData.user_data.db = eventData.db;
   }
-  if (eventData.fb_login_id) mappedData.user_data.fb_login_id = eventData.fb_login_id;
-
-  if (eventData.anon_id) mappedData.user_data.anon_id = eventData.anon_id;
-
-  if (eventData.madid) mappedData.user_data.madid = eventData.madid;
-
-  if (eventData.external_id) mappedData.user_data.external_id = eventData.external_id;
-  else if (eventData.user_id) mappedData.user_data.external_id = eventData.user_id;
-  else if (eventData.userId) mappedData.user_data.external_id = eventData.userId;
-
-  if (eventData.subscription_id) mappedData.user_data.subscription_id = eventData.subscription_id;
-  else if (eventData.subscriptionId)
-    mappedData.user_data.subscription_id = eventData.subscriptionId;
-
-  if (eventData.lead_id) mappedData.user_data.lead_id = eventData.lead_id;
-  else if (eventData.leadId) mappedData.user_data.lead_id = eventData.leadId;
-
-  if (eventData.lastName) mappedData.user_data.ln = eventData.lastName;
-  else if (eventData.LastName) mappedData.user_data.ln = eventData.LastName;
-  else if (eventData.nameLast) mappedData.user_data.ln = eventData.nameLast;
-  else if (eventData.last_name) mappedData.user_data.ln = eventData.last_name;
-  else if (user_data.last_name) mappedData.user_data.ln = user_data.last_name;
-  else if (address.last_name) mappedData.user_data.ln = address.last_name;
-  else if (address.sha256_last_name) mappedData.user_data.ln = address.sha256_last_name;
-
-  if (eventData.firstName) mappedData.user_data.fn = eventData.firstName;
-  else if (eventData.FirstName) mappedData.user_data.fn = eventData.FirstName;
-  else if (eventData.nameFirst) mappedData.user_data.fn = eventData.nameFirst;
-  else if (eventData.first_name) mappedData.user_data.fn = eventData.first_name;
-  else if (user_data.first_name) mappedData.user_data.fn = user_data.first_name;
-  else if (address.first_name) mappedData.user_data.fn = address.first_name;
-  else if (address.sha256_first_name) mappedData.user_data.fn = address.sha256_first_name;
-
-  if (eventData.email) mappedData.user_data.em = eventData.email;
-  else if (user_data.email_address) mappedData.user_data.em = user_data.email_address;
-  else if (user_data.email) mappedData.user_data.em = user_data.email;
-  else if (user_data.sha256_email_address) mappedData.user_data.em = user_data.sha256_email_address;
-
-  if (eventData.phone) mappedData.user_data.ph = eventData.phone;
-  else if (user_data.phone_number) mappedData.user_data.ph = user_data.phone_number;
-  else if (user_data.phone) mappedData.user_data.ph = user_data.phone;
-
-  if (eventData.city) mappedData.user_data.ct = eventData.city;
-  else if (address.city) mappedData.user_data.ct = address.city;
-
-  if (eventData.state) mappedData.user_data.st = eventData.state;
-  else if (eventData.region) mappedData.user_data.st = eventData.region;
-  else if (user_data.region) mappedData.user_data.st = user_data.region;
-  else if (address.region) mappedData.user_data.st = address.region;
-
-  if (eventData.zip) mappedData.user_data.zp = eventData.zip;
-  else if (eventData.postal_code) mappedData.user_data.zp = eventData.postal_code;
-  else if (user_data.postal_code) mappedData.user_data.zp = user_data.postal_code;
-  else if (address.postal_code) mappedData.user_data.zp = address.postal_code;
-
-  if (eventData.countryCode) mappedData.user_data.country = eventData.countryCode;
-  else if (eventData.country) mappedData.user_data.country = eventData.country;
-  else if (user_data.country) mappedData.user_data.country = user_data.country;
-  else if (address.country) mappedData.user_data.country = address.country;
-
-  if (eventData.gender) mappedData.user_data.ge = eventData.gender;
-  if (eventData.db) mappedData.user_data.db = eventData.db;
-
   return mappedData;
 }
 
-function addServerEventData(eventData, mappedData) {
-  if (eventData.event_id) mappedData.event_id = eventData.event_id;
-  else if (eventData.transaction_id) mappedData.event_id = eventData.transaction_id;
+function addServerEventData(data, eventData, mappedData) {
+  const autoMapEnabled = data.hasOwnProperty('autoMapServerEventData')
+    ? data.autoMapServerEventData
+    : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    if (eventData.page_location) mappedData.event_source_url = eventData.page_location;
+    if (eventData.page_referrer) mappedData.referrer_url = eventData.page_referrer;
+
+    const eventId = eventData.event_id || eventData.transaction_id;
+    if (eventId) mappedData.event_id = eventId;
+  }
 
   if (data.serverEventDataList) {
     data.serverEventDataList.forEach((d) => {
@@ -608,50 +645,56 @@ function addServerEventData(eventData, mappedData) {
   return mappedData;
 }
 
-function addAppData(eventData, mappedData) {
+function addAppData(data, eventData, mappedData) {
   if (mappedData.action_source !== 'app') {
     return mappedData;
   }
 
-  if (getType(eventData.app_data) === 'object') {
-    mappedData.app_data = eventData.app_data;
-    return mappedData;
-  }
+  const autoMapEnabled = data.hasOwnProperty('autoMapAppData') ? data.autoMapAppData : true; // To avoid a breaking change.
+  if (autoMapEnabled) {
+    if (getType(eventData.app_data) === 'object') {
+      mappedData.app_data = eventData.app_data;
+      return mappedData;
+    }
 
-  mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled ? 1 : 0; // Required
-  mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled ? 1 : 0; // Required
-  if (eventData.extinfo) {
-    mappedData.app_data.extinfo = eventData.extinfo;
-  } else {
-    const platform = makeString(eventData['x-ga-platform'] || '').toLowerCase();
-    const extinfoArray = [
-      platform === 'android' ? 'a2' : platform === 'ios' ? 'i2' : '', // Required
-      eventData.app_id || '',
-      eventData.app_version || '',
-      eventData.app_version ? 'Version ' + eventData.app_version : '',
-      makeString(eventData['x-ga-os_version'] || ''), // Required
-      eventData['x-ga-device_model'] || '',
-      eventData.language || '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ''
-    ];
-    mappedData.app_data.extinfo = extinfoArray;
+    mappedData.app_data.advertiser_tracking_enabled = eventData.advertiser_tracking_enabled ? 1 : 0; // Required
+    mappedData.app_data.application_tracking_enabled = eventData.application_tracking_enabled
+      ? 1
+      : 0; // Required
+    if (eventData.extinfo) {
+      mappedData.app_data.extinfo = eventData.extinfo;
+    } else {
+      const platform = makeString(eventData['x-ga-platform'] || '').toLowerCase();
+      const extinfoArray = [
+        platform === 'android' ? 'a2' : platform === 'ios' ? 'i2' : '', // Required
+        eventData.app_id || '',
+        eventData.app_version || '',
+        eventData.app_version ? 'Version ' + eventData.app_version : '',
+        makeString(eventData['x-ga-os_version'] || ''), // Required
+        eventData['x-ga-device_model'] || '',
+        eventData.language || '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
+      ];
+      mappedData.app_data.extinfo = extinfoArray;
+    }
+    if (eventData.campaign_ids) mappedData.app_data.campaign_ids = eventData.campaign_ids;
+    if (eventData.install_referrer)
+      mappedData.app_data.install_referrer = eventData.install_referrer;
+    if (eventData.installer_package)
+      mappedData.app_data.installer_package = eventData.installer_package;
+    if (eventData.url_schemes) mappedData.app_data.url_schemes = eventData.url_schemes;
+    if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
+    if (eventData.windows_attribution_id)
+      mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
   }
-  if (eventData.campaign_ids) mappedData.app_data.campaign_ids = eventData.campaign_ids;
-  if (eventData.install_referrer) mappedData.app_data.install_referrer = eventData.install_referrer;
-  if (eventData.installer_package)
-    mappedData.app_data.installer_package = eventData.installer_package;
-  if (eventData.url_schemes) mappedData.app_data.url_schemes = eventData.url_schemes;
-  if (eventData.vendor_id) mappedData.app_data.vendor_id = eventData.vendor_id;
-  if (eventData.windows_attribution_id)
-    mappedData.app_data.windows_attribution_id = eventData.windows_attribution_id;
 
   return mappedData;
 }
@@ -701,7 +744,9 @@ function setGtmEecCookie(userData) {
   });
 }
 
-function enhanceEventData(userData) {
+function enhanceEventData(eventData, userData) {
+  const commonCookie = eventData.common_cookie || {};
+
   const cookieValues = getCookieValues('_gtmeec');
   if ((!cookieValues || cookieValues.length === 0) && !commonCookie._gtmeec) {
     return userData;
@@ -743,8 +788,22 @@ function enhanceEventData(userData) {
   Helpers
 ==============================================================================*/
 
+function getUrl(eventData) {
+  return eventData.page_location || getRequestHeader('referer') || eventData.page_referrer;
+}
+
+function shouldExitEarly(data, eventData) {
+  if (!isConsentGivenOrNotRequired(data, eventData)) return true;
+
+  const url = getUrl(eventData);
+  if (url && url.lastIndexOf('https://gtm-msr.appspot.com/', 0) === 0) return true;
+
+  return false;
+}
+
 function enc(data) {
-  return encodeUriComponent(data || '');
+  if (['null', 'undefined'].indexOf(getType(data)) !== -1) data = '';
+  return encodeUriComponent(makeString(data));
 }
 
 function isHashed(value) {
