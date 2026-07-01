@@ -1,4 +1,3 @@
-const BigQuery = require('BigQuery');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 const createRegex = require('createRegex');
 const decodeUriComponent = require('decodeUriComponent');
@@ -6,13 +5,11 @@ const encodeUriComponent = require('encodeUriComponent');
 const fromBase64 = require('fromBase64');
 const generateRandom = require('generateRandom');
 const getAllEventData = require('getAllEventData');
-const getContainerVersion = require('getContainerVersion');
 const getCookieValues = require('getCookieValues');
 const getRequestHeader = require('getRequestHeader');
 const getTimestampMillis = require('getTimestampMillis');
 const getType = require('getType');
 const JSON = require('JSON');
-const logToConsole = require('logToConsole');
 const makeNumber = require('makeNumber');
 const makeString = require('makeString');
 const Math = require('Math');
@@ -38,94 +35,10 @@ if (shouldExitEarly(data, eventData)) {
 const ids = getClickAndBrowserId(data, eventData);
 const fbc = ids.fbc;
 const fbp = ids.fbp;
-setCookies(data, fbc, fbp);
+setIDsCookies(data, fbc, fbp);
 
 const mappedPostBody = mapEvent(data, eventData, fbc, fbp);
-
-let pixelsConfig = [
-  {
-    pixelId: data.pixelId,
-    accessToken: data.accessToken,
-    appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
-  }
-];
-if (data.enableMultipixelSetup) {
-  pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
-}
-
-const requests = pixelsConfig.map((pixelConfig) => {
-  const pixelId = pixelConfig.pixelId;
-  const accessToken = pixelConfig.accessToken;
-  const appSecretProof = pixelConfig.appSecretProof;
-  const postUrl =
-    'https://graph.facebook.com/v' +
-    API_VERSION +
-    '/' +
-    enc(pixelId) +
-    '/events?access_token=' +
-    enc(accessToken) +
-    (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
-
-  log({
-    Name: 'Facebook',
-    Type: 'Request',
-    EventName: mappedPostBody.data[0].event_name,
-    RequestMethod: 'POST',
-    RequestUrl: postUrl,
-    RequestBody: mappedPostBody
-  });
-
-  return sendHttpRequest(
-    postUrl,
-    { headers: { 'content-type': 'application/json' }, method: 'POST' },
-    JSON.stringify(mappedPostBody)
-  )
-    .then((result) => {
-      log({
-        Name: 'Facebook',
-        Type: 'Response',
-        EventName: mappedPostBody.data[0].event_name,
-        ResponseStatusCode: result.statusCode,
-        ResponseHeaders: result.headers,
-        ResponseBody: result.body,
-        Message: 'Pixel ID: ' + pixelId
-      });
-
-      if (result.statusCode < 200 || result.statusCode >= 300) return false;
-      return true;
-    })
-    .catch((result) => {
-      log({
-        Name: 'Facebook',
-        Type: 'Response',
-        EventName: mappedPostBody.data[0].event_name,
-        Message: 'Request failed or timed out. Pixel ID: ' + pixelId,
-        Reason: JSON.stringify(result)
-      });
-
-      return false;
-    });
-});
-
-Promise.all(requests)
-  .then((results) => {
-    if (!data.useOptimisticScenario) {
-      const someRequestFailed = results.some((success) => !success);
-      if (someRequestFailed) return data.gtmOnFailure();
-      return data.gtmOnSuccess();
-    }
-  })
-  .catch((result) => {
-    log({
-      Name: 'Facebook',
-      Type: 'Message',
-      EventName: mappedPostBody.data[0].event_name,
-      Message: 'Something went wrong.',
-      Reason: JSON.stringify(result)
-    });
-
-    if (!data.useOptimisticScenario) return data.gtmOnFailure();
-  });
+sendRequests(data, mappedPostBody);
 
 if (data.useOptimisticScenario) {
   return data.gtmOnSuccess();
@@ -135,7 +48,7 @@ if (data.useOptimisticScenario) {
   Vendor related functions
 ==============================================================================*/
 
-function setCookies(data, fbc, fbp) {
+function setIDsCookies(data, fbc, fbp) {
   const cookieOptions = {
     domain: isUIFieldTrue(data.overrideCookieDomain)
       ? data.overridenCookieDomain || 'auto'
@@ -784,6 +697,58 @@ function enhanceEventData(eventData, userData) {
   return userData;
 }
 
+function sendRequests(data, mappedPostBody) {
+  let pixelsConfig = [
+    {
+      pixelId: data.pixelId,
+      accessToken: data.accessToken,
+      appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
+    }
+  ];
+  if (data.enableMultipixelSetup) {
+    pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
+  }
+
+  const requests = pixelsConfig.map((pixelConfig) => {
+    const pixelId = pixelConfig.pixelId;
+    const accessToken = pixelConfig.accessToken;
+    const appSecretProof = pixelConfig.appSecretProof;
+    const postUrl =
+      'https://graph.facebook.com/v' +
+      API_VERSION +
+      '/' +
+      enc(pixelId) +
+      '/events?access_token=' +
+      enc(accessToken) +
+      (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
+
+    return sendHttpRequest(
+      postUrl,
+      { headers: { 'content-type': 'application/json' }, method: 'POST' },
+      JSON.stringify(mappedPostBody)
+    )
+      .then((result) => {
+        if (result.statusCode < 200 || result.statusCode >= 300) return false;
+        return true;
+      })
+      .catch((result) => {
+        return false;
+      });
+  });
+
+  Promise.all(requests)
+    .then((results) => {
+      if (!data.useOptimisticScenario) {
+        const someRequestFailed = results.some((success) => !success);
+        if (someRequestFailed) return data.gtmOnFailure();
+        return data.gtmOnSuccess();
+      }
+    })
+    .catch((result) => {
+      if (!data.useOptimisticScenario) return data.gtmOnFailure();
+    });
+}
+
 /*==============================================================================
   Helpers
 ==============================================================================*/
@@ -813,7 +778,7 @@ function isHashed(value) {
 
 function isValidValue(value) {
   const valueType = getType(value);
-  return valueType !== 'null' && valueType !== 'undefined' && value !== '';
+  return valueType !== 'null' && valueType !== 'undefined' && value !== '' && value === value;
 }
 
 function normalizePhoneNumber(phoneNumber) {
@@ -841,92 +806,4 @@ function isConsentGivenOrNotRequired(data, eventData) {
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
   return xGaGcs[2] === '1';
-}
-
-function log(rawDataToLog) {
-  const logDestinationsHandlers = {};
-  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
-  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
-
-  rawDataToLog.TraceId = getRequestHeader('trace-id');
-
-  const keyMappings = {
-    // No transformation for Console is needed.
-    bigQuery: {
-      Name: 'tag_name',
-      Type: 'type',
-      TraceId: 'trace_id',
-      EventName: 'event_name',
-      RequestMethod: 'request_method',
-      RequestUrl: 'request_url',
-      RequestBody: 'request_body',
-      ResponseStatusCode: 'response_status_code',
-      ResponseHeaders: 'response_headers',
-      ResponseBody: 'response_body'
-    }
-  };
-
-  for (const logDestination in logDestinationsHandlers) {
-    const handler = logDestinationsHandlers[logDestination];
-    if (!handler) continue;
-
-    const mapping = keyMappings[logDestination];
-    const dataToLog = mapping ? {} : rawDataToLog;
-
-    if (mapping) {
-      for (const key in rawDataToLog) {
-        const mappedKey = mapping[key] || key;
-        dataToLog[mappedKey] = rawDataToLog[key];
-      }
-    }
-
-    handler(dataToLog);
-  }
-}
-
-function logConsole(dataToLog) {
-  logToConsole(JSON.stringify(dataToLog));
-}
-
-function logToBigQuery(dataToLog) {
-  const connectionInfo = {
-    projectId: data.logBigQueryProjectId,
-    datasetId: data.logBigQueryDatasetId,
-    tableId: data.logBigQueryTableId
-  };
-
-  dataToLog.timestamp = getTimestampMillis();
-
-  ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    dataToLog[p] = JSON.stringify(dataToLog[p]);
-  });
-
-  BigQuery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
-}
-
-function determinateIsLoggingEnabled() {
-  const containerVersion = getContainerVersion();
-  const isDebug = !!(
-    containerVersion &&
-    (containerVersion.debugMode || containerVersion.previewMode)
-  );
-
-  if (!data.logType) {
-    return isDebug;
-  }
-
-  if (data.logType === 'no') {
-    return false;
-  }
-
-  if (data.logType === 'debug') {
-    return isDebug;
-  }
-
-  return data.logType === 'always';
-}
-
-function determinateIsLoggingEnabledForBigQuery() {
-  if (data.bigQueryLogType === 'no') return false;
-  return data.bigQueryLogType === 'always';
 }

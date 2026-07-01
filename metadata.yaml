@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: 6769a59cb8e5a8fc6aa0d3c45a2f7b49d39dfff5
+    changeNotes: Logging removal.
   - sha: 7d1a6ee57624225bc0e8540101ae6aff3505e090
     changeNotes: Add automap toggles. Updated API to v25.
   - sha: d47449bd784fd94517c69344eafda86755036008

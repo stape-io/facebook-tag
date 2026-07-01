@@ -931,101 +931,6 @@ ___TEMPLATE_PARAMETERS___
     ]
   },
   {
-    "displayName": "Logs Settings",
-    "name": "logsGroup",
-    "groupStyle": "ZIPPY_CLOSED",
-    "type": "GROUP",
-    "subParams": [
-      {
-        "type": "RADIO",
-        "name": "logType",
-        "radioItems": [
-          {
-            "value": "no",
-            "displayValue": "Do not log"
-          },
-          {
-            "value": "debug",
-            "displayValue": "Log to console during debug and preview"
-          },
-          {
-            "value": "always",
-            "displayValue": "Always log to console"
-          }
-        ],
-        "simpleValueType": true,
-        "defaultValue": "debug"
-      }
-    ]
-  },
-  {
-    "displayName": "BigQuery Logs Settings",
-    "name": "bigQueryLogsGroup",
-    "groupStyle": "ZIPPY_CLOSED",
-    "type": "GROUP",
-    "subParams": [
-      {
-        "type": "RADIO",
-        "name": "bigQueryLogType",
-        "radioItems": [
-          {
-            "value": "no",
-            "displayValue": "Do not log to BigQuery"
-          },
-          {
-            "value": "always",
-            "displayValue": "Log to BigQuery"
-          }
-        ],
-        "simpleValueType": true,
-        "defaultValue": "no"
-      },
-      {
-        "type": "GROUP",
-        "name": "logsBigQueryConfigGroup",
-        "groupStyle": "NO_ZIPPY",
-        "subParams": [
-          {
-            "type": "TEXT",
-            "name": "logBigQueryProjectId",
-            "displayName": "BigQuery Project ID",
-            "simpleValueType": true,
-            "help": "Optional.  \u003cbr\u003e\u003cbr\u003e  If omitted, it will be retrieved from the environment variable \u003cI\u003eGOOGLE_CLOUD_PROJECT\u003c/i\u003e where the server container is running. If the server container is running on Google Cloud, \u003cI\u003eGOOGLE_CLOUD_PROJECT\u003c/i\u003e will already be set to the Google Cloud project\u0027s ID."
-          },
-          {
-            "type": "TEXT",
-            "name": "logBigQueryDatasetId",
-            "displayName": "BigQuery Dataset ID",
-            "simpleValueType": true,
-            "valueValidators": [
-              {
-                "type": "NON_EMPTY"
-              }
-            ]
-          },
-          {
-            "type": "TEXT",
-            "name": "logBigQueryTableId",
-            "displayName": "BigQuery Table ID",
-            "simpleValueType": true,
-            "valueValidators": [
-              {
-                "type": "NON_EMPTY"
-              }
-            ]
-          }
-        ],
-        "enablingConditions": [
-          {
-            "paramName": "bigQueryLogType",
-            "paramValue": "always",
-            "type": "EQUALS"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "type": "GROUP",
     "name": "moreSettingsGroup",
     "displayName": "More Settings",
@@ -1080,7 +985,6 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_SERVER___
 
-const BigQuery = require('BigQuery');
 const computeEffectiveTldPlusOne = require('computeEffectiveTldPlusOne');
 const createRegex = require('createRegex');
 const decodeUriComponent = require('decodeUriComponent');
@@ -1088,13 +992,11 @@ const encodeUriComponent = require('encodeUriComponent');
 const fromBase64 = require('fromBase64');
 const generateRandom = require('generateRandom');
 const getAllEventData = require('getAllEventData');
-const getContainerVersion = require('getContainerVersion');
 const getCookieValues = require('getCookieValues');
 const getRequestHeader = require('getRequestHeader');
 const getTimestampMillis = require('getTimestampMillis');
 const getType = require('getType');
 const JSON = require('JSON');
-const logToConsole = require('logToConsole');
 const makeNumber = require('makeNumber');
 const makeString = require('makeString');
 const Math = require('Math');
@@ -1120,94 +1022,10 @@ if (shouldExitEarly(data, eventData)) {
 const ids = getClickAndBrowserId(data, eventData);
 const fbc = ids.fbc;
 const fbp = ids.fbp;
-setCookies(data, fbc, fbp);
+setIDsCookies(data, fbc, fbp);
 
 const mappedPostBody = mapEvent(data, eventData, fbc, fbp);
-
-let pixelsConfig = [
-  {
-    pixelId: data.pixelId,
-    accessToken: data.accessToken,
-    appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
-  }
-];
-if (data.enableMultipixelSetup) {
-  pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
-}
-
-const requests = pixelsConfig.map((pixelConfig) => {
-  const pixelId = pixelConfig.pixelId;
-  const accessToken = pixelConfig.accessToken;
-  const appSecretProof = pixelConfig.appSecretProof;
-  const postUrl =
-    'https://graph.facebook.com/v' +
-    API_VERSION +
-    '/' +
-    enc(pixelId) +
-    '/events?access_token=' +
-    enc(accessToken) +
-    (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
-
-  log({
-    Name: 'Facebook',
-    Type: 'Request',
-    EventName: mappedPostBody.data[0].event_name,
-    RequestMethod: 'POST',
-    RequestUrl: postUrl,
-    RequestBody: mappedPostBody
-  });
-
-  return sendHttpRequest(
-    postUrl,
-    { headers: { 'content-type': 'application/json' }, method: 'POST' },
-    JSON.stringify(mappedPostBody)
-  )
-    .then((result) => {
-      log({
-        Name: 'Facebook',
-        Type: 'Response',
-        EventName: mappedPostBody.data[0].event_name,
-        ResponseStatusCode: result.statusCode,
-        ResponseHeaders: result.headers,
-        ResponseBody: result.body,
-        Message: 'Pixel ID: ' + pixelId
-      });
-
-      if (result.statusCode < 200 || result.statusCode >= 300) return false;
-      return true;
-    })
-    .catch((result) => {
-      log({
-        Name: 'Facebook',
-        Type: 'Response',
-        EventName: mappedPostBody.data[0].event_name,
-        Message: 'Request failed or timed out. Pixel ID: ' + pixelId,
-        Reason: JSON.stringify(result)
-      });
-
-      return false;
-    });
-});
-
-Promise.all(requests)
-  .then((results) => {
-    if (!data.useOptimisticScenario) {
-      const someRequestFailed = results.some((success) => !success);
-      if (someRequestFailed) return data.gtmOnFailure();
-      return data.gtmOnSuccess();
-    }
-  })
-  .catch((result) => {
-    log({
-      Name: 'Facebook',
-      Type: 'Message',
-      EventName: mappedPostBody.data[0].event_name,
-      Message: 'Something went wrong.',
-      Reason: JSON.stringify(result)
-    });
-
-    if (!data.useOptimisticScenario) return data.gtmOnFailure();
-  });
+sendRequests(data, mappedPostBody);
 
 if (data.useOptimisticScenario) {
   return data.gtmOnSuccess();
@@ -1217,7 +1035,7 @@ if (data.useOptimisticScenario) {
   Vendor related functions
 ==============================================================================*/
 
-function setCookies(data, fbc, fbp) {
+function setIDsCookies(data, fbc, fbp) {
   const cookieOptions = {
     domain: isUIFieldTrue(data.overrideCookieDomain)
       ? data.overridenCookieDomain || 'auto'
@@ -1866,6 +1684,58 @@ function enhanceEventData(eventData, userData) {
   return userData;
 }
 
+function sendRequests(data, mappedPostBody) {
+  let pixelsConfig = [
+    {
+      pixelId: data.pixelId,
+      accessToken: data.accessToken,
+      appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
+    }
+  ];
+  if (data.enableMultipixelSetup) {
+    pixelsConfig = pixelsConfig.concat(data.pixelIdAndAccessTokenTable);
+  }
+
+  const requests = pixelsConfig.map((pixelConfig) => {
+    const pixelId = pixelConfig.pixelId;
+    const accessToken = pixelConfig.accessToken;
+    const appSecretProof = pixelConfig.appSecretProof;
+    const postUrl =
+      'https://graph.facebook.com/v' +
+      API_VERSION +
+      '/' +
+      enc(pixelId) +
+      '/events?access_token=' +
+      enc(accessToken) +
+      (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
+
+    return sendHttpRequest(
+      postUrl,
+      { headers: { 'content-type': 'application/json' }, method: 'POST' },
+      JSON.stringify(mappedPostBody)
+    )
+      .then((result) => {
+        if (result.statusCode < 200 || result.statusCode >= 300) return false;
+        return true;
+      })
+      .catch((result) => {
+        return false;
+      });
+  });
+
+  Promise.all(requests)
+    .then((results) => {
+      if (!data.useOptimisticScenario) {
+        const someRequestFailed = results.some((success) => !success);
+        if (someRequestFailed) return data.gtmOnFailure();
+        return data.gtmOnSuccess();
+      }
+    })
+    .catch((result) => {
+      if (!data.useOptimisticScenario) return data.gtmOnFailure();
+    });
+}
+
 /*==============================================================================
   Helpers
 ==============================================================================*/
@@ -1895,7 +1765,7 @@ function isHashed(value) {
 
 function isValidValue(value) {
   const valueType = getType(value);
-  return valueType !== 'null' && valueType !== 'undefined' && value !== '';
+  return valueType !== 'null' && valueType !== 'undefined' && value !== '' && value === value;
 }
 
 function normalizePhoneNumber(phoneNumber) {
@@ -1923,94 +1793,6 @@ function isConsentGivenOrNotRequired(data, eventData) {
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
   return xGaGcs[2] === '1';
-}
-
-function log(rawDataToLog) {
-  const logDestinationsHandlers = {};
-  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
-  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
-
-  rawDataToLog.TraceId = getRequestHeader('trace-id');
-
-  const keyMappings = {
-    // No transformation for Console is needed.
-    bigQuery: {
-      Name: 'tag_name',
-      Type: 'type',
-      TraceId: 'trace_id',
-      EventName: 'event_name',
-      RequestMethod: 'request_method',
-      RequestUrl: 'request_url',
-      RequestBody: 'request_body',
-      ResponseStatusCode: 'response_status_code',
-      ResponseHeaders: 'response_headers',
-      ResponseBody: 'response_body'
-    }
-  };
-
-  for (const logDestination in logDestinationsHandlers) {
-    const handler = logDestinationsHandlers[logDestination];
-    if (!handler) continue;
-
-    const mapping = keyMappings[logDestination];
-    const dataToLog = mapping ? {} : rawDataToLog;
-
-    if (mapping) {
-      for (const key in rawDataToLog) {
-        const mappedKey = mapping[key] || key;
-        dataToLog[mappedKey] = rawDataToLog[key];
-      }
-    }
-
-    handler(dataToLog);
-  }
-}
-
-function logConsole(dataToLog) {
-  logToConsole(JSON.stringify(dataToLog));
-}
-
-function logToBigQuery(dataToLog) {
-  const connectionInfo = {
-    projectId: data.logBigQueryProjectId,
-    datasetId: data.logBigQueryDatasetId,
-    tableId: data.logBigQueryTableId
-  };
-
-  dataToLog.timestamp = getTimestampMillis();
-
-  ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    dataToLog[p] = JSON.stringify(dataToLog[p]);
-  });
-
-  BigQuery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
-}
-
-function determinateIsLoggingEnabled() {
-  const containerVersion = getContainerVersion();
-  const isDebug = !!(
-    containerVersion &&
-    (containerVersion.debugMode || containerVersion.previewMode)
-  );
-
-  if (!data.logType) {
-    return isDebug;
-  }
-
-  if (data.logType === 'no') {
-    return false;
-  }
-
-  if (data.logType === 'debug') {
-    return isDebug;
-  }
-
-  return data.logType === 'always';
-}
-
-function determinateIsLoggingEnabledForBigQuery() {
-  if (data.bigQueryLogType === 'no') return false;
-  return data.bigQueryLogType === 'always';
 }
 
 
@@ -2278,37 +2060,6 @@ ___SERVER_PERMISSIONS___
   {
     "instance": {
       "key": {
-        "publicId": "logging",
-        "versionId": "1"
-      },
-      "param": [
-        {
-          "key": "environments",
-          "value": {
-            "type": 1,
-            "string": "all"
-          }
-        }
-      ]
-    },
-    "clientAnnotations": {
-      "isEditedByUser": true
-    },
-    "isRequired": true
-  },
-  {
-    "instance": {
-      "key": {
-        "publicId": "read_container_data",
-        "versionId": "1"
-      },
-      "param": []
-    },
-    "isRequired": true
-  },
-  {
-    "instance": {
-      "key": {
         "publicId": "read_request",
         "versionId": "1"
       },
@@ -2318,21 +2069,6 @@ ___SERVER_PERMISSIONS___
           "value": {
             "type": 2,
             "listItem": [
-              {
-                "type": 3,
-                "mapKey": [
-                  {
-                    "type": 1,
-                    "string": "headerName"
-                  }
-                ],
-                "mapValue": [
-                  {
-                    "type": 1,
-                    "string": "trace-id"
-                  }
-                ]
-              },
               {
                 "type": 3,
                 "mapKey": [
@@ -2377,67 +2113,6 @@ ___SERVER_PERMISSIONS___
           "value": {
             "type": 1,
             "string": "any"
-          }
-        }
-      ]
-    },
-    "clientAnnotations": {
-      "isEditedByUser": true
-    },
-    "isRequired": true
-  },
-  {
-    "instance": {
-      "key": {
-        "publicId": "access_bigquery",
-        "versionId": "1"
-      },
-      "param": [
-        {
-          "key": "allowedTables",
-          "value": {
-            "type": 2,
-            "listItem": [
-              {
-                "type": 3,
-                "mapKey": [
-                  {
-                    "type": 1,
-                    "string": "projectId"
-                  },
-                  {
-                    "type": 1,
-                    "string": "datasetId"
-                  },
-                  {
-                    "type": 1,
-                    "string": "tableId"
-                  },
-                  {
-                    "type": 1,
-                    "string": "operation"
-                  }
-                ],
-                "mapValue": [
-                  {
-                    "type": 1,
-                    "string": "*"
-                  },
-                  {
-                    "type": 1,
-                    "string": "*"
-                  },
-                  {
-                    "type": 1,
-                    "string": "*"
-                  },
-                  {
-                    "type": 1,
-                    "string": "write"
-                  }
-                ]
-              }
-            ]
           }
         }
       ]
@@ -2744,6 +2419,9 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 ___NOTES___
 
+2026-05-25 Change Notes:
+ - Logging removal.
+
 2026-05-20 - Change Notes:
   - Add four automap toggle checkboxes (Server Event Data, User Data, App Data, Custom Data), each defaulting to true, allowing individual auto-mapping groups to be disabled without affecting manual overrides; existing configurations are unaffected via a hasOwnProperty fallback
   - Add optional GA4 "view_item_list" → "ViewContent" mapping (sets content_type to "product_group") and move "Use App Secret Proof" into a new "More Settings" group
@@ -2752,3 +2430,4 @@ ___NOTES___
   - Bump API version to 25.0 and partner agent to stape-gtmss-2.1.4
 
 Created on 10/11/2020, 18:14:02
+
