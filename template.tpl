@@ -55,6 +55,7 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "simpleValueType": true,
+        "defaultValue": "inherit",
         "subParams": [
           {
             "type": "RADIO",
@@ -146,7 +147,12 @@ ___TEMPLATE_PARAMETERS___
                         "displayValue": "ViewContent"
                       }
                     ],
-                    "simpleValueType": true
+                    "simpleValueType": true,
+                    "valueValidators": [
+                      {
+                        "type": "NON_EMPTY"
+                      }
+                    ]
                   }
                 ]
               },
@@ -157,12 +163,18 @@ ___TEMPLATE_PARAMETERS___
                   {
                     "type": "TEXT",
                     "name": "eventNameCustom",
-                    "simpleValueType": true
+                    "simpleValueType": true,
+                    "valueValidators": [
+                      {
+                        "type": "NON_EMPTY"
+                      }
+                    ]
                   }
                 ]
               }
             ],
             "simpleValueType": true,
+            "defaultValue": "standard",
             "enablingConditions": [
               {
                 "paramName": "inheritEventName",
@@ -1137,46 +1149,60 @@ function getClickAndBrowserId(data, eventData) {
 }
 
 function getEventName(data) {
-  if (data.inheritEventName === 'inherit') {
+  const gaToFacebookEventName = {
+    page_view: 'PageView',
+    'gtm.dom': 'PageView',
+    add_payment_info: 'AddPaymentInfo',
+    add_to_cart: 'AddToCart',
+    add_to_wishlist: 'AddToWishlist',
+    sign_up: 'CompleteRegistration',
+    begin_checkout: 'InitiateCheckout',
+    generate_lead: 'Lead',
+    purchase: 'Purchase',
+    search: 'Search',
+    view_item: 'ViewContent',
+
+    contact: 'Contact',
+    customize_product: 'CustomizeProduct',
+    donate: 'Donate',
+    find_location: 'FindLocation',
+    schedule: 'Schedule',
+    start_trial: 'StartTrial',
+    submit_application: 'SubmitApplication',
+    subscribe: 'Subscribe',
+
+    'gtm4wp.addProductToCartEEC': 'AddToCart',
+    'gtm4wp.productClickEEC': 'ViewContent',
+    'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
+    'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
+    'gtm4wp.orderCompletedEEC': 'Purchase'
+  };
+
+  if (data.mapViewItemListToViewContent) {
+    gaToFacebookEventName.view_item_list = 'ViewContent';
+  }
+
+  if (data.inheritEventName !== 'override') { // An absent setting inherits.
     const eventName = eventData.event_name;
-
-    const gaToFacebookEventName = {
-      page_view: 'PageView',
-      'gtm.dom': 'PageView',
-      add_payment_info: 'AddPaymentInfo',
-      add_to_cart: 'AddToCart',
-      add_to_wishlist: 'AddToWishlist',
-      sign_up: 'CompleteRegistration',
-      begin_checkout: 'InitiateCheckout',
-      generate_lead: 'Lead',
-      purchase: 'Purchase',
-      search: 'Search',
-      view_item: 'ViewContent',
-
-      contact: 'Contact',
-      customize_product: 'CustomizeProduct',
-      donate: 'Donate',
-      find_location: 'FindLocation',
-      schedule: 'Schedule',
-      start_trial: 'StartTrial',
-      submit_application: 'SubmitApplication',
-      subscribe: 'Subscribe',
-
-      'gtm4wp.addProductToCartEEC': 'AddToCart',
-      'gtm4wp.productClickEEC': 'ViewContent',
-      'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
-      'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
-      'gtm4wp.orderCompletedEEC': 'Purchase'
-    };
-
-    if (data.mapViewItemListToViewContent) {
-      gaToFacebookEventName.view_item_list = 'ViewContent';
-    }
-
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
+  const selected =
+    data.eventName === 'standard'
+      ? data.eventNameStandard
+      : data.eventName === 'custom'
+        ? data.eventNameCustom
+        : undefined;
+
+  if (isValidValue(selected)) return selected;
+
+  if (['standard', 'custom'].indexOf(data.eventName) === -1) { // Radio unset but a name saved.
+    const configured = data.eventNameStandard || data.eventNameCustom;
+    if (isValidValue(configured)) return configured;
+  }
+
+  // An incomplete override falls back to the incoming name, as the inherit branch does.
+  return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
 }
 
 function mapEvent(data, eventData, fbc, fbp) {
@@ -1399,7 +1425,7 @@ function addEcommerceData(data, eventData, mappedData) {
 
       if (
         data.mapViewItemListToViewContent &&
-        data.inheritEventName === 'inherit' &&
+        data.inheritEventName !== 'override' &&
         eventData.event_name === 'view_item_list'
       ) {
         mappedData.custom_data.content_type = 'product_group';
@@ -1831,7 +1857,6 @@ function isConsentGivenOrNotRequired(data, eventData) {
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
   return xGaGcs[2] === '1';
 }
-
 
 ___SERVER_PERMISSIONS___
 
@@ -2432,6 +2457,203 @@ scenarios:
     \ reject) => reject({ reason: 'failed' }))\n});\n\nrunCode(mockData);\n\ncallLater(()\
     \ => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n  assertApi('gtmOnFailure').wasCalled();\n\
     });"
+- name: '[Event Name] Inherited from the client when the setup method is not set'
+  code: |-
+    mockData.inheritEventName = undefined;
+    mockData.eventNameCustom = undefined;
+
+    mock('getAllEventData', { event_name: 'purchase' });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
+    });
+- name: '[Event Name] An unresolvable event name is sent without one, not invented'
+  code: |-
+    mockData.inheritEventName = undefined;
+    mockData.eventNameCustom = undefined;
+
+    mock('getAllEventData', {});
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
+      assertThat(requestBody.data[0].action_source).isEqualTo('website');
+    });
+- name: '[Event Name] Explicit inherit with no incoming name is still sent'
+  code: |-
+    mockData.inheritEventName = 'inherit';
+    mockData.eventNameCustom = undefined;
+
+    mock('getAllEventData', {});
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
+    });
+- name: '[Event Name] Override with no standard event selected falls back to a mapped name'
+  code: |-
+    mockData.inheritEventName = 'override';
+    mockData.eventName = 'standard';
+    mockData.eventNameStandard = undefined;
+    mockData.eventNameCustom = undefined;
+
+    mock('getAllEventData', { event_name: 'purchase' });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
+    });
+- name: '[Event Name] Override with a blank custom name falls back to a mapped name'
+  code: |-
+    mockData.inheritEventName = 'override';
+    mockData.eventName = 'custom';
+    mockData.eventNameStandard = undefined;
+    mockData.eventNameCustom = '';
+
+    mock('getAllEventData', { event_name: 'add_to_cart' });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('AddToCart');
+    });
+- name: '[Event Name] Incomplete override forwards an unmapped incoming name as-is'
+  code: |-
+    mockData.inheritEventName = 'override';
+    mockData.eventName = 'standard';
+    mockData.eventNameStandard = undefined;
+    mockData.eventNameCustom = undefined;
+
+    // Not in the GA4 mapping table, so it is forwarded unchanged as a custom event.
+    mock('getAllEventData', { event_name: 'session_start' });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('session_start');
+    });
+- name: '[Event Name] Incomplete override with no incoming name is still sent'
+  code: |-
+    mockData.inheritEventName = 'override';
+    mockData.eventName = 'standard';
+    mockData.eventNameStandard = undefined;
+    mockData.eventNameCustom = undefined;
+
+    mock('getAllEventData', {});
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
+    });
+- name: '[Event Name] Override with a selected standard event is sent as chosen'
+  code: |-
+    mockData.inheritEventName = 'override';
+    mockData.eventName = 'standard';
+    mockData.eventNameStandard = 'PageView';
+    mockData.eventNameCustom = undefined;
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('PageView');
+    });
+- name: '[Event Name] A deselected standard event is not reused as a custom override'
+  code: |-
+    mockData.inheritEventName = 'override';
+    mockData.eventName = 'custom';
+    mockData.eventNameStandard = 'PageView';
+    mockData.eventNameCustom = '';
+
+    mock('getAllEventData', { event_name: 'purchase' });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
+    });
+- name: '[Event Name] An absent inherit setting still maps view_item_list to a product group'
+  code: |-
+    mockData.inheritEventName = undefined;
+    mockData.eventNameCustom = undefined;
+    mockData.mapViewItemListToViewContent = true;
+
+    mock('getAllEventData', {
+      event_name: 'view_item_list',
+      items: [{ item_id: 'SKU_1' }, { item_id: 'SKU_2' }]
+    });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
+      assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
+    });
 setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\nconst\
   \ callLater = require('callLater');\n\nconst mergeObj = (target, source) => {\n\
   \  for (const key in source) {\n    if (source.hasOwnProperty(key)) target[key]\

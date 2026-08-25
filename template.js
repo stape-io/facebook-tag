@@ -120,46 +120,60 @@ function getClickAndBrowserId(data, eventData) {
 }
 
 function getEventName(data) {
-  if (data.inheritEventName === 'inherit') {
+  const gaToFacebookEventName = {
+    page_view: 'PageView',
+    'gtm.dom': 'PageView',
+    add_payment_info: 'AddPaymentInfo',
+    add_to_cart: 'AddToCart',
+    add_to_wishlist: 'AddToWishlist',
+    sign_up: 'CompleteRegistration',
+    begin_checkout: 'InitiateCheckout',
+    generate_lead: 'Lead',
+    purchase: 'Purchase',
+    search: 'Search',
+    view_item: 'ViewContent',
+
+    contact: 'Contact',
+    customize_product: 'CustomizeProduct',
+    donate: 'Donate',
+    find_location: 'FindLocation',
+    schedule: 'Schedule',
+    start_trial: 'StartTrial',
+    submit_application: 'SubmitApplication',
+    subscribe: 'Subscribe',
+
+    'gtm4wp.addProductToCartEEC': 'AddToCart',
+    'gtm4wp.productClickEEC': 'ViewContent',
+    'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
+    'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
+    'gtm4wp.orderCompletedEEC': 'Purchase'
+  };
+
+  if (data.mapViewItemListToViewContent) {
+    gaToFacebookEventName.view_item_list = 'ViewContent';
+  }
+
+  if (data.inheritEventName !== 'override') { // An absent setting inherits.
     const eventName = eventData.event_name;
-
-    const gaToFacebookEventName = {
-      page_view: 'PageView',
-      'gtm.dom': 'PageView',
-      add_payment_info: 'AddPaymentInfo',
-      add_to_cart: 'AddToCart',
-      add_to_wishlist: 'AddToWishlist',
-      sign_up: 'CompleteRegistration',
-      begin_checkout: 'InitiateCheckout',
-      generate_lead: 'Lead',
-      purchase: 'Purchase',
-      search: 'Search',
-      view_item: 'ViewContent',
-
-      contact: 'Contact',
-      customize_product: 'CustomizeProduct',
-      donate: 'Donate',
-      find_location: 'FindLocation',
-      schedule: 'Schedule',
-      start_trial: 'StartTrial',
-      submit_application: 'SubmitApplication',
-      subscribe: 'Subscribe',
-
-      'gtm4wp.addProductToCartEEC': 'AddToCart',
-      'gtm4wp.productClickEEC': 'ViewContent',
-      'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
-      'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
-      'gtm4wp.orderCompletedEEC': 'Purchase'
-    };
-
-    if (data.mapViewItemListToViewContent) {
-      gaToFacebookEventName.view_item_list = 'ViewContent';
-    }
-
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
+  const selected =
+    data.eventName === 'standard'
+      ? data.eventNameStandard
+      : data.eventName === 'custom'
+        ? data.eventNameCustom
+        : undefined;
+
+  if (isValidValue(selected)) return selected;
+
+  if (['standard', 'custom'].indexOf(data.eventName) === -1) { // Radio unset but a name saved.
+    const configured = data.eventNameStandard || data.eventNameCustom;
+    if (isValidValue(configured)) return configured;
+  }
+
+  // An incomplete override falls back to the incoming name, as the inherit branch does.
+  return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
 }
 
 function mapEvent(data, eventData, fbc, fbp) {
@@ -382,7 +396,7 @@ function addEcommerceData(data, eventData, mappedData) {
 
       if (
         data.mapViewItemListToViewContent &&
-        data.inheritEventName === 'inherit' &&
+        data.inheritEventName !== 'override' &&
         eventData.event_name === 'view_item_list'
       ) {
         mappedData.custom_data.content_type = 'product_group';
