@@ -386,7 +386,7 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "CHECKBOX",
         "name": "generateFbp",
-        "checkboxText": "Generate _fbp cookie if it not exist",
+        "checkboxText": "Generate _fbp cookie if it does not exist",
         "simpleValueType": true,
         "defaultValue": true,
         "alwaysInSummary": true
@@ -851,20 +851,50 @@ ___TEMPLATE_PARAMETERS___
         "checkboxText": "Automap Custom Data",
         "simpleValueType": true,
         "help": "If enabled, the tag will attempt to automatically map parameters from your event data.\n\u003cbr/\u003e\u003cbr/\u003e\nAny value you manually enter in a field below will always override the auto-mapped value.\n\u003cbr/\u003e\u003cbr/\u003e\nDefault mappings:\n\u003cul\u003e\n\u003cli\u003eValue:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData[\u0027x-ga-mp1-ev\u0027]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData[\u0027x-ga-mp1-tr\u0027]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.value\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eSum of Price * Quantity from eventData.items[] or eventData.ecommerce.items[]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003e0\u003c/i\u003e, if event is \"Purchase\" and no value is defined\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eCurrency:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.currency\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eCurrency from eventData.items[] or eventData.ecommerce.items[]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eUSD\u003c/i\u003e, if event is \"Purchase\" and no currency is defined\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eContents:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.items[]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.ecommerce.items[]\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eContent Type:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData[x-fb-cd-content_type]\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003e\u003ci\u003eeventData.content_type\u003c/i\u003e\u003c/li\u003e\n\u003cli\u003eDefault: \u003ci\u003eproduct\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eOrder ID:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.transaction_id\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003cli\u003eSearch String:\n\u003cul\u003e\n\u003cli\u003e\u003ci\u003eeventData.search_term\u003c/i\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/li\u003e\n\u003c/ul\u003e",
-        "defaultValue": true
-      },
-      {
-        "type": "TEXT",
-        "name": "itemIdKey",
-        "displayName": "Custom Item ID Key",
-        "simpleValueType": true,
-        "help": "Optional.\n\u003cbr/\u003e\u003cbr/\u003e\nYou can specify a custom key, which will be used to set the content Item ID, by default \u003ci\u003eitem_id\u003c/i\u003e will be used. This may be useful if you are using WooCommerce extensions.",
-        "canBeEmptyString": true,
-        "enablingConditions": [
+        "defaultValue": true,
+        "subParams": [
           {
-            "paramName": "autoMapCustomData",
-            "paramValue": false,
-            "type": "NOT_EQUALS"
+            "type": "GROUP",
+            "name": "autoMapCustomDataSettingsGroup",
+            "subParams": [
+              {
+                "type": "TEXT",
+                "name": "itemIdKey",
+                "displayName": "Custom Item ID Key",
+                "simpleValueType": true,
+                "help": "Optional.\n\u003cbr/\u003e\u003cbr/\u003e\nYou can specify a custom key, which will be used to set the content Item ID, by default \u003ci\u003eitem_id\u003c/i\u003e will be used. This may be useful if you are using WooCommerce extensions.",
+                "canBeEmptyString": true
+              },
+              {
+                "type": "SELECT",
+                "name": "mapItemDataTo",
+                "displayName": "Map item data to",
+                "selectItems": [
+                  {
+                    "value": "contents",
+                    "displayValue": "Contents"
+                  },
+                  {
+                    "value": "content_ids",
+                    "displayValue": "Content IDs"
+                  },
+                  {
+                    "value": "both",
+                    "displayValue": "Both Contents and Content IDs"
+                  }
+                ],
+                "simpleValueType": true,
+                "defaultValue": "contents",
+                "help": "Choose which parameter(s) to use when mapping item data: Contents, Content IDs or both."
+              }
+            ],
+            "enablingConditions": [
+              {
+                "paramName": "autoMapCustomData",
+                "paramValue": false,
+                "type": "NOT_EQUALS"
+              }
+            ]
           }
         ]
       },
@@ -1012,8 +1042,8 @@ const toBase64 = require('toBase64');
 ==============================================================================*/
 
 const eventData = getAllEventData();
-const API_VERSION = '25.0';
-const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.4' + (data.enableEventEnhancement ? '-ee' : '');
+const API_VERSION = '26.0';
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.5' + (data.enableEventEnhancement ? '-ee' : '');
 
 if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();
@@ -1364,7 +1394,6 @@ function addEcommerceData(data, eventData, mappedData) {
     if (items) {
       currencyFromItems = items[0].currency;
 
-      mappedData.custom_data.contents = [];
       mappedData.custom_data.content_type =
         eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
 
@@ -1389,6 +1418,7 @@ function addEcommerceData(data, eventData, mappedData) {
       }
 
       const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
+      const mapItemDataTo = data.mapItemDataTo || 'contents';
       items.forEach((d) => {
         const content = {};
         if (d[itemIdKey]) content.id = d[itemIdKey];
@@ -1402,7 +1432,14 @@ function addEcommerceData(data, eventData, mappedData) {
           valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
         }
 
-        mappedData.custom_data.contents.push(content);
+        if (mapItemDataTo === 'contents' || mapItemDataTo === 'both') {
+          mappedData.custom_data.contents = mappedData.custom_data.contents || [];
+          mappedData.custom_data.contents.push(content);
+        }
+        if (content.id && (mapItemDataTo === 'content_ids' || mapItemDataTo === 'both')) {
+          mappedData.custom_data.content_ids = mappedData.custom_data.content_ids || [];
+          mappedData.custom_data.content_ids.push(content.id);
+        }
       });
     }
 
@@ -2404,7 +2441,7 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
   \ 'TraceId', 'Name'];\nconst requiredBqKeys = ['timestamp', 'type', 'trace_id',\
   \ 'tag_name'];\nconst expectedBqOptions = { ignoreUnknownValues: true };\n\nconst\
   \ expectedValue = 'test';\nconst expectedPixelId = '1111111111111';\nconst expectedPartnerAgent\
-  \ = 'stape-gtmss-2.1.4';\nconst expectedApiVersion = '25.0';\n\n\nconst mockData\
+  \ = 'stape-gtmss-2.1.5';\nconst expectedApiVersion = '26.0';\n\n\nconst mockData\
   \ = {\n  pixelId: expectedPixelId,\n  accessToken: expectedValue,\n  inheritEventName:\
   \ 'override',\n  eventNameCustom: expectedValue,\n  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n\
   \  logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId:\
@@ -2418,6 +2455,10 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 
 ___NOTES___
+
+2026-08-25 Change Notes:
+ - Add option to map item data to contents, content_ids or both.
+ - Bump API version to 26.0.
 
 2026-05-25 Change Notes:
  - Logging removal.
