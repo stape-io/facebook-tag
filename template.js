@@ -26,7 +26,7 @@ const toBase64 = require('toBase64');
 
 const eventData = getAllEventData();
 const API_VERSION = '26.0';
-const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.5' + (data.enableEventEnhancement ? '-ee' : '');
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.6' + (data.enableEventEnhancement ? '-ee' : '');
 
 if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();

@@ -1055,7 +1055,7 @@ const toBase64 = require('toBase64');
 
 const eventData = getAllEventData();
 const API_VERSION = '26.0';
-const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.5' + (data.enableEventEnhancement ? '-ee' : '');
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.6' + (data.enableEventEnhancement ? '-ee' : '');
 
 if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();
@@ -3033,7 +3033,7 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
   \ 'TraceId', 'Name'];\nconst requiredBqKeys = ['timestamp', 'type', 'trace_id',\
   \ 'tag_name'];\nconst expectedBqOptions = { ignoreUnknownValues: true };\n\nconst\
   \ expectedValue = 'test';\nconst expectedPixelId = '1111111111111';\nconst expectedPartnerAgent\
-  \ = 'stape-gtmss-2.1.5';\nconst expectedApiVersion = '26.0';\n\n\nconst mockData\
+  \ = 'stape-gtmss-2.1.6';\nconst expectedApiVersion = '26.0';\n\n\nconst mockData\
   \ = {\n  pixelId: expectedPixelId,\n  accessToken: expectedValue,\n  inheritEventName:\
   \ 'override',\n  eventNameCustom: expectedValue,\n  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n\
   \  logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId:\
