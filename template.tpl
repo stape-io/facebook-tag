@@ -1178,23 +1178,22 @@ function getEventName(data) {
     'gtm4wp.orderCompletedEEC': 'Purchase'
   };
 
-  if (data.mapViewItemListToViewContent) {
-    gaToFacebookEventName.view_item_list = 'ViewContent';
-  }
-
-  if (data.inheritEventName !== 'override') { // An absent setting inherits.
+  if (data.inheritEventName !== 'override') {
+    if (data.mapViewItemListToViewContent) {
+      gaToFacebookEventName.view_item_list = 'ViewContent';
+    }
     const eventName = eventData.event_name;
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  let selected;
+  let selectedEventName;
   if (data.eventName === 'standard') {
-    selected = data.eventNameStandard;
+    selectedEventName = data.eventNameStandard;
   } else if (data.eventName === 'custom') {
-    selected = data.eventNameCustom;
+    selectedEventName = data.eventNameCustom;
   }
 
-  if (isValidValue(selected)) return selected;
+  if (isValidValue(selectedEventName)) return selectedEventName;
 
   // An incomplete override falls back to the incoming name, as the inherit branch does.
   return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
@@ -2496,6 +2495,14 @@ scenarios:
         eventData: { event_name: 'purchase' },
         expected: 'PageView'
       },
+      // Incomplete override does not apply the view_item_list mapping, which is scoped to inherit.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        mapViewItemListToViewContent: true,
+        eventData: { event_name: 'view_item_list' },
+        expected: 'view_item_list'
+      },
       // Override switched to custom after a standard event was picked: the stale standard value is not reused.
       {
         inheritEventName: 'override',
@@ -2511,6 +2518,7 @@ scenarios:
       copyMockData.eventName = scenario.eventName;
       copyMockData.eventNameStandard = scenario.eventNameStandard;
       copyMockData.eventNameCustom = scenario.eventNameCustom;
+      copyMockData.mapViewItemListToViewContent = scenario.mapViewItemListToViewContent;
 
       mock('getAllEventData', scenario.eventData);
 
