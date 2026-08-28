@@ -1187,19 +1187,14 @@ function getEventName(data) {
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  const selected =
-    data.eventName === 'standard'
-      ? data.eventNameStandard
-      : data.eventName === 'custom'
-        ? data.eventNameCustom
-        : undefined;
+  let selected;
+  if (data.eventName === 'standard') {
+    selected = data.eventNameStandard;
+  } else if (data.eventName === 'custom') {
+    selected = data.eventNameCustom;
+  }
 
   if (isValidValue(selected)) return selected;
-
-  if (['standard', 'custom'].indexOf(data.eventName) === -1) { // Radio unset but a name saved.
-    const configured = data.eventNameStandard || data.eventNameCustom;
-    if (isValidValue(configured)) return configured;
-  }
 
   // An incomplete override falls back to the incoming name, as the inherit branch does.
   return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
@@ -1858,6 +1853,7 @@ function isConsentGivenOrNotRequired(data, eventData) {
   return xGaGcs[2] === '1';
 }
 
+
 ___SERVER_PERMISSIONS___
 
 [
@@ -2255,32 +2251,32 @@ scenarios:
 - name: '[Action Source = App] Request is sent successfully when using Event Data
     as source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
-    \ = undefined;\n\nmock('getAllEventData', {\n  app_data: {\n    advertiser_tracking_enabled:\
-    \ 1,\n    application_tracking_enabled: 0,\n    extinfo: [\n      'a2',\n    \
-    \  'app_id',\n      'app_version',\n      'Version app_version',\n      'os_version',\n\
-    \      'device_model',\n      'language',\n      '',\n      '',\n      '',\n \
-    \     '',\n      '',\n      '',\n      '',\n      '',\n      ''\n    ],\n    campaign_ids:\
-    \ 'expected-campaign_ids',\n    install_referrer: 'expected-install_referrer',\n\
-    \    installer_package: 'expected-installer_package', \n    url_schemes: ['foobar',\
-    \ 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n    windows_attribution_id:\
-    \ 'expected-windows_attribution_id'\n  }\n});\n\nconst expectedRequestBody = {\n\
-    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
-    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
-    \     app_data: {\n        advertiser_tracking_enabled: 1,\n        application_tracking_enabled:\
-    \ 0,\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
-    \          'Version app_version',\n          'os_version',\n          'device_model',\n\
-    \          'language',\n          '',\n          '',\n          '',\n        \
-    \  '',\n          '',\n          '',\n          '',\n          '',\n         \
-    \ ''\n        ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
-    \ 'expected-install_referrer',\n        installer_package: 'expected-installer_package',\n\
-    \        url_schemes: ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n\
-    \        windows_attribution_id: 'expected-windows_attribution_id'\n      }\n\
-    \    }\n  ],\n  partner_agent: expectedPartnerAgent\n};\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  const parsedBody = JSON.parse(requestBody);\n\
-    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return Promise.create((resolve,\
-    \ reject) => {\n    resolve({ statusCode: 200 });\n  });    \n});\n\nrunCode(mockData);\n\
-    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
-    });"
+    \ = undefined;\nmockData.eventName = 'custom';\n\nmock('getAllEventData', {\n\
+    \  app_data: {\n    advertiser_tracking_enabled: 1,\n    application_tracking_enabled:\
+    \ 0,\n    extinfo: [\n      'a2',\n      'app_id',\n      'app_version',\n   \
+    \   'Version app_version',\n      'os_version',\n      'device_model',\n     \
+    \ 'language',\n      '',\n      '',\n      '',\n      '',\n      '',\n      '',\n\
+    \      '',\n      '',\n      ''\n    ],\n    campaign_ids: 'expected-campaign_ids',\n\
+    \    install_referrer: 'expected-install_referrer',\n    installer_package: 'expected-installer_package',\
+    \ \n    url_schemes: ['foobar', 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n\
+    \    windows_attribution_id: 'expected-windows_attribution_id'\n  }\n});\n\nconst\
+    \ expectedRequestBody = {\n  data: [\n    {\n      event_name: 'test',\n     \
+    \ action_source: 'app',\n      event_time: 1747945830,\n      custom_data: {},\n\
+    \      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
+    \ 1,\n        application_tracking_enabled: 0,\n        extinfo: [\n         \
+    \ 'a2',\n          'app_id',\n          'app_version',\n          'Version app_version',\n\
+    \          'os_version',\n          'device_model',\n          'language',\n \
+    \         '',\n          '',\n          '',\n          '',\n          '',\n  \
+    \        '',\n          '',\n          '',\n          ''\n        ],\n       \
+    \ campaign_ids: 'expected-campaign_ids',\n        install_referrer: 'expected-install_referrer',\n\
+    \        installer_package: 'expected-installer_package',\n        url_schemes:\
+    \ ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n        windows_attribution_id:\
+    \ 'expected-windows_attribution_id'\n      }\n    }\n  ],\n  partner_agent: expectedPartnerAgent\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  const parsedBody = JSON.parse(requestBody);\n  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n\
+    \  return Promise.create((resolve, reject) => {\n    resolve({ statusCode: 200\
+    \ });\n  });    \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
 - name: '[Action Source = App] Request is sent successfully when using UI data as
     source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
@@ -2293,11 +2289,11 @@ scenarios:
     \ value: 'expected-install_referrer' },\n  { name: 'installer_package', value:\
     \ 'expected-installer_package' }, \n  { name: 'url_schemes', value: ['foobar',\
     \ 'abcdef'] },\n  { name: 'vendor_id', value: 'expected-vendor_id' },\n  { name:\
-    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\n\n\
-    mock('getAllEventData', {});\n\nconst expectedRequestBody = {\n  data: [\n   \
-    \ {\n      event_name: 'test',\n      action_source: 'app',\n      event_time:\
-    \ 1747945830,\n      custom_data: {},\n      user_data: {},\n      app_data: {\n\
-    \        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
+    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\nmockData.eventName\
+    \ = 'custom';\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody = {\n\
+    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
+    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
+    \     app_data: {\n        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
     \ '0',\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
     \          'Version app_version',\n          'os_version',\n          'device_model',\n\
     \          'language',\n          '',\n          '',\n          '',\n        \
@@ -2314,13 +2310,13 @@ scenarios:
     });"
 - name: '[Event = AppendValue] Request is sent successfully'
   code: "mockData.inheritEventName = 'override';\nmockData.eventNameCustom = 'AppendValue';\n\
-    mockData.generateFbp = false;\nmockData.actionSource = 'website';\nmockData.userDataList\
-    \ = [\n  { name: 'em', value: 'test' },\n  { name: 'ph', value: 'test' }\n];\n\
-    mockData.customDataList = [\n  { name: 'currency', value: 'BRL' },\n  { name:\
-    \ 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList = [\n  { name:\
-    \ 'event_name', value: 'Purchase' },\n  { name: 'event_time', value: 17555555\
-    \ },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id', value:\
-    \ '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
+    mockData.eventName = 'custom';\nmockData.generateFbp = false;\nmockData.actionSource\
+    \ = 'website';\nmockData.userDataList = [\n  { name: 'em', value: 'test' },\n\
+    \  { name: 'ph', value: 'test' }\n];\nmockData.customDataList = [\n  { name: 'currency',\
+    \ value: 'BRL' },\n  { name: 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList\
+    \ = [\n  { name: 'event_name', value: 'Purchase' },\n  { name: 'event_time', value:\
+    \ 17555555 },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id',\
+    \ value: '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
     \ = {\n  data: [\n    {\n      event_name: 'AppendValue',\n      event_time: 1747945830,\n\
     \      custom_data: { currency: 'BRL', net_revenue: 123 },\n      user_data: {\n\
     \        em: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',\n\
@@ -2457,181 +2453,84 @@ scenarios:
     \ reject) => reject({ reason: 'failed' }))\n});\n\nrunCode(mockData);\n\ncallLater(()\
     \ => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n  assertApi('gtmOnFailure').wasCalled();\n\
     });"
-- name: '[Event Name] Inherited from the client when the setup method is not set'
+- name: '[Event Name] Resolves across setup-method, override and fallback scenarios'
   code: |-
-    mockData.inheritEventName = undefined;
-    mockData.eventNameCustom = undefined;
+    [
+      // Setup method unset: behaves as inherit.
+      { inheritEventName: undefined, eventData: { event_name: 'purchase' }, expected: 'Purchase' },
+      { inheritEventName: undefined, eventData: {}, expected: undefined },
 
-    mock('getAllEventData', { event_name: 'purchase' });
+      // Explicit inherit with nothing to map.
+      { inheritEventName: 'inherit', eventData: {}, expected: undefined },
 
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+      // Override, standard selected but left blank: falls back to the mapped incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventData: { event_name: 'purchase' },
+        expected: 'Purchase'
+      },
+      // Override, custom selected but blank: falls back to the mapped incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameCustom: '',
+        eventData: { event_name: 'add_to_cart' },
+        expected: 'AddToCart'
+      },
+      // Incomplete override with an incoming name outside the GA4 mapping table: forwarded as-is.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventData: { event_name: 'session_start' },
+        expected: 'session_start'
+      },
+      // Incomplete override with no incoming name at all: still sent, unresolved.
+      { inheritEventName: 'override', eventName: 'standard', eventData: {}, expected: undefined },
+
+      // Override, standard event chosen: sent as chosen regardless of the incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventNameStandard: 'PageView',
+        eventData: { event_name: 'purchase' },
+        expected: 'PageView'
+      },
+      // Override switched to custom after a standard event was picked: the stale standard value is not reused.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameStandard: 'PageView',
+        eventNameCustom: '',
+        eventData: { event_name: 'purchase' },
+        expected: 'Purchase'
+      }
+    ].forEach((scenario) => {
+      const copyMockData = JSON.parse(JSON.stringify(mockData));
+      copyMockData.inheritEventName = scenario.inheritEventName;
+      copyMockData.eventName = scenario.eventName;
+      copyMockData.eventNameStandard = scenario.eventNameStandard;
+      copyMockData.eventNameCustom = scenario.eventNameCustom;
+
+      mock('getAllEventData', scenario.eventData);
+
+      let requestBody;
+      mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+        requestBody = JSON.parse(body);
+        return Promise.create((resolve) => resolve({ statusCode: 200 }));
+      });
+
+      runCode(copyMockData);
+
+      callLater(() => {
+        assertThat(requestBody.data[0].event_name).isEqualTo(scenario.expected);
+        assertThat(requestBody.data[0].action_source).isEqualTo('website');
+        assertApi('gtmOnSuccess').wasCalled();
+        assertApi('gtmOnFailure').wasNotCalled();
+      });
     });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
-    });
-- name: '[Event Name] An unresolvable event name is sent without one, not invented'
-  code: |-
-    mockData.inheritEventName = undefined;
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', {});
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
-      assertThat(requestBody.data[0].action_source).isEqualTo('website');
-    });
-- name: '[Event Name] Explicit inherit with no incoming name is still sent'
-  code: |-
-    mockData.inheritEventName = 'inherit';
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', {});
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
-    });
-- name: '[Event Name] Override with no standard event selected falls back to a mapped name'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', { event_name: 'purchase' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
-    });
-- name: '[Event Name] Override with a blank custom name falls back to a mapped name'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'custom';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = '';
-
-    mock('getAllEventData', { event_name: 'add_to_cart' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('AddToCart');
-    });
-- name: '[Event Name] Incomplete override forwards an unmapped incoming name as-is'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = undefined;
-
-    // Not in the GA4 mapping table, so it is forwarded unchanged as a custom event.
-    mock('getAllEventData', { event_name: 'session_start' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('session_start');
-    });
-- name: '[Event Name] Incomplete override with no incoming name is still sent'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', {});
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
-    });
-- name: '[Event Name] Override with a selected standard event is sent as chosen'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = 'PageView';
-    mockData.eventNameCustom = undefined;
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('PageView');
-    });
-- name: '[Event Name] A deselected standard event is not reused as a custom override'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'custom';
-    mockData.eventNameStandard = 'PageView';
-    mockData.eventNameCustom = '';
-
-    mock('getAllEventData', { event_name: 'purchase' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
-    });
-- name: '[Event Name] An absent inherit setting still maps view_item_list to a product group'
+- name: '[Event Name] An absent inherit setting still maps view_item_list to a product
+    group'
   code: |-
     mockData.inheritEventName = undefined;
     mockData.eventNameCustom = undefined;
@@ -2653,6 +2552,8 @@ scenarios:
     callLater(() => {
       assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
       assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
     });
 setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\nconst\
   \ callLater = require('callLater');\n\nconst mergeObj = (target, source) => {\n\
@@ -2677,6 +2578,10 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 
 ___NOTES___
+
+2026-08-28 - Change Notes:
+  - Fix event name being silently blank when the setup method is left unset; it now inherits from the client, as intended
+  - Require a non-empty standard/custom event name on Override, and default the setup method to "Inherit from client"
 
 2026-08-25 Change Notes:
  - Add option to map item data to contents, content_ids or both.

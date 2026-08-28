@@ -149,28 +149,22 @@ function getEventName(data) {
     'gtm4wp.orderCompletedEEC': 'Purchase'
   };
 
-  if (data.mapViewItemListToViewContent) {
-    gaToFacebookEventName.view_item_list = 'ViewContent';
-  }
-
-  if (data.inheritEventName !== 'override') { // An absent setting inherits.
+  if (data.inheritEventName !== 'override') {
+    if (data.mapViewItemListToViewContent) {
+      gaToFacebookEventName.view_item_list = 'ViewContent';
+    }
     const eventName = eventData.event_name;
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  const selected =
-    data.eventName === 'standard'
-      ? data.eventNameStandard
-      : data.eventName === 'custom'
-        ? data.eventNameCustom
-        : undefined;
-
-  if (isValidValue(selected)) return selected;
-
-  if (['standard', 'custom'].indexOf(data.eventName) === -1) { // Radio unset but a name saved.
-    const configured = data.eventNameStandard || data.eventNameCustom;
-    if (isValidValue(configured)) return configured;
+  let selectedEventName;
+  if (data.eventName === 'standard') {
+    selectedEventName = data.eventNameStandard;
+  } else if (data.eventName === 'custom') {
+    selectedEventName = data.eventNameCustom;
   }
+
+  if (isValidValue(selectedEventName)) return selectedEventName;
 
   // An incomplete override falls back to the incoming name, as the inherit branch does.
   return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
