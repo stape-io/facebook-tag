@@ -120,46 +120,54 @@ function getClickAndBrowserId(data, eventData) {
 }
 
 function getEventName(data) {
-  if (data.inheritEventName === 'inherit') {
-    const eventName = eventData.event_name;
+  const gaToFacebookEventName = {
+    page_view: 'PageView',
+    'gtm.dom': 'PageView',
+    add_payment_info: 'AddPaymentInfo',
+    add_to_cart: 'AddToCart',
+    add_to_wishlist: 'AddToWishlist',
+    sign_up: 'CompleteRegistration',
+    begin_checkout: 'InitiateCheckout',
+    generate_lead: 'Lead',
+    purchase: 'Purchase',
+    search: 'Search',
+    view_item: 'ViewContent',
 
-    const gaToFacebookEventName = {
-      page_view: 'PageView',
-      'gtm.dom': 'PageView',
-      add_payment_info: 'AddPaymentInfo',
-      add_to_cart: 'AddToCart',
-      add_to_wishlist: 'AddToWishlist',
-      sign_up: 'CompleteRegistration',
-      begin_checkout: 'InitiateCheckout',
-      generate_lead: 'Lead',
-      purchase: 'Purchase',
-      search: 'Search',
-      view_item: 'ViewContent',
+    contact: 'Contact',
+    customize_product: 'CustomizeProduct',
+    donate: 'Donate',
+    find_location: 'FindLocation',
+    schedule: 'Schedule',
+    start_trial: 'StartTrial',
+    submit_application: 'SubmitApplication',
+    subscribe: 'Subscribe',
 
-      contact: 'Contact',
-      customize_product: 'CustomizeProduct',
-      donate: 'Donate',
-      find_location: 'FindLocation',
-      schedule: 'Schedule',
-      start_trial: 'StartTrial',
-      submit_application: 'SubmitApplication',
-      subscribe: 'Subscribe',
+    'gtm4wp.addProductToCartEEC': 'AddToCart',
+    'gtm4wp.productClickEEC': 'ViewContent',
+    'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
+    'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
+    'gtm4wp.orderCompletedEEC': 'Purchase'
+  };
 
-      'gtm4wp.addProductToCartEEC': 'AddToCart',
-      'gtm4wp.productClickEEC': 'ViewContent',
-      'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
-      'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
-      'gtm4wp.orderCompletedEEC': 'Purchase'
-    };
-
+  if (data.inheritEventName !== 'override') {
     if (data.mapViewItemListToViewContent) {
       gaToFacebookEventName.view_item_list = 'ViewContent';
     }
-
+    const eventName = eventData.event_name;
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
+  let selectedEventName;
+  if (data.eventName === 'standard') {
+    selectedEventName = data.eventNameStandard;
+  } else if (data.eventName === 'custom') {
+    selectedEventName = data.eventNameCustom;
+  }
+
+  if (isValidValue(selectedEventName)) return selectedEventName;
+
+  // An incomplete override falls back to the incoming name, as the inherit branch does.
+  return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
 }
 
 function mapEvent(data, eventData, fbc, fbp) {
@@ -382,7 +390,7 @@ function addEcommerceData(data, eventData, mappedData) {
 
       if (
         data.mapViewItemListToViewContent &&
-        data.inheritEventName === 'inherit' &&
+        data.inheritEventName !== 'override' &&
         eventData.event_name === 'view_item_list'
       ) {
         mappedData.custom_data.content_type = 'product_group';

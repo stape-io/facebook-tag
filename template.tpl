@@ -55,6 +55,7 @@ ___TEMPLATE_PARAMETERS___
           }
         ],
         "simpleValueType": true,
+        "defaultValue": "inherit",
         "subParams": [
           {
             "type": "RADIO",
@@ -146,7 +147,12 @@ ___TEMPLATE_PARAMETERS___
                         "displayValue": "ViewContent"
                       }
                     ],
-                    "simpleValueType": true
+                    "simpleValueType": true,
+                    "valueValidators": [
+                      {
+                        "type": "NON_EMPTY"
+                      }
+                    ]
                   }
                 ]
               },
@@ -157,12 +163,18 @@ ___TEMPLATE_PARAMETERS___
                   {
                     "type": "TEXT",
                     "name": "eventNameCustom",
-                    "simpleValueType": true
+                    "simpleValueType": true,
+                    "valueValidators": [
+                      {
+                        "type": "NON_EMPTY"
+                      }
+                    ]
                   }
                 ]
               }
             ],
             "simpleValueType": true,
+            "defaultValue": "standard",
             "enablingConditions": [
               {
                 "paramName": "inheritEventName",
@@ -1137,46 +1149,54 @@ function getClickAndBrowserId(data, eventData) {
 }
 
 function getEventName(data) {
-  if (data.inheritEventName === 'inherit') {
-    const eventName = eventData.event_name;
+  const gaToFacebookEventName = {
+    page_view: 'PageView',
+    'gtm.dom': 'PageView',
+    add_payment_info: 'AddPaymentInfo',
+    add_to_cart: 'AddToCart',
+    add_to_wishlist: 'AddToWishlist',
+    sign_up: 'CompleteRegistration',
+    begin_checkout: 'InitiateCheckout',
+    generate_lead: 'Lead',
+    purchase: 'Purchase',
+    search: 'Search',
+    view_item: 'ViewContent',
 
-    const gaToFacebookEventName = {
-      page_view: 'PageView',
-      'gtm.dom': 'PageView',
-      add_payment_info: 'AddPaymentInfo',
-      add_to_cart: 'AddToCart',
-      add_to_wishlist: 'AddToWishlist',
-      sign_up: 'CompleteRegistration',
-      begin_checkout: 'InitiateCheckout',
-      generate_lead: 'Lead',
-      purchase: 'Purchase',
-      search: 'Search',
-      view_item: 'ViewContent',
+    contact: 'Contact',
+    customize_product: 'CustomizeProduct',
+    donate: 'Donate',
+    find_location: 'FindLocation',
+    schedule: 'Schedule',
+    start_trial: 'StartTrial',
+    submit_application: 'SubmitApplication',
+    subscribe: 'Subscribe',
 
-      contact: 'Contact',
-      customize_product: 'CustomizeProduct',
-      donate: 'Donate',
-      find_location: 'FindLocation',
-      schedule: 'Schedule',
-      start_trial: 'StartTrial',
-      submit_application: 'SubmitApplication',
-      subscribe: 'Subscribe',
+    'gtm4wp.addProductToCartEEC': 'AddToCart',
+    'gtm4wp.productClickEEC': 'ViewContent',
+    'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
+    'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
+    'gtm4wp.orderCompletedEEC': 'Purchase'
+  };
 
-      'gtm4wp.addProductToCartEEC': 'AddToCart',
-      'gtm4wp.productClickEEC': 'ViewContent',
-      'gtm4wp.checkoutOptionEEC': 'InitiateCheckout',
-      'gtm4wp.checkoutStepEEC': 'AddPaymentInfo',
-      'gtm4wp.orderCompletedEEC': 'Purchase'
-    };
-
+  if (data.inheritEventName !== 'override') {
     if (data.mapViewItemListToViewContent) {
       gaToFacebookEventName.view_item_list = 'ViewContent';
     }
-
+    const eventName = eventData.event_name;
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  return data.eventName === 'standard' ? data.eventNameStandard : data.eventNameCustom;
+  let selectedEventName;
+  if (data.eventName === 'standard') {
+    selectedEventName = data.eventNameStandard;
+  } else if (data.eventName === 'custom') {
+    selectedEventName = data.eventNameCustom;
+  }
+
+  if (isValidValue(selectedEventName)) return selectedEventName;
+
+  // An incomplete override falls back to the incoming name, as the inherit branch does.
+  return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
 }
 
 function mapEvent(data, eventData, fbc, fbp) {
@@ -1399,7 +1419,7 @@ function addEcommerceData(data, eventData, mappedData) {
 
       if (
         data.mapViewItemListToViewContent &&
-        data.inheritEventName === 'inherit' &&
+        data.inheritEventName !== 'override' &&
         eventData.event_name === 'view_item_list'
       ) {
         mappedData.custom_data.content_type = 'product_group';
@@ -2230,32 +2250,32 @@ scenarios:
 - name: '[Action Source = App] Request is sent successfully when using Event Data
     as source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
-    \ = undefined;\n\nmock('getAllEventData', {\n  app_data: {\n    advertiser_tracking_enabled:\
-    \ 1,\n    application_tracking_enabled: 0,\n    extinfo: [\n      'a2',\n    \
-    \  'app_id',\n      'app_version',\n      'Version app_version',\n      'os_version',\n\
-    \      'device_model',\n      'language',\n      '',\n      '',\n      '',\n \
-    \     '',\n      '',\n      '',\n      '',\n      '',\n      ''\n    ],\n    campaign_ids:\
-    \ 'expected-campaign_ids',\n    install_referrer: 'expected-install_referrer',\n\
-    \    installer_package: 'expected-installer_package', \n    url_schemes: ['foobar',\
-    \ 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n    windows_attribution_id:\
-    \ 'expected-windows_attribution_id'\n  }\n});\n\nconst expectedRequestBody = {\n\
-    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
-    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
-    \     app_data: {\n        advertiser_tracking_enabled: 1,\n        application_tracking_enabled:\
-    \ 0,\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
-    \          'Version app_version',\n          'os_version',\n          'device_model',\n\
-    \          'language',\n          '',\n          '',\n          '',\n        \
-    \  '',\n          '',\n          '',\n          '',\n          '',\n         \
-    \ ''\n        ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
-    \ 'expected-install_referrer',\n        installer_package: 'expected-installer_package',\n\
-    \        url_schemes: ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n\
-    \        windows_attribution_id: 'expected-windows_attribution_id'\n      }\n\
-    \    }\n  ],\n  partner_agent: expectedPartnerAgent\n};\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  const parsedBody = JSON.parse(requestBody);\n\
-    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return Promise.create((resolve,\
-    \ reject) => {\n    resolve({ statusCode: 200 });\n  });    \n});\n\nrunCode(mockData);\n\
-    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
-    });"
+    \ = undefined;\nmockData.eventName = 'custom';\n\nmock('getAllEventData', {\n\
+    \  app_data: {\n    advertiser_tracking_enabled: 1,\n    application_tracking_enabled:\
+    \ 0,\n    extinfo: [\n      'a2',\n      'app_id',\n      'app_version',\n   \
+    \   'Version app_version',\n      'os_version',\n      'device_model',\n     \
+    \ 'language',\n      '',\n      '',\n      '',\n      '',\n      '',\n      '',\n\
+    \      '',\n      '',\n      ''\n    ],\n    campaign_ids: 'expected-campaign_ids',\n\
+    \    install_referrer: 'expected-install_referrer',\n    installer_package: 'expected-installer_package',\
+    \ \n    url_schemes: ['foobar', 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n\
+    \    windows_attribution_id: 'expected-windows_attribution_id'\n  }\n});\n\nconst\
+    \ expectedRequestBody = {\n  data: [\n    {\n      event_name: 'test',\n     \
+    \ action_source: 'app',\n      event_time: 1747945830,\n      custom_data: {},\n\
+    \      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
+    \ 1,\n        application_tracking_enabled: 0,\n        extinfo: [\n         \
+    \ 'a2',\n          'app_id',\n          'app_version',\n          'Version app_version',\n\
+    \          'os_version',\n          'device_model',\n          'language',\n \
+    \         '',\n          '',\n          '',\n          '',\n          '',\n  \
+    \        '',\n          '',\n          '',\n          ''\n        ],\n       \
+    \ campaign_ids: 'expected-campaign_ids',\n        install_referrer: 'expected-install_referrer',\n\
+    \        installer_package: 'expected-installer_package',\n        url_schemes:\
+    \ ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n        windows_attribution_id:\
+    \ 'expected-windows_attribution_id'\n      }\n    }\n  ],\n  partner_agent: expectedPartnerAgent\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  const parsedBody = JSON.parse(requestBody);\n  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n\
+    \  return Promise.create((resolve, reject) => {\n    resolve({ statusCode: 200\
+    \ });\n  });    \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
 - name: '[Action Source = App] Request is sent successfully when using UI data as
     source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
@@ -2268,11 +2288,11 @@ scenarios:
     \ value: 'expected-install_referrer' },\n  { name: 'installer_package', value:\
     \ 'expected-installer_package' }, \n  { name: 'url_schemes', value: ['foobar',\
     \ 'abcdef'] },\n  { name: 'vendor_id', value: 'expected-vendor_id' },\n  { name:\
-    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\n\n\
-    mock('getAllEventData', {});\n\nconst expectedRequestBody = {\n  data: [\n   \
-    \ {\n      event_name: 'test',\n      action_source: 'app',\n      event_time:\
-    \ 1747945830,\n      custom_data: {},\n      user_data: {},\n      app_data: {\n\
-    \        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
+    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\nmockData.eventName\
+    \ = 'custom';\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody = {\n\
+    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
+    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
+    \     app_data: {\n        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
     \ '0',\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
     \          'Version app_version',\n          'os_version',\n          'device_model',\n\
     \          'language',\n          '',\n          '',\n          '',\n        \
@@ -2289,13 +2309,13 @@ scenarios:
     });"
 - name: '[Event = AppendValue] Request is sent successfully'
   code: "mockData.inheritEventName = 'override';\nmockData.eventNameCustom = 'AppendValue';\n\
-    mockData.generateFbp = false;\nmockData.actionSource = 'website';\nmockData.userDataList\
-    \ = [\n  { name: 'em', value: 'test' },\n  { name: 'ph', value: 'test' }\n];\n\
-    mockData.customDataList = [\n  { name: 'currency', value: 'BRL' },\n  { name:\
-    \ 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList = [\n  { name:\
-    \ 'event_name', value: 'Purchase' },\n  { name: 'event_time', value: 17555555\
-    \ },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id', value:\
-    \ '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
+    mockData.eventName = 'custom';\nmockData.generateFbp = false;\nmockData.actionSource\
+    \ = 'website';\nmockData.userDataList = [\n  { name: 'em', value: 'test' },\n\
+    \  { name: 'ph', value: 'test' }\n];\nmockData.customDataList = [\n  { name: 'currency',\
+    \ value: 'BRL' },\n  { name: 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList\
+    \ = [\n  { name: 'event_name', value: 'Purchase' },\n  { name: 'event_time', value:\
+    \ 17555555 },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id',\
+    \ value: '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
     \ = {\n  data: [\n    {\n      event_name: 'AppendValue',\n      event_time: 1747945830,\n\
     \      custom_data: { currency: 'BRL', net_revenue: 123 },\n      user_data: {\n\
     \        em: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',\n\
@@ -2432,6 +2452,117 @@ scenarios:
     \ reject) => reject({ reason: 'failed' }))\n});\n\nrunCode(mockData);\n\ncallLater(()\
     \ => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n  assertApi('gtmOnFailure').wasCalled();\n\
     });"
+- name: '[Event Name] Resolves across setup-method, override and fallback scenarios'
+  code: |-
+    [
+      // Setup method unset: behaves as inherit.
+      { inheritEventName: undefined, eventData: { event_name: 'purchase' }, expected: 'Purchase' },
+      { inheritEventName: undefined, eventData: {}, expected: undefined },
+
+      // Explicit inherit with nothing to map.
+      { inheritEventName: 'inherit', eventData: {}, expected: undefined },
+
+      // Override, standard selected but left blank: falls back to the mapped incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventData: { event_name: 'purchase' },
+        expected: 'Purchase'
+      },
+      // Override, custom selected but blank: falls back to the mapped incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameCustom: '',
+        eventData: { event_name: 'add_to_cart' },
+        expected: 'AddToCart'
+      },
+      // Incomplete override with an incoming name outside the GA4 mapping table: forwarded as-is.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventData: { event_name: 'session_start' },
+        expected: 'session_start'
+      },
+      // Incomplete override with no incoming name at all: still sent, unresolved.
+      { inheritEventName: 'override', eventName: 'standard', eventData: {}, expected: undefined },
+
+      // Override, standard event chosen: sent as chosen regardless of the incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventNameStandard: 'PageView',
+        eventData: { event_name: 'purchase' },
+        expected: 'PageView'
+      },
+      // Incomplete override does not apply the view_item_list mapping, which is scoped to inherit.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        mapViewItemListToViewContent: true,
+        eventData: { event_name: 'view_item_list' },
+        expected: 'view_item_list'
+      },
+      // Override switched to custom after a standard event was picked: the stale standard value is not reused.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameStandard: 'PageView',
+        eventNameCustom: '',
+        eventData: { event_name: 'purchase' },
+        expected: 'Purchase'
+      }
+    ].forEach((scenario) => {
+      const copyMockData = JSON.parse(JSON.stringify(mockData));
+      copyMockData.inheritEventName = scenario.inheritEventName;
+      copyMockData.eventName = scenario.eventName;
+      copyMockData.eventNameStandard = scenario.eventNameStandard;
+      copyMockData.eventNameCustom = scenario.eventNameCustom;
+      copyMockData.mapViewItemListToViewContent = scenario.mapViewItemListToViewContent;
+
+      mock('getAllEventData', scenario.eventData);
+
+      let requestBody;
+      mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+        requestBody = JSON.parse(body);
+        return Promise.create((resolve) => resolve({ statusCode: 200 }));
+      });
+
+      runCode(copyMockData);
+
+      callLater(() => {
+        assertThat(requestBody.data[0].event_name).isEqualTo(scenario.expected);
+        assertThat(requestBody.data[0].action_source).isEqualTo('website');
+        assertApi('gtmOnSuccess').wasCalled();
+        assertApi('gtmOnFailure').wasNotCalled();
+      });
+    });
+- name: '[Event Name] An absent inherit setting still maps view_item_list to a product
+    group'
+  code: |-
+    mockData.inheritEventName = undefined;
+    mockData.eventNameCustom = undefined;
+    mockData.mapViewItemListToViewContent = true;
+
+    mock('getAllEventData', {
+      event_name: 'view_item_list',
+      items: [{ item_id: 'SKU_1' }, { item_id: 'SKU_2' }]
+    });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
+      assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
 setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\nconst\
   \ callLater = require('callLater');\n\nconst mergeObj = (target, source) => {\n\
   \  for (const key in source) {\n    if (source.hasOwnProperty(key)) target[key]\
@@ -2455,6 +2586,10 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 
 ___NOTES___
+
+2026-08-28 - Change Notes:
+  - Fix event name being silently blank when the setup method is left unset; it now inherits from the client, as intended
+  - Require a non-empty standard/custom event name on Override, and default the setup method to "Inherit from client"
 
 2026-08-25 Change Notes:
  - Add option to map item data to contents, content_ids or both.
