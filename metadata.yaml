@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: b8db573436c414915dfc1b0a1ebff6009ccbc43a
+    changeNotes: Fixed event name not being inherited when the setup method is left unset. Added required field validation for event name options.
   - sha: f7a34753bc6092e8a032de564cae18280138b428
     changeNotes: Added an option to choose which parameter to use when automapping item data. Updated API to v26.
   - sha: 6769a59cb8e5a8fc6aa0d3c45a2f7b49d39dfff5
