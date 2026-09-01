@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: 2ad85bab16edaaa3d8f6d48e9d905567b63985cc
+    changeNotes: Bumped partner agent string to 2.1.6.
   - sha: b8db573436c414915dfc1b0a1ebff6009ccbc43a
     changeNotes: Fixed event name not being inherited when the setup method is left unset. Added required field validation for event name options.
   - sha: f7a34753bc6092e8a032de564cae18280138b428
