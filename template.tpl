@@ -1230,7 +1230,7 @@ function mapEvent(data, eventData, fbc, fbp) {
   mappedData = addEcommerceData(data, eventData, mappedData);
   mappedData = addOriginalEventData(mappedData);
 
-  if (data.enableEventEnhancement) { // Before cleanup and hashing, so cookie values get both.
+  if (data.enableEventEnhancement) {
     mappedData.user_data = enhanceEventData(eventData, mappedData.user_data);
   }
 
@@ -1446,7 +1446,7 @@ function addEcommerceData(data, eventData, mappedData) {
       const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
       const mapItemDataTo = data.mapItemDataTo || 'contents';
       items.forEach((d) => {
-        if (!currencyFromItems && d.currency) currencyFromItems = d.currency; // Not only items[0].
+        if (!currencyFromItems && d.currency) currencyFromItems = d.currency;
 
         const content = {};
         let hasContent = false;
@@ -1494,7 +1494,7 @@ function addEcommerceData(data, eventData, mappedData) {
       });
 
       if (!mappedData.custom_data.contents && !mappedData.custom_data.content_ids) {
-        mappedData.custom_data.content_type = undefined; // Nothing left to describe.
+        mappedData.custom_data.content_type = undefined;
       }
     }
 
@@ -1519,7 +1519,7 @@ function addEcommerceData(data, eventData, mappedData) {
       !mappedData.custom_data.currency &&
       (isValidValue(mappedData.custom_data.value) || valueFromItems)
     ) {
-      mappedData.custom_data.currency = 'USD'; // A price without a currency is rejected.
+      mappedData.custom_data.currency = 'USD';
     }
   }
 
