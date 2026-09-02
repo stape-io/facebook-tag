@@ -1400,6 +1400,7 @@ function addEcommerceData(data, eventData, mappedData) {
   if (autoMapEnabled) {
     let currencyFromItems = '';
     let valueFromItems = 0;
+    let hasValueFromItems = false;
 
     let items;
     if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
@@ -1473,6 +1474,7 @@ function addEcommerceData(data, eventData, mappedData) {
           content.item_price = itemPrice;
           hasContent = true;
           valueFromItems += isValidValue(quantity) ? quantity * itemPrice : itemPrice;
+          hasValueFromItems = true;
         }
 
         if (!hasContent) return;
@@ -1505,13 +1507,13 @@ function addEcommerceData(data, eventData, mappedData) {
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
     if (mappedData.event_name === 'Purchase') {
-      if (!isValidValue(mappedData.custom_data.value))
+      if (!isValidValue(mappedData.custom_data.value) && hasValueFromItems)
         mappedData.custom_data.value = valueFromItems;
     }
 
     if (
       !mappedData.custom_data.currency &&
-      (isValidValue(mappedData.custom_data.value) || valueFromItems)
+      (isValidValue(mappedData.custom_data.value) || hasValueFromItems)
     ) {
       mappedData.custom_data.currency = 'USD';
     }
@@ -2300,32 +2302,32 @@ scenarios:
 - name: '[Action Source = App] Request is sent successfully when using Event Data
     as source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
-    \ = undefined;\n\nmock('getAllEventData', {\n  app_data: {\n    advertiser_tracking_enabled:\
-    \ 1,\n    application_tracking_enabled: 0,\n    extinfo: [\n      'a2',\n    \
-    \  'app_id',\n      'app_version',\n      'Version app_version',\n      'os_version',\n\
-    \      'device_model',\n      'language',\n      '',\n      '',\n      '',\n \
-    \     '',\n      '',\n      '',\n      '',\n      '',\n      ''\n    ],\n    campaign_ids:\
-    \ 'expected-campaign_ids',\n    install_referrer: 'expected-install_referrer',\n\
-    \    installer_package: 'expected-installer_package', \n    url_schemes: ['foobar',\
-    \ 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n    windows_attribution_id:\
-    \ 'expected-windows_attribution_id'\n  }\n});\n\nconst expectedRequestBody = {\n\
-    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
-    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
-    \     app_data: {\n        advertiser_tracking_enabled: 1,\n        application_tracking_enabled:\
-    \ 0,\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
-    \          'Version app_version',\n          'os_version',\n          'device_model',\n\
-    \          'language',\n          '',\n          '',\n          '',\n        \
-    \  '',\n          '',\n          '',\n          '',\n          '',\n         \
-    \ ''\n        ],\n        campaign_ids: 'expected-campaign_ids',\n        install_referrer:\
-    \ 'expected-install_referrer',\n        installer_package: 'expected-installer_package',\n\
-    \        url_schemes: ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n\
-    \        windows_attribution_id: 'expected-windows_attribution_id'\n      }\n\
-    \    }\n  ],\n  partner_agent: expectedPartnerAgent\n};\n\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => {\n  const parsedBody = JSON.parse(requestBody);\n\
-    \  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n  return Promise.create((resolve,\
-    \ reject) => {\n    resolve({ statusCode: 200 });\n  });    \n});\n\nrunCode(mockData);\n\
-    \ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n  assertApi('gtmOnFailure').wasNotCalled();\n\
-    });"
+    \ = undefined;\nmockData.eventName = 'custom';\n\nmock('getAllEventData', {\n\
+    \  app_data: {\n    advertiser_tracking_enabled: 1,\n    application_tracking_enabled:\
+    \ 0,\n    extinfo: [\n      'a2',\n      'app_id',\n      'app_version',\n   \
+    \   'Version app_version',\n      'os_version',\n      'device_model',\n     \
+    \ 'language',\n      '',\n      '',\n      '',\n      '',\n      '',\n      '',\n\
+    \      '',\n      '',\n      ''\n    ],\n    campaign_ids: 'expected-campaign_ids',\n\
+    \    install_referrer: 'expected-install_referrer',\n    installer_package: 'expected-installer_package',\
+    \ \n    url_schemes: ['foobar', 'abcdef'],\n    vendor_id: 'expected-vendor_id',\n\
+    \    windows_attribution_id: 'expected-windows_attribution_id'\n  }\n});\n\nconst\
+    \ expectedRequestBody = {\n  data: [\n    {\n      event_name: 'test',\n     \
+    \ action_source: 'app',\n      event_time: 1747945830,\n      custom_data: {},\n\
+    \      user_data: {},\n      app_data: {\n        advertiser_tracking_enabled:\
+    \ 1,\n        application_tracking_enabled: 0,\n        extinfo: [\n         \
+    \ 'a2',\n          'app_id',\n          'app_version',\n          'Version app_version',\n\
+    \          'os_version',\n          'device_model',\n          'language',\n \
+    \         '',\n          '',\n          '',\n          '',\n          '',\n  \
+    \        '',\n          '',\n          '',\n          ''\n        ],\n       \
+    \ campaign_ids: 'expected-campaign_ids',\n        install_referrer: 'expected-install_referrer',\n\
+    \        installer_package: 'expected-installer_package',\n        url_schemes:\
+    \ ['foobar', 'abcdef'],\n        vendor_id: 'expected-vendor_id',\n        windows_attribution_id:\
+    \ 'expected-windows_attribution_id'\n      }\n    }\n  ],\n  partner_agent: expectedPartnerAgent\n\
+    };\n\nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n\
+    \  const parsedBody = JSON.parse(requestBody);\n  assertThat(parsedBody).isEqualTo(expectedRequestBody);\n\
+    \  return Promise.create((resolve, reject) => {\n    resolve({ statusCode: 200\
+    \ });\n  });    \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
+    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
 - name: '[Action Source = App] Request is sent successfully when using UI data as
     source'
   code: "mockData.generateFbp = false;\nmockData.actionSource = 'app';\nmockData.appDataList\
@@ -2338,11 +2340,11 @@ scenarios:
     \ value: 'expected-install_referrer' },\n  { name: 'installer_package', value:\
     \ 'expected-installer_package' }, \n  { name: 'url_schemes', value: ['foobar',\
     \ 'abcdef'] },\n  { name: 'vendor_id', value: 'expected-vendor_id' },\n  { name:\
-    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\n\n\
-    mock('getAllEventData', {});\n\nconst expectedRequestBody = {\n  data: [\n   \
-    \ {\n      event_name: 'test',\n      action_source: 'app',\n      event_time:\
-    \ 1747945830,\n      custom_data: {},\n      user_data: {},\n      app_data: {\n\
-    \        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
+    \ 'windows_attribution_id', value: 'expected-windows_attribution_id' }\n];\nmockData.eventName\
+    \ = 'custom';\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody = {\n\
+    \  data: [\n    {\n      event_name: 'test',\n      action_source: 'app',\n  \
+    \    event_time: 1747945830,\n      custom_data: {},\n      user_data: {},\n \
+    \     app_data: {\n        advertiser_tracking_enabled: '1',\n        application_tracking_enabled:\
     \ '0',\n        extinfo: [\n          'a2',\n          'app_id',\n          'app_version',\n\
     \          'Version app_version',\n          'os_version',\n          'device_model',\n\
     \          'language',\n          '',\n          '',\n          '',\n        \
@@ -2359,13 +2361,13 @@ scenarios:
     });"
 - name: '[Event = AppendValue] Request is sent successfully'
   code: "mockData.inheritEventName = 'override';\nmockData.eventNameCustom = 'AppendValue';\n\
-    mockData.generateFbp = false;\nmockData.actionSource = 'website';\nmockData.userDataList\
-    \ = [\n  { name: 'em', value: 'test' },\n  { name: 'ph', value: 'test' }\n];\n\
-    mockData.customDataList = [\n  { name: 'currency', value: 'BRL' },\n  { name:\
-    \ 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList = [\n  { name:\
-    \ 'event_name', value: 'Purchase' },\n  { name: 'event_time', value: 17555555\
-    \ },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id', value:\
-    \ '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
+    mockData.eventName = 'custom';\nmockData.generateFbp = false;\nmockData.actionSource\
+    \ = 'website';\nmockData.userDataList = [\n  { name: 'em', value: 'test' },\n\
+    \  { name: 'ph', value: 'test' }\n];\nmockData.customDataList = [\n  { name: 'currency',\
+    \ value: 'BRL' },\n  { name: 'net_revenue', value: 123 }\n];\nmockData.originalEventDataList\
+    \ = [\n  { name: 'event_name', value: 'Purchase' },\n  { name: 'event_time', value:\
+    \ 17555555 },\n  { name: 'order_id', value: 'foobar123' },\n  { name: 'event_id',\
+    \ value: '1747945830' }\n];\n\nmock('getAllEventData', {});\n\nconst expectedRequestBody\
     \ = {\n  data: [\n    {\n      event_name: 'AppendValue',\n      event_time: 1747945830,\n\
     \      custom_data: { currency: 'BRL', net_revenue: 123 },\n      user_data: {\n\
     \        em: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',\n\
@@ -2456,52 +2458,62 @@ scenarios:
     \  );\n\n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
     \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
     \  assertApi('gtmOnFailure').wasNotCalled();\n});"
-- name: gtmOnFailure handler is called if some request fails with status code
+- name: gtmOnFailure handler is called if a request fails, rejects, or Promise all
+    rejects
   code: |-
-    mockData.enableMultipixelSetup = true;
-    mockData.pixelIdAndAccessTokenTable = [
-      {
-        pixelId: 'pixelId2',
-        accessToken: 'accessToken2',
-        appSecretProof: 'appSecretProof2'
+    [
+      // A request resolves with a non-200 status code.
+      () => {
+        let requestCount = 0;
+        mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {
+          requestCount++;
+          const statusCode = requestCount === 1 ? 500 : 200;
+          return Promise.create((resolve, reject) => {
+            resolve({ statusCode: statusCode });
+          });
+        });
+      },
+      // A request rejects outright.
+      () => {
+        let requestCount = 0;
+        mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {
+          requestCount++;
+          return Promise.create((resolve, reject) => {
+            if (requestCount === 1) reject({ reason: 'failed' });
+            else resolve({ statusCode: 200 });
+          });
+        });
+      },
+      // Every request succeeds, but Promise.all itself rejects.
+      () => {
+        mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {
+          return Promise.create((resolve, reject) => {
+            resolve({ statusCode: 200 });
+          });
+        });
+        mockObject('Promise', {
+          all: () => Promise.create((resolve, reject) => reject({ reason: 'failed' }))
+        });
       }
-    ];
+    ].forEach((setupFailure) => {
+      mockData.enableMultipixelSetup = true;
+      mockData.pixelIdAndAccessTokenTable = [
+        {
+          pixelId: 'pixelId2',
+          accessToken: 'accessToken2',
+          appSecretProof: 'appSecretProof2'
+        }
+      ];
 
-    const lastRequestIndex = mockData.pixelIdAndAccessTokenTable.length + 1;
+      setupFailure();
 
-    let requestCount = 0;
-    mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {
-      requestCount++;
-      const statusCode = (requestCount === 1) ? 500 : 200;
-      return Promise.create((resolve, reject) => {
-        resolve({ statusCode: statusCode });
+      runCode(mockData);
+
+      callLater(() => {
+        assertApi('gtmOnSuccess').wasNotCalled();
+        assertApi('gtmOnFailure').wasCalled();
       });
     });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertApi('gtmOnSuccess').wasNotCalled();
-      assertApi('gtmOnFailure').wasCalled();
-    });
-- name: gtmOnFailure handler is called if some request rejects
-  code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
-    \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
-    \ 'appSecretProof2'\n  }\n];\n\nlet requestCount = 0;\nmock('sendHttpRequest',\
-    \ (requestUrl, requestOptions, requestBody) => { \n  requestCount++;\n  return\
-    \ Promise.create((resolve, reject) => {\n    if (requestCount === 1) reject({\
-    \ reason: 'failed' });\n    else resolve({ statusCode: 200 });\n  });\n});\n\n\
-    runCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n\
-    \  assertApi('gtmOnFailure').wasCalled();\n});"
-- name: gtmOnFailure handler is called if Promise dot all rejects
-  code: "mockData.enableMultipixelSetup = true;\nmockData.pixelIdAndAccessTokenTable\
-    \ = [\n  {\n    pixelId: 'pixelId2',\n    accessToken: 'accessToken2',\n    appSecretProof:\
-    \ 'appSecretProof2'\n  }\n];\n\nmock('sendHttpRequest', (requestUrl, requestOptions,\
-    \ requestBody) => { \n  return Promise.create((resolve, reject) => {\n    resolve({\
-    \ statusCode: 200 });\n  });\n});\n\nmockObject('Promise', {\n  all: () => Promise.create((resolve,\
-    \ reject) => reject({ reason: 'failed' }))\n});\n\nrunCode(mockData);\n\ncallLater(()\
-    \ => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n  assertApi('gtmOnFailure').wasCalled();\n\
-    });"
 - name: '[Event Name] Resolves across setup-method, override and fallback scenarios'
   code: |-
     [
@@ -2595,6 +2607,30 @@ scenarios:
         assertApi('gtmOnFailure').wasNotCalled();
       });
     });
+- name: '[Event Name] An absent inherit setting still maps view_item_list to a product
+    group'
+  code: |-
+    mockData.inheritEventName = undefined;
+    mockData.eventNameCustom = undefined;
+    mockData.mapViewItemListToViewContent = true;
+
+    mock('getAllEventData', {
+      event_name: 'view_item_list',
+      items: [{ item_id: 'SKU_1' }, { item_id: 'SKU_2' }]
+    });
+
+    let requestBody;
+    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+      requestBody = JSON.parse(body);
+      return Promise.create((resolve) => resolve({ statusCode: 200 }));
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
+      assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
+    });
 - name: '[Server Event Data] An empty value clears a field unless it is required'
   code: |-
     mock('getAllEventData', {
@@ -2644,29 +2680,6 @@ scenarios:
     callLater(() => {
       assertThat(requestBody.data[0].user_data.em).isUndefined();
       assertThat(requestBody.data[0].user_data.ct).isDefined();
-    });
-- name: '[Event Name] An absent inherit setting still maps view_item_list to a product group'
-  code: |-
-    mockData.inheritEventName = undefined;
-    mockData.eventNameCustom = undefined;
-    mockData.mapViewItemListToViewContent = true;
-
-    mock('getAllEventData', {
-      event_name: 'view_item_list',
-      items: [{ item_id: 'SKU_1' }, { item_id: 'SKU_2' }]
-    });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
-      assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
     });
 - name: '[Currency] Currency is found on an item other than the first'
   code: |-

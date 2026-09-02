@@ -371,6 +371,7 @@ function addEcommerceData(data, eventData, mappedData) {
   if (autoMapEnabled) {
     let currencyFromItems = '';
     let valueFromItems = 0;
+    let hasValueFromItems = false;
 
     let items;
     if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
@@ -444,6 +445,7 @@ function addEcommerceData(data, eventData, mappedData) {
           content.item_price = itemPrice;
           hasContent = true;
           valueFromItems += isValidValue(quantity) ? quantity * itemPrice : itemPrice;
+          hasValueFromItems = true;
         }
 
         if (!hasContent) return;
@@ -476,13 +478,13 @@ function addEcommerceData(data, eventData, mappedData) {
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
     if (mappedData.event_name === 'Purchase') {
-      if (!isValidValue(mappedData.custom_data.value))
+      if (!isValidValue(mappedData.custom_data.value) && hasValueFromItems)
         mappedData.custom_data.value = valueFromItems;
     }
 
     if (
       !mappedData.custom_data.currency &&
-      (isValidValue(mappedData.custom_data.value) || valueFromItems)
+      (isValidValue(mappedData.custom_data.value) || hasValueFromItems)
     ) {
       mappedData.custom_data.currency = 'USD';
     }
