@@ -1055,7 +1055,7 @@ const toBase64 = require('toBase64');
 
 const eventData = getAllEventData();
 const API_VERSION = '26.0';
-const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.5' + (data.enableEventEnhancement ? '-ee' : '');
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.7' + (data.enableEventEnhancement ? '-ee' : '');
 
 if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();
@@ -1170,28 +1170,22 @@ function getEventName(data) {
     'gtm4wp.orderCompletedEEC': 'Purchase'
   };
 
-  if (data.mapViewItemListToViewContent) {
-    gaToFacebookEventName.view_item_list = 'ViewContent';
-  }
-
-  if (data.inheritEventName !== 'override') { // An absent setting inherits.
+  if (data.inheritEventName !== 'override') {
+    if (data.mapViewItemListToViewContent) {
+      gaToFacebookEventName.view_item_list = 'ViewContent';
+    }
     const eventName = eventData.event_name;
     return gaToFacebookEventName[eventName] || eventName;
   }
 
-  const selected =
-    data.eventName === 'standard'
-      ? data.eventNameStandard
-      : data.eventName === 'custom'
-        ? data.eventNameCustom
-        : undefined;
-
-  if (isValidValue(selected)) return selected;
-
-  if (['standard', 'custom'].indexOf(data.eventName) === -1) { // Radio unset but a name saved.
-    const configured = data.eventNameStandard || data.eventNameCustom;
-    if (isValidValue(configured)) return configured;
+  let selectedEventName;
+  if (data.eventName === 'standard') {
+    selectedEventName = data.eventNameStandard;
+  } else if (data.eventName === 'custom') {
+    selectedEventName = data.eventNameCustom;
   }
+
+  if (isValidValue(selectedEventName)) return selectedEventName;
 
   // An incomplete override falls back to the incoming name, as the inherit branch does.
   return gaToFacebookEventName[eventData.event_name] || eventData.event_name;
@@ -1629,7 +1623,7 @@ function addServerEventData(data, eventData, mappedData) {
   }
 
   if (data.serverEventDataList) {
-    const required = ['event_name', 'event_time', 'action_source'];
+    const required = ['event_time'];
 
     data.serverEventDataList.forEach((d) => {
       // A required field can be replaced but not cleared, so an empty one is ignored.
@@ -2508,42 +2502,98 @@ scenarios:
     \ reject) => reject({ reason: 'failed' }))\n});\n\nrunCode(mockData);\n\ncallLater(()\
     \ => {\n  assertApi('gtmOnSuccess').wasNotCalled();\n  assertApi('gtmOnFailure').wasCalled();\n\
     });"
-- name: '[Event Name] Inherited from the client when the setup method is not set'
+- name: '[Event Name] Resolves across setup-method, override and fallback scenarios'
   code: |-
-    mockData.inheritEventName = undefined;
-    mockData.eventNameCustom = undefined;
+    [
+      // Setup method unset: behaves as inherit.
+      { inheritEventName: undefined, eventData: { event_name: 'purchase' }, expected: 'Purchase' },
+      { inheritEventName: undefined, eventData: {}, expected: undefined },
 
-    mock('getAllEventData', { event_name: 'purchase' });
+      // Explicit inherit with nothing to map.
+      { inheritEventName: 'inherit', eventData: {}, expected: undefined },
 
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
+      // Override, standard selected but left blank: falls back to the mapped incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventData: { event_name: 'purchase' },
+        expected: 'Purchase'
+      },
+      // Override, custom selected but blank: falls back to the mapped incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameCustom: '',
+        eventData: { event_name: 'add_to_cart' },
+        expected: 'AddToCart'
+      },
+      // Incomplete override with an incoming name outside the GA4 mapping table: forwarded as-is.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventData: { event_name: 'session_start' },
+        expected: 'session_start'
+      },
+      // Incomplete override with no incoming name at all: still sent, unresolved.
+      { inheritEventName: 'override', eventName: 'standard', eventData: {}, expected: undefined },
 
-    runCode(mockData);
+      // Override, standard event chosen: sent as chosen regardless of the incoming name.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        eventNameStandard: 'PageView',
+        eventData: { event_name: 'purchase' },
+        expected: 'PageView'
+      },
+      // Incomplete override does not apply the view_item_list mapping, which is scoped to inherit.
+      {
+        inheritEventName: 'override',
+        eventName: 'standard',
+        mapViewItemListToViewContent: true,
+        eventData: { event_name: 'view_item_list' },
+        expected: 'view_item_list'
+      },
+      // Override switched to custom after a standard event was picked: the stale standard value is not reused.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameStandard: 'PageView',
+        eventNameCustom: '',
+        eventData: { event_name: 'purchase' },
+        expected: 'Purchase'
+      },
+      // A sentinel string is not treated as a valid override name.
+      {
+        inheritEventName: 'override',
+        eventName: 'custom',
+        eventNameCustom: 'undefined',
+        eventData: {},
+        expected: undefined
+      }
+    ].forEach((scenario) => {
+      const copyMockData = JSON.parse(JSON.stringify(mockData));
+      copyMockData.inheritEventName = scenario.inheritEventName;
+      copyMockData.eventName = scenario.eventName;
+      copyMockData.eventNameStandard = scenario.eventNameStandard;
+      copyMockData.eventNameCustom = scenario.eventNameCustom;
+      copyMockData.mapViewItemListToViewContent = scenario.mapViewItemListToViewContent;
 
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
-    });
-- name: '[Event Name] An unresolvable event name is sent without one, not invented'
-  code: |-
-    mockData.inheritEventName = undefined;
-    mockData.eventNameCustom = undefined;
+      mock('getAllEventData', scenario.eventData);
 
-    mock('getAllEventData', {});
+      let requestBody;
+      mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
+        requestBody = JSON.parse(body);
+        return Promise.create((resolve) => resolve({ statusCode: 200 }));
+      });
 
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
+      runCode(copyMockData);
 
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
-      assertThat(requestBody.data[0].action_source).isEqualTo('website');
+      callLater(() => {
+        assertThat(requestBody.data[0].event_name).isEqualTo(scenario.expected);
+        assertThat(requestBody.data[0].action_source).isEqualTo('website');
+        assertApi('gtmOnSuccess').wasCalled();
+        assertApi('gtmOnFailure').wasNotCalled();
+      });
     });
 - name: '[Server Event Data] An empty value clears a field unless it is required'
   code: |-
@@ -2555,6 +2605,7 @@ scenarios:
     mockData.serverEventDataList = [
       { name: 'event_source_url', value: undefined },
       { name: 'action_source', value: 'undefined' },
+      { name: 'event_time', value: 'undefined' },
       { name: 'event_id', value: 'order-1' }
     ];
 
@@ -2568,8 +2619,9 @@ scenarios:
 
     callLater(() => {
       assertThat(requestBody.data[0].event_source_url).isEqualTo(undefined);
+      assertThat(requestBody.data[0].action_source).isEqualTo(undefined);
       assertThat(requestBody.data[0].event_id).isEqualTo('order-1');
-      assertThat(requestBody.data[0].action_source).isEqualTo('website');
+      assertThat(requestBody.data[0].event_time).isEqualTo(1747945830);
     });
 - name: '[Event Enhancement] Non-scalar cookie values are ignored'
   code: |-
@@ -2593,143 +2645,6 @@ scenarios:
       assertThat(requestBody.data[0].user_data.em).isUndefined();
       assertThat(requestBody.data[0].user_data.ct).isDefined();
     });
-- name: '[Event Name] Explicit inherit with no incoming name is still sent'
-  code: |-
-    mockData.inheritEventName = 'inherit';
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', {});
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
-    });
-- name: '[Event Name] Override with no standard event selected falls back to a mapped name'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', { event_name: 'purchase' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
-    });
-- name: '[Event Name] Override with a blank custom name falls back to a mapped name'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'custom';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = '';
-
-    mock('getAllEventData', { event_name: 'add_to_cart' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('AddToCart');
-    });
-- name: '[Event Name] Incomplete override forwards an unmapped incoming name as-is'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = undefined;
-
-    // Not in the GA4 mapping table, so it is forwarded unchanged as a custom event.
-    mock('getAllEventData', { event_name: 'session_start' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('session_start');
-    });
-- name: '[Event Name] Incomplete override with no incoming name is still sent'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = undefined;
-
-    mock('getAllEventData', {});
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
-    });
-- name: '[Event Name] Override with a selected standard event is sent as chosen'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'standard';
-    mockData.eventNameStandard = 'PageView';
-    mockData.eventNameCustom = undefined;
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('PageView');
-    });
-- name: '[Event Name] A deselected standard event is not reused as a custom override'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'custom';
-    mockData.eventNameStandard = 'PageView';
-    mockData.eventNameCustom = '';
-
-    mock('getAllEventData', { event_name: 'purchase' });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo('Purchase');
-    });
 - name: '[Event Name] An absent inherit setting still maps view_item_list to a product group'
   code: |-
     mockData.inheritEventName = undefined;
@@ -2752,26 +2667,6 @@ scenarios:
     callLater(() => {
       assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
       assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
-    });
-- name: '[Event Name] A sentinel override string is not used as the event name'
-  code: |-
-    mockData.inheritEventName = 'override';
-    mockData.eventName = 'custom';
-    mockData.eventNameStandard = undefined;
-    mockData.eventNameCustom = 'undefined';
-
-    mock('getAllEventData', {});
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
     });
 - name: '[Currency] Currency is found on an item other than the first'
   code: |-
@@ -2911,7 +2806,7 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
   \ 'TraceId', 'Name'];\nconst requiredBqKeys = ['timestamp', 'type', 'trace_id',\
   \ 'tag_name'];\nconst expectedBqOptions = { ignoreUnknownValues: true };\n\nconst\
   \ expectedValue = 'test';\nconst expectedPixelId = '1111111111111';\nconst expectedPartnerAgent\
-  \ = 'stape-gtmss-2.1.5';\nconst expectedApiVersion = '26.0';\n\n\nconst mockData\
+  \ = 'stape-gtmss-2.1.7';\nconst expectedApiVersion = '26.0';\n\n\nconst mockData\
   \ = {\n  pixelId: expectedPixelId,\n  accessToken: expectedValue,\n  inheritEventName:\
   \ 'override',\n  eventNameCustom: expectedValue,\n  logBigQueryProjectId: expectedBigQuerySettings.logBigQueryProjectId,\n\
   \  logBigQueryDatasetId: expectedBigQuerySettings.logBigQueryDatasetId,\n  logBigQueryTableId:\
@@ -2925,6 +2820,19 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 
 ___NOTES___
+
+2026-09-02 - Change Notes:
+  - Empty or invalid values are no longer sent to Facebook for any field, preventing malformed requests
+  - Prices and quantities with unusual formatting (e.g. "$1,234.56") are no longer guessed at; only plain numbers are accepted, blank or invalid ones are safely skipped
+  - Simplified how the event name is resolved when no override is configured
+  - Bumped partner agent string to 2.1.7
+
+2026-09-01 - Change Notes:
+  - Bumped partner agent string to 2.1.6.
+
+2026-08-28 - Change Notes:
+  - Fix event name being silently blank when the setup method is left unset; it now inherits from the client, as intended
+  - Require a non-empty standard/custom event name on Override, and default the setup method to "Inherit from client"
 
 2026-08-25 Change Notes:
  - Add option to map item data to contents, content_ids or both.
