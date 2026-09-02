@@ -2458,7 +2458,7 @@ scenarios:
     \  );\n\n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
     \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
     \  assertApi('gtmOnFailure').wasNotCalled();\n});"
-- name: gtmOnFailure handler is called if a request fails, rejects, or Promise all
+- name: gtmOnFailure handler is called if a request fails, rejects, or Promise.all
     rejects
   code: |-
     [
@@ -2630,6 +2630,8 @@ scenarios:
     callLater(() => {
       assertThat(requestBody.data[0].event_name).isEqualTo('ViewContent');
       assertThat(requestBody.data[0].custom_data.content_type).isEqualTo('product_group');
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
     });
 - name: '[Server Event Data] An empty value clears a field unless it is required'
   code: |-
