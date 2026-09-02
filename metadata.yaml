@@ -1,7 +1,7 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
-  - sha: e215218112ba27199edf7eabc0a921d0f295311f
+  - sha: 0c0e8cb5c299526bbf53649bcf2a28fa919320e4
     changeNotes: Sanitized invalid values across all fields, dropped guesswork on odd price formatting, simplified event name resolution, and bumped partner agent string to 2.1.7.
   - sha: 2ad85bab16edaaa3d8f6d48e9d905567b63985cc
     changeNotes: Bumped partner agent string to 2.1.6.
