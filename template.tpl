@@ -1400,7 +1400,6 @@ function addEcommerceData(data, eventData, mappedData) {
   if (autoMapEnabled) {
     let currencyFromItems = '';
     let valueFromItems = 0;
-    let hasValueFromItems = false;
 
     let items;
     if (getType(eventData.items) === 'array' && eventData.items.length) items = eventData.items;
@@ -1474,7 +1473,6 @@ function addEcommerceData(data, eventData, mappedData) {
           content.item_price = itemPrice;
           hasContent = true;
           valueFromItems += isValidValue(quantity) ? quantity * itemPrice : itemPrice;
-          hasValueFromItems = true;
         }
 
         if (!hasContent) return;
@@ -1507,13 +1505,14 @@ function addEcommerceData(data, eventData, mappedData) {
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
     if (mappedData.event_name === 'Purchase') {
-      if (!isValidValue(mappedData.custom_data.value) && hasValueFromItems)
+      // Facebook rejects a Purchase event with no value at all, so this always assigns one.
+      if (!isValidValue(mappedData.custom_data.value))
         mappedData.custom_data.value = valueFromItems;
     }
 
     if (
       !mappedData.custom_data.currency &&
-      (isValidValue(mappedData.custom_data.value) || hasValueFromItems)
+      (isValidValue(mappedData.custom_data.value) || valueFromItems)
     ) {
       mappedData.custom_data.currency = 'USD';
     }
@@ -2458,7 +2457,7 @@ scenarios:
     \  );\n\n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
     \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
     \  assertApi('gtmOnFailure').wasNotCalled();\n});"
-- name: gtmOnFailure handler is called if a request fails, rejects, or Promise.all
+- name: gtmOnFailure handler is called if a request fails, rejects, or Promise all
     rejects
   code: |-
     [
@@ -2742,7 +2741,7 @@ scenarios:
     callLater(() => {
       assertThat(requestBody.data[0].user_data.fbc).isEqualTo(undefined);
     });
-- name: '[Price] A blank price does not become a zero-value event'
+- name: '[Price] A blank item price still fills in a value on a Purchase event'
   code: |-
     mock('getAllEventData', {
       event_name: 'purchase',
@@ -2760,8 +2759,9 @@ scenarios:
     callLater(() => {
       const customData = requestBody.data[0].custom_data;
       assertThat(customData.contents[0].item_price).isEqualTo(undefined);
-      assertThat(customData.value).isEqualTo(undefined);
-      assertThat(customData.currency).isEqualTo(undefined);
+      // Facebook rejects a Purchase event with no value at all.
+      assertThat(customData.value).isEqualTo('0.00');
+      assertThat(customData.currency).isEqualTo('USD');
     });
 - name: '[Contents] Mapping item data to content_ids only does not require contents'
   code: |-
