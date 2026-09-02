@@ -1868,74 +1868,10 @@ function toFiniteNumber(value) {
   if (valueType !== 'number' && valueType !== 'string') return undefined;
   if (valueType === 'string' && value.trim() === '') return undefined; // Whitespace coerces to 0.
 
-  let parsed = makeNumber(value);
-
-  if (parsed * 0 !== 0 && valueType === 'string') {
-    const recovered = stripCurrencyNotation(value); // '12.50 USD', '$1,234.56'
-    if (!recovered) return undefined;
-    parsed = makeNumber(recovered);
-  }
-
+  const parsed = makeNumber(value);
   if (parsed * 0 !== 0) return undefined; // Rejects NaN and +/-Infinity.
 
   return parsed;
-}
-
-function stripCurrencyNotation(value) {
-  const raw = makeString(value);
-
-  const shapeRegex = createRegex('^[^0-9,.-]*[0-9][0-9,.]*[^0-9,.-]*$'); // A single digit run.
-  if (!testRegex(shapeRegex, raw)) return '';
-
-  const keepRegex = createRegex('^[0-9,.]$');
-  const core = raw
-    .split('')
-    .filter((item) => testRegex(keepRegex, item))
-    .join('');
-
-  const dots = core.split('.').length - 1;
-  const commas = core.split(',').length - 1;
-
-  let decimal = '';
-  let grouper = '';
-
-  if (dots > 0 && commas > 0) {
-    const dotIsDecimal = core.lastIndexOf('.') > core.lastIndexOf(',');
-    decimal = dotIsDecimal ? '.' : ','; // The rightmost one, under either convention.
-    grouper = dotIsDecimal ? ',' : '.';
-  } else if (commas > 1) {
-    grouper = ','; // A decimal separator appears once, so a repeated one groups.
-  } else if (dots > 1) {
-    grouper = '.';
-  } else if (commas === 1) {
-    if (core.split(',')[1].length === 3) return ''; // Grouping and decimal differ 1000-fold here.
-    decimal = ','; // Grouping is always three digits, so any other width decimalizes.
-  } else if (dots === 1) {
-    decimal = '.';
-  }
-
-  const parts = decimal ? core.split(decimal) : [core];
-  if (parts.length > 2) return '';
-
-  const integer = grouper ? stripGroupSeparators(parts[0], grouper) : parts[0];
-  if (integer === '') return '';
-
-  return parts.length === 2 ? integer + '.' + parts[1] : integer;
-}
-
-function stripGroupSeparators(digits, separator) {
-  const groups = digits.split(separator);
-  const leadRegex = createRegex('^[0-9]{1,3}$');
-  const groupRegex = createRegex('^[0-9]{3}$');
-
-  let valid = testRegex(leadRegex, groups[0]);
-  let position = 0;
-  groups.forEach((group) => {
-    if (position > 0 && !testRegex(groupRegex, group)) valid = false;
-    position++;
-  });
-
-  return valid ? groups.join('') : '';
 }
 
 function normalizePhoneNumber(phoneNumber) {
@@ -1964,6 +1900,7 @@ function isConsentGivenOrNotRequired(data, eventData) {
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
   return xGaGcs[2] === '1';
 }
+
 
 ___SERVER_PERMISSIONS___
 
@@ -2863,29 +2800,6 @@ scenarios:
       assertThat(customData.value).isEqualTo(9.99);
       assertThat(customData.currency).isEqualTo('USD');
     });
-- name: '[Price] A price carrying its currency notation is recovered'
-  code: |-
-    mock('getAllEventData', {
-      currency: 'EUR',
-      items: [
-        { item_id: 'sku1', price: '12.50 USD', quantity: 2 },
-        { item_id: 'sku2', price: '$4.00' }
-      ]
-    });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      const contents = requestBody.data[0].custom_data.contents;
-      assertThat(contents[0].item_price).isEqualTo(12.5);
-      assertThat(contents[1].item_price).isEqualTo(4);
-    });
 - name: '[Click ID] A malformed fbclid is not written into the click ID'
   code: |-
     mock('getAllEventData', {
@@ -2903,56 +2817,6 @@ scenarios:
 
     callLater(() => {
       assertThat(requestBody.data[0].user_data.fbc).isEqualTo(undefined);
-    });
-- name: '[Price] A separated price is recovered where the reading is certain'
-  code: |-
-    mock('getAllEventData', {
-      currency: 'EUR',
-      items: [
-        { item_id: 'sku1', price: '1.234,56' },
-        { item_id: 'sku2', price: '1,234.56' },
-        { item_id: 'sku3', price: '12,50' },
-        { item_id: 'sku4', price: '1,234,567' }
-      ]
-    });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      const contents = requestBody.data[0].custom_data.contents;
-      assertThat(contents[0].item_price).isEqualTo(1234.56);
-      assertThat(contents[1].item_price).isEqualTo(1234.56);
-      assertThat(contents[2].item_price).isEqualTo(12.5);
-      assertThat(contents[3].item_price).isEqualTo(1234567);
-    });
-- name: '[Price] A comma that could group or decimalize is dropped'
-  code: |-
-    mock('getAllEventData', {
-      currency: 'EUR',
-      items: [
-        { item_id: 'sku1', price: '1,234' },
-        { item_id: 'sku2', price: '0,500' }
-      ]
-    });
-
-    let requestBody;
-    mock('sendHttpRequest', (requestUrl, requestOptions, body) => {
-      requestBody = JSON.parse(body);
-      return Promise.create((resolve) => resolve({ statusCode: 200 }));
-    });
-
-    runCode(mockData);
-
-    callLater(() => {
-      const contents = requestBody.data[0].custom_data.contents;
-      assertThat(contents[0].item_price).isEqualTo(undefined);
-      assertThat(contents[1].item_price).isEqualTo(undefined);
     });
 - name: '[Price] A blank price does not become a zero-value event'
   code: |-
