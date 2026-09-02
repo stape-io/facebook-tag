@@ -365,6 +365,10 @@ function cleanupData(mappedData) {
     mappedData.original_event_data = originalEventData;
   }
 
+  for (let key in mappedData) { // Assigned, not rebuilt: the post body holds this reference.
+    if (!isValidValue(mappedData[key])) mappedData[key] = undefined;
+  }
+
   return mappedData;
 }
 
@@ -596,8 +600,11 @@ function addServerEventData(data, eventData, mappedData) {
   }
 
   if (data.serverEventDataList) {
+    const required = ['event_name', 'event_time', 'action_source'];
+
     data.serverEventDataList.forEach((d) => {
-      if (!isValidValue(d.value)) return;
+      // A required field can be replaced but not cleared, so an empty one is ignored.
+      if (required.indexOf(d.name) !== -1 && !isValidValue(d.value)) return;
       mappedData[d.name] = d.value;
     });
 

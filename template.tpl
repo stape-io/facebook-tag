@@ -1394,6 +1394,10 @@ function cleanupData(mappedData) {
     mappedData.original_event_data = originalEventData;
   }
 
+  for (let key in mappedData) { // Assigned, not rebuilt: the post body holds this reference.
+    if (!isValidValue(mappedData[key])) mappedData[key] = undefined;
+  }
+
   return mappedData;
 }
 
@@ -1625,8 +1629,11 @@ function addServerEventData(data, eventData, mappedData) {
   }
 
   if (data.serverEventDataList) {
+    const required = ['event_name', 'event_time', 'action_source'];
+
     data.serverEventDataList.forEach((d) => {
-      if (!isValidValue(d.value)) return;
+      // A required field can be replaced but not cleared, so an empty one is ignored.
+      if (required.indexOf(d.name) !== -1 && !isValidValue(d.value)) return;
       mappedData[d.name] = d.value;
     });
 
@@ -2538,11 +2545,17 @@ scenarios:
       assertThat(requestBody.data[0].event_name).isEqualTo(undefined);
       assertThat(requestBody.data[0].action_source).isEqualTo('website');
     });
-- name: '[Server Event Data] An invalid value does not overwrite an auto-mapped field'
+- name: '[Server Event Data] An empty value clears a field unless it is required'
   code: |-
+    mock('getAllEventData', {
+      event_name: 'purchase',
+      page_location: 'https://example.com/checkout'
+    });
+
     mockData.serverEventDataList = [
-      { name: 'event_name', value: undefined },
-      { name: 'action_source', value: 'undefined' }
+      { name: 'event_source_url', value: undefined },
+      { name: 'action_source', value: 'undefined' },
+      { name: 'event_id', value: 'order-1' }
     ];
 
     let requestBody;
@@ -2554,7 +2567,8 @@ scenarios:
     runCode(mockData);
 
     callLater(() => {
-      assertThat(requestBody.data[0].event_name).isEqualTo(expectedValue);
+      assertThat(requestBody.data[0].event_source_url).isEqualTo(undefined);
+      assertThat(requestBody.data[0].event_id).isEqualTo('order-1');
       assertThat(requestBody.data[0].action_source).isEqualTo('website');
     });
 - name: '[Event Enhancement] Non-scalar cookie values are ignored'
