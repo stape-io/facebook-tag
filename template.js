@@ -26,7 +26,7 @@ const toBase64 = require('toBase64');
 
 const eventData = getAllEventData();
 const API_VERSION = '26.0';
-const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.6' + (data.enableEventEnhancement ? '-ee' : '');
+const PARTNER_AGENT_STRING = 'stape-gtmss-2.1.7' + (data.enableEventEnhancement ? '-ee' : '');
 
 if (shouldExitEarly(data, eventData)) {
   return data.gtmOnSuccess();
@@ -89,19 +89,11 @@ function getClickAndBrowserId(data, eventData) {
   if (url) {
     const urlParsed = parseUrl(url);
     if (urlParsed && urlParsed.searchParams.fbclid) {
-      if (
-        !ids.fbc ||
-        (ids.fbc &&
-          ids.fbc.split('.')[ids.fbc.split('.').length - 1] !==
-            decodeUriComponent(urlParsed.searchParams.fbclid))
-      ) {
-        ids.fbc =
-          'fb.' +
-          subDomainIndex +
-          '.' +
-          getTimestampMillis() +
-          '.' +
-          decodeUriComponent(urlParsed.searchParams.fbclid);
+      const fbclid = decodeUriComponent(urlParsed.searchParams.fbclid);
+      const fbcParts = ids.fbc ? ids.fbc.split('.') : [];
+
+      if (isValidValue(fbclid) && (!ids.fbc || fbcParts[fbcParts.length - 1] !== fbclid)) {
+        ids.fbc = 'fb.' + subDomainIndex + '.' + getTimestampMillis() + '.' + fbclid;
       }
     }
   }
@@ -202,12 +194,16 @@ function mapEvent(data, eventData, fbc, fbp) {
   mappedData = addAppData(data, eventData, mappedData);
   mappedData = addEcommerceData(data, eventData, mappedData);
   mappedData = addOriginalEventData(mappedData);
+
+  if (data.enableEventEnhancement) {
+    mappedData.user_data = enhanceEventData(eventData, mappedData.user_data);
+  }
+
   mappedData = overrideDataIfNeeded(mappedData);
   mappedData = cleanupData(mappedData);
   mappedData = hashDataIfNeeded(mappedData);
 
   if (data.enableEventEnhancement) {
-    mappedData.user_data = enhanceEventData(eventData, mappedData.user_data);
     setGtmEecCookie(mappedData.user_data);
   }
 
@@ -363,6 +359,10 @@ function cleanupData(mappedData) {
     mappedData.original_event_data = originalEventData;
   }
 
+  for (let key in mappedData) { // Assigned, not rebuilt: the post body holds this reference.
+    if (!isValidValue(mappedData[key])) mappedData[key] = undefined;
+  }
+
   return mappedData;
 }
 
@@ -383,8 +383,6 @@ function addEcommerceData(data, eventData, mappedData) {
     }
 
     if (items) {
-      currencyFromItems = items[0].currency;
-
       mappedData.custom_data.content_type =
         eventData['x-fb-cd-content_type'] || eventData.content_type || 'product';
 
@@ -401,27 +399,54 @@ function addEcommerceData(data, eventData, mappedData) {
         if (items[0].item_category)
           mappedData.custom_data.content_category = items[0].item_category;
 
-        if (items[0].price) {
-          mappedData.custom_data.value = items[0].quantity
-            ? items[0].quantity * items[0].price
-            : items[0].price;
+        const singleItemPrice = toFiniteNumber(items[0].price);
+        const singleItemQuantity = toFiniteNumber(items[0].quantity);
+        if (isValidValue(singleItemPrice)) {
+          mappedData.custom_data.value = isValidValue(singleItemQuantity)
+            ? singleItemQuantity * singleItemPrice
+            : singleItemPrice;
         }
       }
 
       const itemIdKey = data.itemIdKey ? data.itemIdKey : 'item_id';
       const mapItemDataTo = data.mapItemDataTo || 'contents';
       items.forEach((d) => {
-        const content = {};
-        if (d[itemIdKey]) content.id = d[itemIdKey];
-        if (d.item_name) content.title = d.item_name;
-        if (d.item_brand) content.brand = d.item_brand;
-        if (d.quantity) content.quantity = d.quantity;
-        if (d.item_category) content.category = d.item_category;
+        if (!currencyFromItems && d.currency) currencyFromItems = d.currency;
 
-        if (d.price) {
-          content.item_price = makeNumber(d.price);
-          valueFromItems += d.quantity ? d.quantity * content.item_price : content.item_price;
+        const content = {};
+        let hasContent = false;
+
+        if (isValidValue(d[itemIdKey])) {
+          content.id = makeString(d[itemIdKey]);
+          hasContent = true;
         }
+        if (d.item_name) {
+          content.title = d.item_name;
+          hasContent = true;
+        }
+        if (d.item_brand) {
+          content.brand = d.item_brand;
+          hasContent = true;
+        }
+        if (d.item_category) {
+          content.category = d.item_category;
+          hasContent = true;
+        }
+
+        const quantity = toFiniteNumber(d.quantity);
+        if (isValidValue(quantity)) {
+          content.quantity = quantity;
+          hasContent = true;
+        }
+
+        const itemPrice = toFiniteNumber(d.price);
+        if (isValidValue(itemPrice)) {
+          content.item_price = itemPrice;
+          hasContent = true;
+          valueFromItems += isValidValue(quantity) ? quantity * itemPrice : itemPrice;
+        }
+
+        if (!hasContent) return;
 
         if (mapItemDataTo === 'contents' || mapItemDataTo === 'both') {
           mappedData.custom_data.contents = mappedData.custom_data.contents || [];
@@ -432,10 +457,16 @@ function addEcommerceData(data, eventData, mappedData) {
           mappedData.custom_data.content_ids.push(content.id);
         }
       });
+
+      if (!mappedData.custom_data.contents && !mappedData.custom_data.content_ids) {
+        mappedData.custom_data.content_type = undefined;
+      }
     }
 
-    const value = eventData['x-ga-mp1-ev'] || eventData['x-ga-mp1-tr'] || eventData.value;
-    if (value) mappedData.custom_data.value = value;
+    const value = toFiniteNumber(
+      eventData['x-ga-mp1-ev'] || eventData['x-ga-mp1-tr'] || eventData.value
+    );
+    if (isValidValue(value)) mappedData.custom_data.value = value;
 
     const currency = eventData.currency || currencyFromItems;
     if (currency) mappedData.custom_data.currency = currency;
@@ -445,9 +476,16 @@ function addEcommerceData(data, eventData, mappedData) {
     if (eventData.transaction_id) mappedData.custom_data.order_id = eventData.transaction_id;
 
     if (mappedData.event_name === 'Purchase') {
-      if (!mappedData.custom_data.currency) mappedData.custom_data.currency = 'USD';
-      if (!mappedData.custom_data.value)
-        mappedData.custom_data.value = valueFromItems ? valueFromItems : 0;
+      // Facebook rejects a Purchase event with no value at all, so this always assigns one.
+      if (!isValidValue(mappedData.custom_data.value))
+        mappedData.custom_data.value = valueFromItems;
+    }
+
+    if (
+      !mappedData.custom_data.currency &&
+      (isValidValue(mappedData.custom_data.value) || valueFromItems)
+    ) {
+      mappedData.custom_data.currency = 'USD';
     }
   }
 
@@ -557,7 +595,11 @@ function addServerEventData(data, eventData, mappedData) {
   }
 
   if (data.serverEventDataList) {
+    const required = ['event_time'];
+
     data.serverEventDataList.forEach((d) => {
+      // A required field can be replaced but not cleared, so an empty one is ignored.
+      if (required.indexOf(d.name) !== -1 && !isValidValue(d.value)) return;
       mappedData[d.name] = d.value;
     });
 
@@ -692,22 +734,17 @@ function enhanceEventData(eventData, userData) {
 
   const gtmeecData = JSON.parse(jsonStr);
 
-  if (gtmeecData) {
-    if (!userData.em && gtmeecData.em) userData.em = gtmeecData.em;
-    if (!userData.ph && gtmeecData.ph) userData.ph = gtmeecData.ph;
-    if (!userData.ln && gtmeecData.ln) userData.ln = gtmeecData.ln;
-    if (!userData.fn && gtmeecData.fn) userData.fn = gtmeecData.fn;
-    if (!userData.ct && gtmeecData.ct) userData.ct = gtmeecData.ct;
-    if (!userData.st && gtmeecData.st) userData.st = gtmeecData.st;
-    if (!userData.zp && gtmeecData.zp) userData.zp = gtmeecData.zp;
-    if (!userData.ge && gtmeecData.ge) userData.ge = gtmeecData.ge;
-    if (!userData.db && gtmeecData.db) userData.db = gtmeecData.db;
-    if (!userData.country && gtmeecData.country) userData.country = gtmeecData.country;
-    if (!userData.external_id && gtmeecData.external_id)
-      userData.external_id = gtmeecData.external_id;
-    if (!userData.fb_login_id && gtmeecData.fb_login_id)
-      userData.fb_login_id = gtmeecData.fb_login_id;
+  if (getType(gtmeecData) !== 'object') {
+    return userData;
   }
+
+  const keys = 'em,ph,ln,fn,ct,st,zp,ge,db,country,external_id,fb_login_id'.split(',');
+  keys.forEach((key) => {
+    const value = gtmeecData[key];
+    const valueType = getType(value);
+    if (userData[key] || (valueType !== 'string' && valueType !== 'number')) return;
+    if (isValidValue(value)) userData[key] = value;
+  });
 
   return userData;
 }
@@ -793,7 +830,21 @@ function isHashed(value) {
 
 function isValidValue(value) {
   const valueType = getType(value);
-  return valueType !== 'null' && valueType !== 'undefined' && value !== '' && value === value;
+  if (valueType === 'null' || valueType === 'undefined' || value !== value) return false;
+  return value !== '' && value !== 'undefined' && value !== 'null';
+}
+
+function toFiniteNumber(value) {
+  if (!isValidValue(value)) return undefined;
+
+  const valueType = getType(value);
+  if (valueType !== 'number' && valueType !== 'string') return undefined;
+  if (valueType === 'string' && value.trim() === '') return undefined; // Whitespace coerces to 0.
+
+  const parsed = makeNumber(value);
+  if (parsed * 0 !== 0) return undefined; // Rejects NaN and +/-Infinity.
+
+  return parsed;
 }
 
 function normalizePhoneNumber(phoneNumber) {
