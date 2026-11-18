@@ -1799,13 +1799,18 @@ function sendRequests(data, mappedPostBody) {
       API_VERSION +
       '/' +
       enc(pixelId) +
-      '/events?access_token=' +
-      enc(accessToken) +
-      (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
+      '/events' +
+      (appSecretProof ? '?appsecret_proof=' + enc(appSecretProof) : '');
 
     return sendHttpRequest(
       postUrl,
-      { headers: { 'content-type': 'application/json' }, method: 'POST' },
+      {
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer ' + accessToken
+        },
+        method: 'POST'
+      },
       JSON.stringify(mappedPostBody)
     )
       .then((result) => {
@@ -2453,8 +2458,9 @@ scenarios:
     \ pixelId = mockData.pixelId;\n  const accessToken = mockData.accessToken;\n \
     \ const appSecretProof = mockData.appSecretProof;\n  \n  assertThat(requestUrl).isEqualTo(\n\
     \    'https://graph.facebook.com/v' + expectedApiVersion + '/' + pixelId + \n\
-    \    '/events?access_token=' + accessToken +\n    '&appsecret_proof=' + appSecretProof\n\
-    \  );\n\n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
+    \    '/events?appsecret_proof=' + appSecretProof\n\
+    \  );\n  assertThat(requestOptions.headers.authorization).isEqualTo('Bearer ' + accessToken);\n\
+    \n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
     \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
     \  assertApi('gtmOnFailure').wasNotCalled();\n});"
 - name: gtmOnFailure handler is called if a request fails, rejects, or Promise all

@@ -770,13 +770,18 @@ function sendRequests(data, mappedPostBody) {
       API_VERSION +
       '/' +
       enc(pixelId) +
-      '/events?access_token=' +
-      enc(accessToken) +
-      (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
+      '/events' +
+      (appSecretProof ? '?appsecret_proof=' + enc(appSecretProof) : '');
 
     return sendHttpRequest(
       postUrl,
-      { headers: { 'content-type': 'application/json' }, method: 'POST' },
+      {
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer ' + accessToken
+        },
+        method: 'POST'
+      },
       JSON.stringify(mappedPostBody)
     )
       .then((result) => {
