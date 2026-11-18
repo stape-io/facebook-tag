@@ -2854,6 +2854,9 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 ___NOTES___
 
+2026-11-18 - Change Notes:
+  - Credentials are no longer sent in the request URL, so they don't leak into request logs, proxy logs or the server Preview's outgoing-request list: the Conversions API access token now goes in the Authorization header (for the main pixel and every multi-pixel row), and the App Secret Proof goes in the request body
+
 2026-09-02 - Change Notes:
   - Empty or invalid values are no longer sent to Facebook for any field, preventing malformed requests
   - Prices and quantities with unusual formatting (e.g. "$1,234.56") are no longer guessed at; only plain numbers are accepted, blank or invalid ones are safely skipped
