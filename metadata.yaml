@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/facebook-tag'
 versions:
+  - sha: 13b9f375605a624dd968276d457eeb4090b47275
+    changeNotes: Moved the access token to the Authorization header and the App Secret Proof to the request body, keeping credentials out of the request URL.
   - sha: 0c0e8cb5c299526bbf53649bcf2a28fa919320e4
     changeNotes: Sanitized invalid values across all fields, dropped guesswork on odd price formatting, simplified event name resolution, and bumped partner agent string to 2.1.7.
   - sha: 2ad85bab16edaaa3d8f6d48e9d905567b63985cc
