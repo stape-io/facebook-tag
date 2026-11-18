@@ -181,6 +181,10 @@ function mapEvent(data, eventData, fbc, fbp) {
       : data.testId;
   }
 
+  if (data.useAppSecretProof && data.appSecretProof) {
+    mappedPostBody.appsecret_proof = data.appSecretProof;
+  }
+
   if (mappedData.action_source === 'app') {
     mappedData.app_data = {};
   }
@@ -753,8 +757,7 @@ function sendRequests(data, mappedPostBody) {
   let pixelsConfig = [
     {
       pixelId: data.pixelId,
-      accessToken: data.accessToken,
-      appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
+      accessToken: data.accessToken
     }
   ];
   if (data.enableMultipixelSetup) {
@@ -764,14 +767,7 @@ function sendRequests(data, mappedPostBody) {
   const requests = pixelsConfig.map((pixelConfig) => {
     const pixelId = pixelConfig.pixelId;
     const accessToken = pixelConfig.accessToken;
-    const appSecretProof = pixelConfig.appSecretProof;
-    const postUrl =
-      'https://graph.facebook.com/v' +
-      API_VERSION +
-      '/' +
-      enc(pixelId) +
-      '/events' +
-      (appSecretProof ? '?appsecret_proof=' + enc(appSecretProof) : '');
+    const postUrl = 'https://graph.facebook.com/v' + API_VERSION + '/' + enc(pixelId) + '/events';
 
     return sendHttpRequest(
       postUrl,
