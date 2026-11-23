@@ -1210,6 +1210,10 @@ function mapEvent(data, eventData, fbc, fbp) {
       : data.testId;
   }
 
+  if (data.useAppSecretProof && data.appSecretProof) {
+    mappedPostBody.appsecret_proof = data.appSecretProof;
+  }
+
   if (mappedData.action_source === 'app') {
     mappedData.app_data = {};
   }
@@ -1782,8 +1786,7 @@ function sendRequests(data, mappedPostBody) {
   let pixelsConfig = [
     {
       pixelId: data.pixelId,
-      accessToken: data.accessToken,
-      appSecretProof: data.useAppSecretProof ? data.appSecretProof : undefined
+      accessToken: data.accessToken
     }
   ];
   if (data.enableMultipixelSetup) {
@@ -1793,19 +1796,17 @@ function sendRequests(data, mappedPostBody) {
   const requests = pixelsConfig.map((pixelConfig) => {
     const pixelId = pixelConfig.pixelId;
     const accessToken = pixelConfig.accessToken;
-    const appSecretProof = pixelConfig.appSecretProof;
-    const postUrl =
-      'https://graph.facebook.com/v' +
-      API_VERSION +
-      '/' +
-      enc(pixelId) +
-      '/events?access_token=' +
-      enc(accessToken) +
-      (appSecretProof ? '&appsecret_proof=' + enc(appSecretProof) : '');
+    const postUrl = 'https://graph.facebook.com/v' + API_VERSION + '/' + enc(pixelId) + '/events';
 
     return sendHttpRequest(
       postUrl,
-      { headers: { 'content-type': 'application/json' }, method: 'POST' },
+      {
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer ' + accessToken
+        },
+        method: 'POST'
+      },
       JSON.stringify(mappedPostBody)
     )
       .then((result) => {
@@ -2448,15 +2449,32 @@ scenarios:
     \ {\n    assertApi('gtmOnSuccess').wasCalled();\n    assertApi('gtmOnFailure').wasNotCalled();\n\
     \  });\n});"
 - name: '[App Secret Proof] App Secret Proof is handled and sent succesfully'
-  code: "mockData.useAppSecretProof = true;\nmockData.appSecretProof = 'appSecretProof1';\n\
-    \nmock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {\n  const\
-    \ pixelId = mockData.pixelId;\n  const accessToken = mockData.accessToken;\n \
-    \ const appSecretProof = mockData.appSecretProof;\n  \n  assertThat(requestUrl).isEqualTo(\n\
-    \    'https://graph.facebook.com/v' + expectedApiVersion + '/' + pixelId + \n\
-    \    '/events?access_token=' + accessToken +\n    '&appsecret_proof=' + appSecretProof\n\
-    \  );\n\n  return Promise.create((resolve, reject) => {\n    resolve({ statusCode:\
-    \ 200 });\n  });  \n});\n\nrunCode(mockData);\n\ncallLater(() => {\n  assertApi('gtmOnSuccess').wasCalled();\n\
-    \  assertApi('gtmOnFailure').wasNotCalled();\n});"
+  code: |-
+    mockData.useAppSecretProof = true;
+    mockData.appSecretProof = 'appSecretProof1';
+
+    mock('sendHttpRequest', (requestUrl, requestOptions, requestBody) => {
+      const pixelId = mockData.pixelId;
+      const accessToken = mockData.accessToken;
+      const appSecretProof = mockData.appSecretProof;
+
+      assertThat(requestUrl).isEqualTo(
+        'https://graph.facebook.com/v' + expectedApiVersion + '/' + pixelId + '/events'
+      );
+      assertThat(requestOptions.headers.authorization).isEqualTo('Bearer ' + accessToken);
+      assertThat(JSON.parse(requestBody).appsecret_proof).isEqualTo(appSecretProof);
+
+      return Promise.create((resolve, reject) => {
+        resolve({ statusCode: 200 });
+      });
+    });
+
+    runCode(mockData);
+
+    callLater(() => {
+      assertApi('gtmOnSuccess').wasCalled();
+      assertApi('gtmOnFailure').wasNotCalled();
+    });
 - name: gtmOnFailure handler is called if a request fails, rejects, or Promise all
     rejects
   code: |-
@@ -2835,6 +2853,9 @@ setup: "const JSON = require('JSON');\nconst Promise = require('Promise');\ncons
 
 
 ___NOTES___
+
+2026-11-18 - Change Notes:
+  - Credentials are no longer sent in the request URL, so they don't leak into request logs, proxy logs or the server Preview's outgoing-request list: the Conversions API access token now goes in the Authorization header (for the main pixel and every multi-pixel row), and the App Secret Proof goes in the request body
 
 2026-09-02 - Change Notes:
   - Empty or invalid values are no longer sent to Facebook for any field, preventing malformed requests
